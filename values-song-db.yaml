@@ -15,3 +15,14 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
+
+securityContext:
+  runAsUser: 999
+  runAsGroup: 999
+  fsGroup: 999
+  runAsNonRoot: true
+
+podSecurityContext:
+  runAsUser: 999
+  runAsGroup: 999
+  fsGroup: 999
