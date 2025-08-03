@@ -21,7 +21,7 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
   hosts:
-    - host: keycloak.local
+    - host: keycloak-ilifu.openup.org.za
       paths:
         - path: /
           pathType: Prefix keycloak-db service
@@ -29,7 +29,7 @@ ingress:
 fullnameOverride: "keycloak"
 
 url:
-  hostname: "keycloak.local"
+  hostname: "keycloak-ilifu.openup.org.za"
 
 image:
   repository: quay.io/keycloak/keycloak
@@ -68,7 +68,7 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-buffering: "on"
     nginx.ingress.kubernetes.io/proxy-buffers-number: "20"
   hosts:
-    - host: keycloak.local
+    - host: keycloak-ilifu.openup.org.za
       paths:
         - path: /
           pathType: Prefix

@@ -1,11 +1,11 @@
 fullnameOverride: "minio"
 
 url:
-  hostname: "minio.local"
+  hostname: "minio-ilifu.openup.org.za"
 
 console:
   url:
-    hostname: "minio-console.local"
+    hostname: "minio-console-ilifu.openup.org.za"
   ingress:
     enabled: true
     className: "nginx"
@@ -68,7 +68,7 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-body-size: "1000m"
     nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
   hosts:
-    - host: minio.local
+    - host: minio-ilifu.openup.org.za
       paths:
         - path: /
           pathType: Prefix

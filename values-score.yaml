@@ -1,7 +1,7 @@
 fullnameOverride: "score"
 
 url:
-  hostname: "score.local"
+  hostname: "score-ilifu.openup.org.za"
 
 image:
   repository: ghcr.io/overture-stack/score-server
@@ -84,7 +84,7 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
   hosts:
-    - host: score.local
+    - host: score-ilifu.openup.org.za
       paths:
         - path: /
           pathType: Prefix

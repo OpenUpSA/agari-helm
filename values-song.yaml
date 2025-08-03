@@ -1,7 +1,7 @@
 fullnameOverride: "song"
 
 url:
-  hostname: "song.local"
+  hostname: "song-ilifu.openup.org.za"
 
 image:
   repository: ghcr.io/overture-stack/song-server
@@ -53,7 +53,7 @@ song:
   
   # Kafka Variables
   kafka:
-    bootstrapServers: "kafka.agari-dev.svc.cluster.local:9092"
+    bootstrapServers: "kafka.agari.svc.cluster.local:9092"
     template:
       defaultTopic: "song-analysis"
   
@@ -96,7 +96,7 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
   hosts:
-    - host: song.local
+    - host: song-ilifu.openup.org.za
       paths:
         - path: /
           pathType: Prefix

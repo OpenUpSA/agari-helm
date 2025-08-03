@@ -1,7 +1,7 @@
 fullnameOverride: "arranger"
 
 url:
-  hostname: "arranger.local"
+  hostname: "arranger-ilifu.openup.org.za"
 
 image:
   repository: ghcr.io/overture-stack/arranger-server
@@ -21,7 +21,7 @@ arranger:
     compatibilityMode: true
   
   stage:
-    baseUrl: "http://arranger.local:3000"
+    baseUrl: "http://arranger-ilifu.openup.org.za"
     adminRoot: "http://arranger-server:5050/graphql"
 
 resources:
@@ -38,7 +38,7 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
   hosts:
-    - host: arranger.local
+    - host: arranger-ilifu.openup.org.za
       paths:
         - path: /
           pathType: Prefix

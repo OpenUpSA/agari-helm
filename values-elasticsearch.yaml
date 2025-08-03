@@ -1,7 +1,7 @@
 fullnameOverride: "elasticsearch"
 
 url:
-  hostname: "elasticsearch.local"
+  hostname: "es-ilifu.openup.org.za"
 
 image:
   repository: docker.elastic.co/elasticsearch/elasticsearch
@@ -50,7 +50,7 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
   hosts:
-    - host: elasticsearch.local
+    - host: es-ilifu.openup.org.za
       paths:
         - path: /
           pathType: Prefix
