@@ -11,6 +11,10 @@ service:
   type: ClusterIP
   port: 5050
 
+env:
+  - name: NODE_OPTIONS
+    value: "--max-old-space-size=768"
+
 arranger:
   enableLogs: false
   
@@ -26,11 +30,11 @@ arranger:
 
 resources:
   limits:
-    cpu: 300m
-    memory: 512Mi
+    cpu: 500m
+    memory: 1Gi
   requests:
-    cpu: 100m
-    memory: 256Mi
+    cpu: 200m
+    memory: 512Mi
 
 ingress:
   enabled: true
