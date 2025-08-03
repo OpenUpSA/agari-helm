@@ -92,7 +92,7 @@ helm install elasticsearch ./helm/elasticsearch -n agari-dev -f values-elasticse
 #### Load Sample Data into Elasticsearch
 ```bash
 # Create index
-kubectl exec -i elasticsearch-<pod-name> -n agari-dev -- curl -X PUT "localhost:9200/overture-quickstart-index" -H "Content-Type: application/json" -d '{
+kubectl exec -i elasticsearch-7bc5998cbf-rsf5n -n agari -- curl -X PUT "localhost:9200/overture-quickstart-index" -H "Content-Type: application/json" -d '{
   "settings": {
     "analysis": {
       "analyzer": {
@@ -126,7 +126,7 @@ kubectl exec -i elasticsearch-<pod-name> -n agari-dev -- curl -X PUT "localhost:
 # Load sample documents
 cd configs/elasticsearchConfigs/es-docs
 for doc in *.json; do
-  kubectl exec -i elasticsearch-<pod-name> -n agari-dev -- curl -X POST "localhost:9200/overture-quickstart-index/_doc/$(basename $doc .json)" -H "Content-Type: application/json" -d @- < "$doc"
+  kubectl exec -i elasticsearch-7bc5998cbf-rsf5n -n agari -- curl -X POST "localhost:9200/overture-quickstart-index/_doc/$(basename $doc .json)" -H "Content-Type: application/json" -d @- < "$doc"
 done
 ```
 
