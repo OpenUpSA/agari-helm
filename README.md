@@ -54,7 +54,12 @@ kubectl exec -it minio-86c949747-dkfzg -n agari-dev -- mc ls localminio
 
 #### Kafka
 ```bash
-helm install kafka ./helm/kafka -n agari-dev -f values-kafka.yaml
+# Add Bitnami repository if not already added
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
+
+# Install Kafka using Bitnami chart
+helm install kafka bitnami/kafka -n agari-dev -f values-kafka-bitnami.yaml
 ```
 
 #### Keycloak Authentication
@@ -181,6 +186,7 @@ kubectl logs <pod-name> -n agari-dev
 ## Configuration Files
 
 - `values-*.yaml`: Helm values for each service
+- `values-kafka-bitnami.yaml`: Bitnami Kafka chart configuration
 - `configs/keycloakConfigs/`: Keycloak realm and user configurations
 - `configs/arrangerConfigs/`: Arranger UI configuration files
 - `configs/elasticsearchConfigs/`: Sample genomic data and index templates

@@ -52,7 +52,7 @@ maestro:
       stream:
         kafka:
           binder:
-            brokers: "kafka.agari-dev.svc.cluster.local:9092"
+            brokers: "kafka:9092"
         bindings:
           songInput:
             destination: "song-analysis"

@@ -4,7 +4,7 @@ fullnameOverride: "kafka"
 zookeeper:
   enabled: true
 
-# Simple Zookeeper-based Kafka configuration
+# Bitnami Kafka configuration
 kafka:
   brokerId: 1
   zookeeperConnect: "zookeeper:2181"
@@ -21,6 +21,12 @@ kafka:
   messageMaxBytes: "5242880"
   replicaFetchMaxBytes: "5242880"
 
+# Use Bitnami image instead of Confluent
+image:
+  repository: bitnami/kafka
+  tag: "3.4.1"
+  pullPolicy: IfNotPresent
+
 # Resource limits
 resources:
   limits:
@@ -34,7 +40,7 @@ resources:
 persistence:
   enabled: false
 
-# Security context
+# Security context for Bitnami
 securityContext:
-  runAsUser: 0
-  runAsGroup: 0
+  runAsUser: 1001
+  runAsGroup: 1001
