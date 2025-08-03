@@ -1,0 +1,90 @@
+fullnameOverride: "score"
+
+url:
+  hostname: "score.local"
+
+image:
+  repository: ghcr.io/overture-stack/score-server
+  tag: "5.11.0"
+
+score:
+  # Spring Configuration
+  spring:
+    profiles:
+      active: "default,collaboratory,prod,secure,jwt"
+  
+  # Server Configuration
+  server:
+    port: 8087
+    ssl:
+      enabled: false
+  
+  # Song Variables 
+  metadata:
+    url: "http://song:8080"
+  
+  s3:
+    endpoint: "http://minio:9000"
+    accesskey: "admin"
+    secretkey: "admin123"
+    sigv4enabled: true
+    secured: false
+  
+  object:
+    sentinel: "heliograph"
+  
+  bucket:
+    name:
+      object: "object"
+      state: "state"
+  
+  upload:
+    partsize: "1073741824"
+    connection:
+      timeout: "1200000"
+  
+  auth:
+    server:
+      provider: "keycloak"
+      clientId: "dms"
+      clientSecret: "score-client-secret-change-me"
+      tokenName: "apiKey"
+      keycloak:
+        host: "http://keycloak:8080"
+        realm: "myrealm"
+      scope:
+        study:
+          prefix: "STUDY."
+        download:
+          suffix: ".READ"
+          system: "score.READ"
+        upload:
+          suffix: ".WRITE"
+          system: "score.WRITE"
+      url: "http://keycloak:8080/realms/myrealm/apikey/check_api_key/"
+    jwt:
+      publickeyurl: "http://keycloak:8080/oauth/token/public_key"
+    oauth2:
+      resourceserver:
+        jwt:
+          jwkSetUri: "http://keycloak:8080/realms/myrealm/protocol/openid-connect/certs"
+
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 768Mi
+  requests:
+    cpu: 100m
+    memory: 384Mi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+  hosts:
+    - host: score.local
+      paths:
+        - path: /
+          pathType: Prefix

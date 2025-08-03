@@ -1,0 +1,117 @@
+replicaCount: 1
+
+url:
+  hostname: "song.local"
+
+image:
+  repository: ghcr.io/overture-stack/song-server
+  pullPolicy: IfNotPresent
+  tag: "5.0.2"
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+song:
+  # Spring Configuration
+  spring:
+    profiles:
+      active: "prod,secure,kafka"
+    flyway:
+      enabled: true
+  
+  # Song Variables
+  id:
+    useLocal: true
+  schemas:
+    enforceLatest: true
+  
+  # Score Variables
+  score:
+    url: "http://score:8087"
+    accessToken: ""
+  
+  # Keycloak Variables
+  auth:
+    server:
+      provider: "keycloak"
+      clientId: "dms"
+      clientSecret: "t016kqXfI648ORoIP5gepqCzqtsRjlcc"
+      tokenName: "apiKey"
+      keycloak:
+        host: "http://keycloak:8080"
+        realm: "myrealm"
+      scope:
+        study:
+          prefix: "STUDY."
+          suffix: ".WRITE"
+        system: "song.WRITE"
+    oauth2:
+      resourceserver:
+        jwt:
+          jwkSetUri: "http://keycloak:8080/realms/myrealm/protocol/openid-connect/certs"
+      introspectionUri: "http://keycloak:8080/realms/myrealm/apikey/check_api_key/"
+  
+  # Database Variables
+  datasource:
+    url: "jdbc:postgresql://song-db:5432/songDb?stringtype=unspecified"
+    username: "admin"
+    password: "song-db-pass-123"
+  
+  # Kafka Variables
+  kafka:
+    bootstrapServers: "http://kafka:9092"
+    template:
+      defaultTopic: "song-analysis"
+  
+  # Swagger Variable
+  swagger:
+    alternateUrl: "/swagger-api"
+
+# Resource limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+# Persistence
+persistence:
+  enabled: false
+  size: 1Gi
+  accessMode: ReadWriteOnce
+  storageClass: ""
+
+# Node selection
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Pod security context
+podSecurityContext: {}
+securityContext: {}
+
+# Service account
+serviceAccount:
+  create: false
+  annotations: {}
+  name: ""
+
+# Pod annotations
+podAnnotations: {}
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: song.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []

@@ -1,0 +1,59 @@
+fullnameOverride: "elasticsearch"
+
+url:
+  hostname: "elasticsearch.local"
+
+image:
+  repository: docker.elastic.co/elasticsearch/elasticsearch
+  tag: "7.17.15"
+
+elasticsearch:
+  cluster:
+    name: "workflow.elasticsearch"
+  
+  discovery:
+    type: "single-node"
+  
+  security:
+    enabled: false
+  
+  java:
+    opts: "-Xms256m -Xmx512m"
+  
+  network:
+    host: "0.0.0.0"
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 512Mi
+
+# Probe configuration
+probes:
+  liveness:
+    enabled: false 
+  readiness:
+    enabled: true
+    tcpSocket:
+      port: 9200
+    initialDelaySeconds: 60 
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 6
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+  hosts:
+    - host: elasticsearch.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+persistence:
+  enabled: false

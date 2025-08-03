@@ -1,0 +1,74 @@
+extraEnv:
+  - name: JAVA_OPTS_APPEND
+    value: "-Djava.awt.headless=true -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.net.preferIPv4Stack=true -server -Xms512m -Xmx768m -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
+
+probes:
+  liveness:
+    enabled: false
+  readiness:
+    enabled: true
+    tcpSocket:
+      port: 8080
+    initialDelaySeconds: 90 
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 8
+
+# Enable ingress
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+  hosts:
+    - host: keycloak.local
+      paths:
+        - path: /
+          pathType: Prefix keycloak-db service
+
+fullnameOverride: "keycloak"
+
+url:
+  hostname: "keycloak.local"
+
+image:
+  repository: quay.io/keycloak/keycloak
+  tag: "22.0"
+
+keycloak:
+  database:
+    vendor: postgres
+    host: keycloak-db
+    port: 5432
+    database: keycloakDb
+    username: admin
+    password: keycloak-db-pass-123
+  
+  admin:
+    username: admin
+    password: admin123
+  
+  healthEnabled: true
+  startupMode: start-dev
+  importRealm: true
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 768Mi
+  requests:
+    cpu: 100m
+    memory: 384Mi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffering: "on"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "20"
+  hosts:
+    - host: keycloak.local
+      paths:
+        - path: /
+          pathType: Prefix

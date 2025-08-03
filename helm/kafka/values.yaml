@@ -1,0 +1,100 @@
+replicaCount: 1
+
+url:
+  hostname: "kafka.local"
+
+image:
+  repository: confluentinc/cp-kafka
+  pullPolicy: IfNotPresent
+  tag: "7.5.0"
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 9092
+  externalPort: 29092
+
+kafka:
+  processRoles: "broker,controller"
+  nodeId: 1
+  clusterId: "q1Sh-9_ISia_zwGINzRvyQ"
+  
+  # Listeners
+  advertisedListeners: "PLAINTEXT://kafka:9092,EXTERNAL://localhost:29092"
+  listeners: "PLAINTEXT://kafka:9092,EXTERNAL://0.0.0.0:29092,CONTROLLER://kafka:9093"
+  listenerSecurityProtocolMap: "PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
+  interBrokerListenerName: "PLAINTEXT"
+  controllerQuorumVoters: "1@kafka:9093"
+  controllerListenerNames: "CONTROLLER"
+  
+  # Storage Configuration
+  logDirs: "/var/lib/kafka/data"
+  logRetentionHours: 168
+  logRetentionBytes: -1
+  
+  # Topic Configuration
+  offsetsTopicReplicationFactor: 1
+  autoCreateTopicsEnable: false
+  numPartitions: 1
+  defaultReplicationFactor: 1
+  minInsyncReplicas: 1
+  
+  # Performance Tuning
+  messageMaxBytes: 5242880
+  replicaFetchMaxBytes: 5242880
+  
+  # Logging Configuration
+  log4jLoggers: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+  log4jRootLoglevel: "INFO"
+
+# Persistence
+persistence:
+  enabled: true
+  size: 10Gi
+  accessMode: ReadWriteOnce
+  storageClass: ""
+
+# Resource limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+# Node selection
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Pod security context
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+
+# Service account
+serviceAccount:
+  create: false
+  annotations: {}
+  name: ""
+
+# Pod annotations
+podAnnotations: {}
+
+# Ingress
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: kafka.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []

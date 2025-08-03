@@ -1,0 +1,28 @@
+controller:
+  replicaCount: 1
+  persistence:
+    enabled: false
+  resources:
+    limits:
+      cpu: 1000m 
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 512Mi
+
+broker:
+  replicaCount: 0
+
+zookeeper:
+  enabled: false
+
+sasl:
+  enabled: false
+
+listeners:
+  client:
+    protocol: PLAINTEXT
+  controller:
+    protocol: PLAINTEXT
+  interbroker:
+    protocol: PLAINTEXT

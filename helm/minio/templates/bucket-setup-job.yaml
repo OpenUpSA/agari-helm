@@ -1,0 +1,61 @@
+{{- if .Values.minio.bucketSetup.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.fullnameOverride | default (printf "%s-minio" .Release.Name) }}-setup
+  labels:
+    app.kubernetes.io/name: {{ .Values.nameOverride | default "minio" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.nameOverride | default "minio" }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        job: bucket-setup
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mc
+          image: "{{ .Values.mc.image.repository }}:{{ .Values.mc.image.tag }}"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Waiting for MinIO to be ready..."
+              until mc alias set myminio http://{{ .Values.fullnameOverride | default (printf "%s-minio" .Release.Name) }}:9000 {{ .Values.minio.accessKey }} {{ .Values.minio.secretKey }}; do
+                echo "MinIO not ready, waiting..."
+                sleep 5
+              done
+              
+              echo "Creating buckets..."
+              {{- range .Values.minio.buckets }}
+              mc mb myminio/{{ .name }} || echo "Bucket {{ .name }} already exists"
+              {{- end }}
+              
+              echo "Setting up object bucket structure..."
+              mc mb myminio/object/data || echo "object/data already exists"
+              
+              echo "Creating heliograph file..."
+              echo "" > /tmp/heliograph
+              mc cp /tmp/heliograph myminio/object/data/heliograph || echo "heliograph file already exists"
+              rm /tmp/heliograph
+              
+              echo "Bucket setup completed successfully"
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

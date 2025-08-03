@@ -1,0 +1,142 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.fullnameOverride | default (printf "%s-keycloak" .Release.Name) }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.nameOverride | default "keycloak" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate 
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.nameOverride | default "keycloak" }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/name: {{ .Values.nameOverride | default "keycloak" }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: keycloak
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: management
+              containerPort: 9990
+              protocol: TCP
+          env:
+            # Database configuration
+            - name: KC_DB
+              value: {{ .Values.keycloak.database.vendor }}
+            - name: KC_DB_USERNAME
+              value: {{ .Values.keycloak.database.username }}
+            - name: KC_DB_PASSWORD
+              value: {{ .Values.keycloak.database.password }}
+            - name: KC_DB_URL
+              value: "jdbc:postgresql://{{ .Values.keycloak.database.host }}:{{ .Values.keycloak.database.port }}/{{ .Values.keycloak.database.database }}"
+            # Admin user
+            - name: KEYCLOAK_ADMIN
+              value: {{ .Values.keycloak.admin.username }}
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              value: {{ .Values.keycloak.admin.password }}
+            # Keycloak settings
+            - name: KC_HOSTNAME
+              value: {{ .Values.url.hostname }}
+            - name: KC_HEALTH_ENABLED
+              value: "{{ .Values.keycloak.healthEnabled }}"
+            # Proxy settings for Kubernetes
+            - name: KC_PROXY
+              value: "edge"
+            - name: KC_HOSTNAME_STRICT
+              value: "false"
+            - name: KC_HOSTNAME_STRICT_HTTPS
+              value: "false"
+          args:
+            - {{ .Values.keycloak.startupMode }}
+            {{- if .Values.keycloak.importRealm }}
+            - --import-realm
+            {{- end }}
+          volumeMounts:
+            - name: keycloak-import
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
+            - name: keycloak-providers
+              mountPath: /opt/keycloak/providers
+              readOnly: true
+          {{- if .Values.probes.liveness.enabled }}
+          livenessProbe:
+            {{- if .Values.probes.liveness.httpGet }}
+            httpGet:
+              path: {{ .Values.probes.liveness.httpGet.path }}
+              port: {{ .Values.probes.liveness.httpGet.port }}
+            {{- else if .Values.probes.liveness.tcpSocket }}
+            tcpSocket:
+              port: {{ .Values.probes.liveness.tcpSocket.port }}
+            {{- end }}
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          {{- end }}
+          {{- if .Values.probes.readiness.enabled }}
+          readinessProbe:
+            {{- if .Values.probes.readiness.httpGet }}
+            httpGet:
+              path: {{ .Values.probes.readiness.httpGet.path }}
+              port: {{ .Values.probes.readiness.httpGet.port }}
+            {{- else if .Values.probes.readiness.tcpSocket }}
+            tcpSocket:
+              port: {{ .Values.probes.readiness.tcpSocket.port }}
+            {{- end }}
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: keycloak-import
+          configMap:
+            name: keycloak-config
+            items:
+              - key: myrealm-realm.json
+                path: myrealm-realm.json
+              - key: myrealm-users-0.json
+                path: myrealm-users-0.json
+        - name: keycloak-providers
+          configMap:
+            name: keycloak-config
+            items:
+              - key: keycloak-apikeys-1.0.1.jar
+                path: keycloak-apikeys-1.0.1.jar
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

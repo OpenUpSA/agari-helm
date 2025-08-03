@@ -1,0 +1,17 @@
+fullnameOverride: "keycloak-db"
+
+postgresql:
+  postgresqlUsername: admin
+  postgresqlPassword: keycloak-db-pass-123
+  postgresqlDatabase: keycloakDb
+
+persistence:
+  size: 1Gi
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi

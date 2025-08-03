@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.fullnameOverride | default "arranger" }}-config
+  labels:
+    app.kubernetes.io/name: arranger
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  base.json: |
+{{ .Values.arrangerConfig.base | toJson | indent 4 }}
+  extended.json: |
+{{ .Values.arrangerConfig.extended | toJson | indent 4 }}
+  facets.json: |
+{{ .Values.arrangerConfig.facets | toJson | indent 4 }}
+  matchbox.json: |
+{{ .Values.arrangerConfig.matchbox | toJson | indent 4 }}
+  table.json: |
+{{ .Values.arrangerConfig.table | toJson | indent 4 }}

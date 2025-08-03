@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.fullnameOverride | default (printf "%s-elasticsearch" .Release.Name) }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.nameOverride | default "elasticsearch" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: 9300
+      targetPort: transport
+      protocol: TCP
+      name: transport
+  selector:
+    app.kubernetes.io/name: {{ .Values.nameOverride | default "elasticsearch" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

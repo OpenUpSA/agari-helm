@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.fullnameOverride | default (printf "%s-score" .Release.Name) }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.nameOverride | default "score" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.nameOverride | default "score" }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.nameOverride | default "score" }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: score
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8087
+              protocol: TCP
+          env:
+            # Spring Configuration
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.score.spring.profiles.active | quote }}
+            - name: SERVER_PORT
+              value: {{ .Values.score.server.port | quote }}
+            # Song Variables
+            - name: METADATA_URL
+              value: {{ .Values.score.metadata.url | quote }}
+            # Server Variables
+            - name: SERVER_SSL_ENABLED
+              value: {{ .Values.score.server.ssl.enabled | quote }}
+            # Object Storage Variables
+            - name: S3_ENDPOINT
+              value: {{ .Values.score.s3.endpoint | quote }}
+            - name: S3_ACCESSKEY
+              value: {{ .Values.score.s3.accesskey | quote }}
+            - name: S3_SECRETKEY
+              value: {{ .Values.score.s3.secretkey | quote }}
+            - name: S3_SIGV4ENABLED
+              value: {{ .Values.score.s3.sigv4enabled | quote }}
+            - name: S3_SECURED
+              value: {{ .Values.score.s3.secured | quote }}
+            - name: OBJECT_SENTINEL
+              value: {{ .Values.score.object.sentinel | quote }}
+            - name: BUCKET_NAME_OBJECT
+              value: {{ .Values.score.bucket.name.object | quote }}
+            - name: BUCKET_NAME_STATE
+              value: {{ .Values.score.bucket.name.state | quote }}
+            - name: UPLOAD_PARTSIZE
+              value: {{ .Values.score.upload.partsize | quote }}
+            - name: UPLOAD_CONNECTION_TIMEOUT
+              value: {{ .Values.score.upload.connection.timeout | quote }}
+            # Keycloak Variables
+            - name: AUTH_SERVER_PROVIDER
+              value: {{ .Values.score.auth.server.provider | quote }}
+            - name: AUTH_SERVER_CLIENTID
+              value: {{ .Values.score.auth.server.clientId | quote }}
+            - name: AUTH_SERVER_CLIENTSECRET
+              value: {{ .Values.score.auth.server.clientSecret | quote }}
+            - name: AUTH_SERVER_TOKENNAME
+              value: {{ .Values.score.auth.server.tokenName | quote }}
+            - name: AUTH_SERVER_KEYCLOAK_HOST
+              value: {{ .Values.score.auth.server.keycloak.host | quote }}
+            - name: AUTH_SERVER_KEYCLOAK_REALM
+              value: {{ .Values.score.auth.server.keycloak.realm | quote }}
+            - name: AUTH_SERVER_SCOPE_STUDY_PREFIX
+              value: {{ .Values.score.auth.server.scope.study.prefix | quote }}
+            - name: AUTH_SERVER_SCOPE_DOWNLOAD_SUFFIX
+              value: {{ .Values.score.auth.server.scope.download.suffix | quote }}
+            - name: AUTH_SERVER_SCOPE_DOWNLOAD_SYSTEM
+              value: {{ .Values.score.auth.server.scope.download.system | quote }}
+            - name: AUTH_SERVER_SCOPE_UPLOAD_SYSTEM
+              value: {{ .Values.score.auth.server.scope.upload.system | quote }}
+            - name: AUTH_SERVER_SCOPE_UPLOAD_SUFFIX
+              value: {{ .Values.score.auth.server.scope.upload.suffix | quote }}
+            - name: AUTH_SERVER_URL
+              value: {{ .Values.score.auth.server.url | quote }}
+            - name: AUTH_JWT_PUBLICKEYURL
+              value: {{ .Values.score.auth.jwt.publickeyurl | quote }}
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+              value: {{ .Values.score.auth.oauth2.resourceserver.jwt.jwkSetUri | quote }}
+          readinessProbe:
+            tcpSocket:
+              port: 8087
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: 8087
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
