@@ -1,5 +1,5 @@
 # Local Helm values (contains secrets)
-# values-*.yaml
+values-production-secrets.yaml
 
 # IDE files
 .vscode/
