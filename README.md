@@ -17,10 +17,14 @@ This guide will deploy the complete stack on a Kubernetes cluster. All commands 
 
 ```bash
 # Create k3d cluster with 3 nodes and port mapping
-k3d cluster create agari-cluster --agents 2 --port "80:80@loadbalancer"
+k3d cluster create agari-dev --agents 2 --port "80:80@loadbalancer"
 
 # Install nginx ingress
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.1/deploy/static/provider/cloud/deploy.yaml
+
+# Wait for ingress to be ready
+kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=300s
+
 ```
 
 ### 2. Create Namespace
@@ -33,16 +37,19 @@ kubectl create namespace agari-dev
 
 #### PostgreSQL Databases
 ```bash
-# Song database
-helm install song-db ./helm/databases -n agari-dev -f values-song-db.yaml
-
 # Keycloak database  
 helm install keycloak-db ./helm/databases -n agari-dev -f values-keycloak-db.yaml
+
+# Song database
+helm install song-db ./helm/databases -n agari-dev -f values-song-db.yaml
 ```
 
 #### MinIO Object Storage
 ```bash
 helm install minio ./helm/minio -n agari-dev -f values-minio.yaml
+
+# List Buckets
+kubectl exec -it minio-86c949747-dkfzg -n agari-dev -- mc ls localminio
 ```
 
 #### Kafka

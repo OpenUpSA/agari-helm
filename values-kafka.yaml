@@ -1,28 +1,40 @@
-controller:
-  replicaCount: 1
-  persistence:
-    enabled: false
-  resources:
-    limits:
-      cpu: 1000m 
-      memory: 1Gi
-    requests:
-      cpu: 200m
-      memory: 512Mi
+fullnameOverride: "kafka"
 
-broker:
-  replicaCount: 0
-
+# Enable Zookeeper
 zookeeper:
+  enabled: true
+
+# Simple Zookeeper-based Kafka configuration
+kafka:
+  brokerId: 1
+  zookeeperConnect: "zookeeper:2181"
+  
+  # Simple listeners for internal cluster communication
+  listenerSecurityProtocolMap: "PLAINTEXT:PLAINTEXT"
+  advertisedListeners: "PLAINTEXT://kafka:9092"
+  
+  # Topic Configuration
+  offsetsTopicReplicationFactor: 1
+  groupInitialRebalanceDelayMs: 0
+  
+  # Performance Tuning
+  messageMaxBytes: "5242880"
+  replicaFetchMaxBytes: "5242880"
+
+# Resource limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+# Disable persistence for now
+persistence:
   enabled: false
 
-sasl:
-  enabled: false
-
-listeners:
-  client:
-    protocol: PLAINTEXT
-  controller:
-    protocol: PLAINTEXT
-  interbroker:
-    protocol: PLAINTEXT
+# Security context
+securityContext:
+  runAsUser: 0
+  runAsGroup: 0

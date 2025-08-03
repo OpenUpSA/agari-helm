@@ -6,7 +6,7 @@ url:
 image:
   repository: confluentinc/cp-kafka
   pullPolicy: IfNotPresent
-  tag: "7.5.0"
+  tag: "5.2.1"
 
 nameOverride: ""
 fullnameOverride: ""
@@ -16,38 +16,35 @@ service:
   port: 9092
   externalPort: 29092
 
+# Zookeeper Configuration
+zookeeper:
+  enabled: true
+  image:
+    repository: wurstmeister/zookeeper
+    tag: latest
+  service:
+    port: 2181
+
 kafka:
-  processRoles: "broker,controller"
-  nodeId: 1
-  clusterId: "q1Sh-9_ISia_zwGINzRvyQ"
+  brokerId: 1
+  zookeeperConnect: "zookeeper:2181"
   
-  # Listeners
-  advertisedListeners: "PLAINTEXT://kafka:9092,EXTERNAL://localhost:29092"
-  listeners: "PLAINTEXT://kafka:9092,EXTERNAL://0.0.0.0:29092,CONTROLLER://kafka:9093"
-  listenerSecurityProtocolMap: "PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
-  interBrokerListenerName: "PLAINTEXT"
-  controllerQuorumVoters: "1@kafka:9093"
-  controllerListenerNames: "CONTROLLER"
+  # Listeners (Zookeeper mode)
+  listenerSecurityProtocolMap: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+  advertisedListeners: "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092"
   
   # Storage Configuration
-  logDirs: "/var/lib/kafka/data"
+  logDirs: "/kafka/kafka-logs"
   logRetentionHours: 168
   logRetentionBytes: -1
   
   # Topic Configuration
   offsetsTopicReplicationFactor: 1
-  autoCreateTopicsEnable: false
-  numPartitions: 1
-  defaultReplicationFactor: 1
-  minInsyncReplicas: 1
+  groupInitialRebalanceDelayMs: 0
   
   # Performance Tuning
   messageMaxBytes: 5242880
   replicaFetchMaxBytes: 5242880
-  
-  # Logging Configuration
-  log4jLoggers: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-  log4jRootLoglevel: "INFO"
 
 # Persistence
 persistence:

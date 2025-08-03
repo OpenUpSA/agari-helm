@@ -1,0 +1,53 @@
+{{- if .Values.zookeeper.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+  labels:
+    app.kubernetes.io/name: zookeeper
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: zookeeper
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: zookeeper
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: zookeeper
+          image: "zookeeper:3.7"
+          ports:
+            - name: zookeeper
+              containerPort: 2181
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 200m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper
+  labels:
+    app.kubernetes.io/name: zookeeper
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.zookeeper.service.port }}
+      targetPort: zookeeper
+      protocol: TCP
+      name: zookeeper
+  selector:
+    app.kubernetes.io/name: zookeeper
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
