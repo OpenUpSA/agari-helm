@@ -88,21 +88,6 @@ helm install score ./helm/score -n agari-dev -f values-score.yaml
 helm install elasticsearch ./helm/elasticsearch -n agari-dev -f values-elasticsearch.yaml
 ```
 
-#### Maestro Workflow Orchestration
-```bash
-helm install maestro ./helm/maestro -n agari-dev -f values-maestro.yaml
-```
-
-### 5. Deploy Data Portal
-
-#### Create Arranger Configuration
-```bash
-# Create ConfigMap from Arranger configs
-kubectl create configmap arranger-config --from-file=configs/arrangerConfigs/ -n agari-dev
-
-# Deploy Arranger
-helm install arranger ./helm/arranger -n agari-dev -f values-arranger.yaml
-```
 
 #### Load Sample Data into Elasticsearch
 ```bash
@@ -145,6 +130,22 @@ for doc in *.json; do
 done
 ```
 
+#### Maestro Workflow Orchestration
+```bash
+helm install maestro ./helm/maestro -n agari-dev -f values-maestro.yaml
+```
+
+### 5. Deploy Data Portal
+
+#### Create Arranger Configuration
+```bash
+# Create ConfigMap from Arranger configs
+kubectl create configmap arranger-config --from-file=configs/arrangerConfigs/ -n agari-dev
+
+# Deploy Arranger
+helm install arranger ./helm/arranger -n agari-dev -f values-arranger.yaml
+```
+
 ## Service Access
 
 After deployment, services are available at:
@@ -181,6 +182,13 @@ kubectl get ingress -n agari-dev
 View logs:
 ```bash
 kubectl logs <pod-name> -n agari-dev
+```
+
+## Ingress
+
+```bash
+# Restart ingress
+kubectl rollout restart deployment/ingress-nginx-controller -n ingress-nginx
 ```
 
 ## Configuration Files
@@ -220,9 +228,9 @@ For production deployment:
 └─────────────┘    └──────────────┘    └─────────────┘
                                               │
                                               ▼
-                                    ┌─────────────┐
-                                    │  Arranger   │
-                                    └─────────────┘
+                                       ┌─────────────┐
+                                       │  Arranger   │
+                                       └─────────────┘
 ```
 
 ## Sample GraphQL Queries
