@@ -91,8 +91,12 @@ helm install elasticsearch ./helm/elasticsearch -n agari-dev -f values-elasticse
 
 #### Load Sample Data into Elasticsearch
 ```bash
+# First, get the actual Elasticsearch pod name
+ES_POD=$(kubectl get pods -n agari-dev | grep elasticsearch | awk '{print $1}')
+echo "Using Elasticsearch pod: $ES_POD"
+
 # Create index
-kubectl exec -i elasticsearch-<pod-name> -n agari-dev -- curl -X PUT "localhost:9200/overture-quickstart-index" -H "Content-Type: application/json" -d '{
+kubectl exec -i $ES_POD -n agari-dev -- curl -X PUT "localhost:9200/overture-quickstart-index" -H "Content-Type: application/json" -d '{
   "settings": {
     "analysis": {
       "analyzer": {
@@ -126,8 +130,14 @@ kubectl exec -i elasticsearch-<pod-name> -n agari-dev -- curl -X PUT "localhost:
 # Load sample documents
 cd configs/elasticsearchConfigs/es-docs
 for doc in *.json; do
-  kubectl exec -i elasticsearch-<pod-name> -n agari-dev -- curl -X POST "localhost:9200/overture-quickstart-index/_doc/$(basename $doc .json)" -H "Content-Type: application/json" -d @- < "$doc"
+  kubectl exec -i $ES_POD -n agari-dev -- curl -X POST "localhost:9200/overture-quickstart-index/_doc/$(basename $doc .json)" -H "Content-Type: application/json" -d @- < "$doc"
 done
+
+# Verify data loaded successfully
+kubectl exec -i $ES_POD -n agari-dev -- curl -X GET "localhost:9200/overture-quickstart-index/_count"
+
+# Return to repository root
+cd ../../..
 ```
 
 #### Maestro Workflow Orchestration
@@ -171,7 +181,21 @@ API Key: F4C094A60BA88FB3F42BB9D20D75931286549D7F3C2E448F62D81CE20237B9BC
 Scopes: score.READ, score.WRITE, song.READ, song.WRITE
 ```
 
-## Monitoring
+## Troubleshooting
+
+### Arranger GraphQL Shows No Data
+
+If Arranger GraphQL returns empty results, check if Elasticsearch has data:
+
+```bash
+# Check document count in Elasticsearch
+ES_POD=$(kubectl get pods -n agari-dev | grep elasticsearch | awk '{print $1}')
+kubectl exec -i $ES_POD -n agari-dev -- curl -s "localhost:9200/overture-quickstart-index/_count"
+
+# If count is 0, reload sample data following the steps in section "Load Sample Data into Elasticsearch"
+```
+
+### Check Service Status
 
 Check service status:
 ```bash
