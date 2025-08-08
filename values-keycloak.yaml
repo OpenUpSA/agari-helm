@@ -1,6 +1,8 @@
 extraEnv:
   - name: JAVA_OPTS_APPEND
     value: "-Djava.awt.headless=true -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.net.preferIPv4Stack=true -server -Xms512m -Xmx768m -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap"
+  - name: KC_CORS_ORIGINS
+    value: "*"
 
 probes:
   liveness:
