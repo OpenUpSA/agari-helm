@@ -181,8 +181,35 @@ After deployment, services are available at:
 
 ### Keycloak Credentials
 - **Admin**: admin / admin123
-- **Realm**: myrealm
+- **Realm**: agari
 - **User**: admin@example.com (imported with API keys)
+
+### JWT Authentication for SONG
+
+**CRITICAL**: SONG requires a specific JWT structure. You must configure a JWT protocol mapper in Keycloak:
+
+1. Go to **Clients** → **project-EXAMPLE** → **Client scopes** tab
+2. Click **project-EXAMPLE-dedicated** → **Mappers** tab
+3. **Add mapper** → **By configuration** → **User Client Role**
+4. Configure:
+   - **Name**: `context-scope-mapper`
+   - **Token Claim Name**: `context.scope`
+   - **Claim JSON Type**: `JSON`
+   - **Add to access token**: `ON`
+
+This creates the JWT structure SONG expects:
+```json
+{
+  "context": {
+    "scope": [
+      "song.WRITE",
+      "STUDY.study-name.WRITE"
+    ]
+  }
+}
+```
+
+Without this mapper, SONG will return 403 "insufficient scope" errors.
 
 ### API Key for Song/Score
 ```

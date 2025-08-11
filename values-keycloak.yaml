@@ -33,7 +33,7 @@ url:
 
 image:
   repository: quay.io/keycloak/keycloak
-  tag: "22.0"
+  tag: "26.3.2"
 
 keycloak:
   database:
