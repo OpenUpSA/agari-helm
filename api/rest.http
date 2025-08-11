@@ -1,0 +1,167 @@
+# Test users from AGARI realm
+@username = owner
+# @username = orgadmin
+# @username = orgcontrib
+# @username = orgviewer
+# @username = projectadmin
+# @username = projectcontrib
+# @username = projectviewer
+@password = password123
+@realm = agari
+@query_realm = agari
+@client_id = project-EXAMPLE
+@client_secret = 7XDDSIOwksqdSGgPit7M4yHjxXMbDy7L
+
+### TEST with admin-cli (should always work)
+# @name adminLogin
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+username={{username}}
+&password={{password}}
+&grant_type=password
+&client_id=admin-cli
+
+### LOGIN with project client
+
+# @name login
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+username={{username}}
+&password={{password}}
+&grant_type=password
+&client_id={{client_id}}
+&client_secret={{client_secret}}
+
+
+
+
+
+
+###
+
+@token = {{login.response.body.access_token}}
+@refresh_token = {{login.response.body.refresh_token}}
+
+### LOGOUT
+
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/logout
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{client_id}}
+&client_secret={{client_secret}}
+&refresh_token={{refresh_token}}
+
+### SONG API Tests
+
+### Get all studies (works!)
+GET http://song.local/studies/all
+Authorization: Bearer {{token}}
+
+### Get study by ID
+GET http://song.local/studies/cholera
+Authorization: Bearer {{token}}
+
+### Create a new study (requires admin/contributor role)
+### Try different POST endpoints
+POST http://song.local/studies/cholera/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "studyId": "agari-test-study",
+  "name": "AGARI Test Study", 
+  "description": "Test study for RBAC validation",
+  "organization": "NICD",
+  "info": {
+    "projectType": "genomics",
+    "region": "South Africa"
+  }
+}
+
+### Alternative: Try with specific study ID in URL
+POST http://song.local/studies/agari-test-study/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "AGARI Test Study", 
+  "description": "Test study for RBAC validation",
+  "organization": "NICD",
+  "info": {
+    "projectType": "genomics",
+    "region": "South Africa"
+  }
+}
+
+### Get analyses for a study
+GET http://song.local/studies/cholera/analysis/
+Authorization: Bearer {{token}}
+
+### Submit analysis metadata (requires contributor role)
+POST http://song.local/studies/cholera/analysis/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "studyId": "cholera",
+  "analysisType": {
+    "name": "sequencing_read",
+    "version": 1
+  },
+  "samples": [
+    {
+      "sampleId": "SA001",
+      "sampleType": "DNA",
+      "specimen": {
+        "specimenId": "SP001",
+        "specimenType": "Normal",
+        "specimenTissueSource": "Blood"
+      },
+      "donor": {
+        "donorId": "D001",
+        "studyId": "cholera",
+        "donorSubmitterId": "patient-001",
+        "donorGender": "male"
+      }
+    }
+  ],
+  "files": [
+    {
+      "fileName": "sample_R1.fastq.gz",
+      "fileType": "FASTQ",
+      "fileSize": 1048576,
+      "fileMd5sum": "abc123def456",
+      "fileAccess": "open"
+    }
+  ]
+}
+
+### Upload file (requires contributor role)
+POST http://song.local/upload/cholera
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data
+
+### Get file info
+GET http://song.local/studies/cholera/analysis/AN001/files
+Authorization: Bearer {{token}}
+
+### KEYCLOAK ADMIN API
+
+### Get all users in AGARI realm
+GET http://keycloak.local/admin/realms/{{query_realm}}/users
+Authorization: Bearer {{token}}
+
+### Get current user info
+GET http://keycloak.local/admin/realms/{{query_realm}}/users/{{username}}
+Authorization: Bearer {{token}}
+
+### Get user roles
+GET http://keycloak.local/admin/realms/{{query_realm}}/users/{{username}}/role-mappings
+Authorization: Bearer {{token}}
+
+
+
+
+eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJSbm9zbzE0OE9va0ZvRDdRVVNXZ1lqQl81dGxLSTI1M3lRSG84blppeVlJIn0.eyJleHAiOjE3NTQ0NzEyNjUsImlhdCI6MTc1NDQ2NzY2NSwianRpIjoiNGUyNzdiMDktNTU0NC00YWYxLWFlN2ItZjc0NjM5YWExYTAwIiwiaXNzIjoiaHR0cDovL2tleWNsb2FrLmxvY2FsL3JlYWxtcy9hZ2FyaSIsInN1YiI6Im93bmVyLXV1aWQtMDAxIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoicHJvamVjdC1FWEFNUExFIiwic2Vzc2lvbl9zdGF0ZSI6IjAxMzgxM2NlLTQ4MDEtNDRlZS05N2Y0LWNiMjdiYzliY2IxYyIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiLyoiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIlNUVURZLmFnYXJpLXRlc3Qtc3R1ZHkuV1JJVEUiLCJPd25lciIsImRlZmF1bHQtcm9sZXMtYWdhcmkiLCJvZmZsaW5lX2FjY2VzcyIsInNvbmcuV1JJVEUiLCJPcmdhbmlzYXRpb24gQWRtaW4iLCJTVFVEWS5jaG9sZXJhLldSSVRFIl19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJzaWQiOiIwMTM4MTNjZS00ODAxLTQ0ZWUtOTdmNC1jYjI3YmM5YmNiMWMiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6Ik9yZyBPd25lciIsInByZWZlcnJlZF91c2VybmFtZSI6Im93bmVyIiwiZ2l2ZW5fbmFtZSI6Ik9yZyIsImZhbWlseV9uYW1lIjoiT3duZXIiLCJlbWFpbCI6Im93bmVyQG9yZy5jb20ifQ.f5zxI_8ncS57KBttHZ4fwOAmho2a8dwQUYKawVfXe97tuiBeLSAOo_C2gRKbgHH0u1t400cBshqZ-DvOWCjW1nmSiMmAkQex6QYjNJm-AJK2crBIiESD7jFrBSDC8RIJS4QEbdjNzDH8gw7KjB_dnKOHPGksDcgOSGholMR1NaPgF5LdEo0bmX7Ve336qj9dN1pOqgp9vB_5swcpsFvXLC_KDILgreJhTxxVjidSHxHM9ztrvr4tGMXCWu2ECVlw9_39AWXUom1gkfVIkGBrDvSUp800ln-gs0lWPjyS50Bbmz6P1h5_7SY0CsDoAuyYNE3Jy8UXx5Pjb5LnQ7yGrw

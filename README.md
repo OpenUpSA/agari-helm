@@ -16,7 +16,13 @@ This guide will deploy the complete stack on a Kubernetes cluster. All commands 
 ### 1. Setup k3d Cluster (Dev)
 
 ```bash
-# Create k3d cluster with 3 nodes and port mapping
+# Check for existing clusters
+k3d cluster list
+
+# If cluster exists but is stopped, start it
+k3d cluster start agari-dev
+
+# If no cluster exists, create a new one with 3 nodes and port mapping
 k3d cluster create agari-dev --agents 2 --port "80:80@loadbalancer"
 
 # Install nginx ingress
@@ -24,6 +30,9 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 
 # Wait for ingress to be ready
 kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=300s
+
+# Verify cluster is running
+kubectl cluster-info
 
 ```
 
@@ -64,8 +73,8 @@ helm install kafka bitnami/kafka -n agari-dev -f values-kafka-bitnami.yaml
 
 #### Keycloak Authentication
 ```bash
-# Create configuration ConfigMap
-kubectl create configmap keycloak-config --from-file=configs/keycloakConfigs/ -n agari-dev
+# Create configuration ConfigMap (only the JSON file, not the JAR)
+kubectl create configmap keycloak-config --from-file=agari-realm-fixed.json=configs/keycloakConfigs/agari-realm-fixed.json -n agari-dev
 
 # Deploy Keycloak
 helm install keycloak ./helm/keycloak -n agari-dev -f values-keycloak.yaml

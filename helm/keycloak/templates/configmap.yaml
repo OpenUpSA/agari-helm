@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  agari-realm-fixed.json: |-
+{{ .Files.Get "../../configs/keycloakConfigs/agari-realm-fixed.json" | indent 4 }}

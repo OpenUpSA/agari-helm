@@ -33,7 +33,7 @@ song:
       tokenName: "apiKey"
       keycloak:
         host: "http://keycloak:8080"
-        realm: "myrealm"
+        realm: "agari"
       scope:
         study:
           prefix: "STUDY."
@@ -42,8 +42,8 @@ song:
     oauth2:
       resourceserver:
         jwt:
-          jwkSetUri: "http://keycloak:8080/realms/myrealm/protocol/openid-connect/certs"
-      introspectionUri: "http://keycloak:8080/realms/myrealm/apikey/check_api_key/"
+          jwkSetUri: "http://keycloak:8080/realms/agari/protocol/openid-connect/certs"
+      introspectionUri: "http://keycloak:8080/realms/agari/apikey/check_api_key/"
   
   # Database Variables 
   datasource:

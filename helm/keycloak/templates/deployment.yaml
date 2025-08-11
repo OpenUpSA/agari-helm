@@ -78,9 +78,6 @@ spec:
             - name: keycloak-import
               mountPath: /opt/keycloak/data/import
               readOnly: true
-            - name: keycloak-providers
-              mountPath: /opt/keycloak/providers
-              readOnly: true
           {{- if .Values.probes.liveness.enabled }}
           livenessProbe:
             {{- if .Values.probes.liveness.httpGet }}
@@ -118,16 +115,8 @@ spec:
           configMap:
             name: keycloak-config
             items:
-              - key: myrealm-realm.json
-                path: myrealm-realm.json
-              - key: myrealm-users-0.json
-                path: myrealm-users-0.json
-        - name: keycloak-providers
-          configMap:
-            name: keycloak-config
-            items:
-              - key: keycloak-apikeys-1.0.1.jar
-                path: keycloak-apikeys-1.0.1.jar
+              - key: agari-realm-fixed.json
+                path: agari-realm.json
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

@@ -1,0 +1,416 @@
+{
+  "realm": "agari",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": false,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "defaultSignatureAlgorithm": "RS256",
+  "revokeRefreshToken": false,
+  "refreshTokenMaxReuse": 0,
+  "accessTokenLifespan": 3600,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 3600,
+  "ssoSessionMaxLifespan": 36000,
+  "ssoSessionIdleTimeoutRememberMe": 0,
+  "ssoSessionMaxLifespanRememberMe": 0,
+  "offlineSessionIdleTimeout": 2592000,
+  "offlineSessionMaxLifespanEnabled": false,
+  "offlineSessionMaxLifespan": 5184000,
+  "clientSessionIdleTimeout": 0,
+  "clientSessionMaxLifespan": 0,
+  "clientOfflineSessionIdleTimeout": 0,
+  "clientOfflineSessionMaxLifespan": 0,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "oauth2DeviceCodeLifespan": 600,
+  "oauth2DevicePollingInterval": 5,
+  "notBefore": 0,
+  "sslRequired": "external",
+  "rememberMe": false,
+  "verifyEmail": false,
+  "roles": {
+    "realm": [
+      { 
+        "name": "default-roles-agari",
+        "description": "${role_default-roles}",
+        "composite": true,
+        "clientRole": false,
+        "containerId": "agari"
+      },
+      { 
+        "name": "offline_access",
+        "description": "${role_offline-access}",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "agari"
+      },
+      { 
+        "name": "uma_authorization",
+        "description": "${role_uma_authorization}",
+        "composite": false,
+        "clientRole": false,
+        "containerId": "agari"
+      },
+      { "name": "Owner", "composite": false, "clientRole": false, "containerId": "agari" },
+      { "name": "Organisation Admin", "composite": false, "clientRole": false, "containerId": "agari" },
+      { "name": "Organisation Contributor", "composite": false, "clientRole": false, "containerId": "agari" },
+      { "name": "Organisation Viewer", "composite": false, "clientRole": false, "containerId": "agari" },
+      { "name": "song.WRITE", "composite": false, "clientRole": false, "containerId": "agari" },
+      { "name": "STUDY.agari-test-study.WRITE", "composite": false, "clientRole": false, "containerId": "agari" },
+      { "name": "STUDY.cholera.WRITE", "composite": false, "clientRole": false, "containerId": "agari" }
+    ],
+    "client": {
+      "project-EXAMPLE": [
+        { "name": "Admin", "composite": false, "clientRole": true },
+        { "name": "Contributor", "composite": false, "clientRole": true },
+        { "name": "Viewer", "composite": false, "clientRole": true }
+      ]
+    }
+  },
+  "groups": [
+    {
+      "name": "org-nicd",
+      "path": "/org-nicd",
+      "realmRoles": ["Organisation Admin"],
+      "clientRoles": {},
+      "attributes": {},
+      "subGroups": [
+        {
+          "name": "project-EXAMPLE",
+          "path": "/org-nicd/project-EXAMPLE",
+          "realmRoles": [],
+          "clientRoles": {
+            "project-EXAMPLE": ["Admin"]
+          },
+          "attributes": {},
+          "subGroups": []
+        }
+      ]
+    }
+  ],
+  "defaultRole": {
+    "name": "default-roles-agari",
+    "description": "${role_default-roles}",
+    "composite": true,
+    "clientRole": false,
+    "containerId": "agari"
+  },
+  "requiredCredentials": ["password"],
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA1",
+  "otpPolicyInitialCounter": 0,
+  "otpPolicyDigits": 6,
+  "otpPolicyLookAheadWindow": 1,
+  "otpPolicyPeriod": 30,
+  "otpPolicyCodeReusable": false,
+  "otpSupportedApplications": ["totpAppGoogleName", "totpAppFreeOTPName"],
+  "clients": [
+    {
+      "clientId": "account",
+      "name": "${client_account}",
+      "rootUrl": "${authBaseUrl}",
+      "baseUrl": "/realms/agari/account/",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "redirectUris": ["/realms/agari/account/*"],
+      "webOrigins": [],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "publicClient": true,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false,
+      "nodeReRegistrationTimeout": 0,
+      "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "email"],
+      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"]
+    },
+    {
+      "clientId": "admin-cli",
+      "name": "${client_admin-cli}",
+      "surrogateAuthRequired": false,
+      "enabled": true,
+      "alwaysDisplayInConsole": false,
+      "clientAuthenticatorType": "client-secret",
+      "redirectUris": [],
+      "webOrigins": [],
+      "notBefore": 0,
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "publicClient": true,
+      "frontchannelLogout": false,
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false,
+      "nodeReRegistrationTimeout": 0,
+      "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "email"],
+      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"]
+    },
+    {
+      "clientId": "project-EXAMPLE",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": true,
+      "redirectUris": ["/*"],
+      "webOrigins": ["/*"],
+      "defaultClientScopes": ["web-origins", "acr", "profile", "roles", "email"],
+      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"],
+      "protocolMappers": [
+        {
+          "name": "song-scope-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "usermodel.realmRoleMapping.rolePrefix": "",
+            "multivalued": "true",
+            "claim.name": "scope",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "id": "owner-uuid-001",
+      "createdTimestamp": 1722869273000,
+      "username": "owner",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Org",
+      "lastName": "Owner",
+      "email": "owner@org.com",
+      "credentials": [
+        {
+          "id": "owner-cred-001",
+          "type": "password",
+          "userLabel": "Default password",
+          "createdDate": 1722869273000,
+          "secretData": "{\"value\":\"bObvXU4FOF8JDDloamU4Th0+weRiJ6A/UEx3NlweKxM=\",\"salt\":\"k8hhIcgGIFLPp+FyxyACmA==\",\"additionalParameters\":{}}",
+          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": ["default-roles-agari", "Owner", "song.WRITE", "STUDY.agari-test-study.WRITE", "STUDY.cholera.WRITE"],
+      "notBefore": 0,
+      "groups": ["/org-nicd"]
+    },
+    {
+      "id": "orgadmin-uuid-002",
+      "createdTimestamp": 1722869274000,
+      "username": "orgadmin",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Org",
+      "lastName": "Admin",
+      "email": "orgadmin@org.com",
+      "credentials": [
+        {
+          "id": "orgadmin-cred-002",
+          "type": "password",
+          "userLabel": "Default password",
+          "createdDate": 1722869274000,
+          "secretData": "{\"value\":\"bObvXU4FOF8JDDloamU4Th0+weRiJ6A/UEx3NlweKxM=\",\"salt\":\"k8hhIcgGIFLPp+FyxyACmA==\",\"additionalParameters\":{}}",
+          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": ["default-roles-agari", "Organisation Admin", "song.WRITE", "STUDY.agari-test-study.WRITE", "STUDY.cholera.WRITE"],
+      "notBefore": 0,
+      "groups": ["/org-nicd"]
+    },
+    {
+      "id": "orgcontrib-uuid-003",
+      "createdTimestamp": 1722869275000,
+      "username": "orgcontrib",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Org",
+      "lastName": "Contributor",
+      "email": "orgcontrib@org.com",
+      "credentials": [
+        {
+          "id": "orgcontrib-cred-003",
+          "type": "password",
+          "userLabel": "Default password",
+          "createdDate": 1722869275000,
+          "secretData": "{\"value\":\"bObvXU4FOF8JDDloamU4Th0+weRiJ6A/UEx3NlweKxM=\",\"salt\":\"k8hhIcgGIFLPp+FyxyACmA==\",\"additionalParameters\":{}}",
+          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": ["default-roles-agari", "Organisation Contributor", "song.WRITE", "STUDY.agari-test-study.WRITE", "STUDY.cholera.WRITE"],
+      "notBefore": 0,
+      "groups": ["/org-nicd"]
+    },
+    {
+      "id": "orgviewer-uuid-004",
+      "createdTimestamp": 1722869276000,
+      "username": "orgviewer",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Org",
+      "lastName": "Viewer",
+      "email": "orgviewer@org.com",
+      "credentials": [
+        {
+          "id": "orgviewer-cred-004",
+          "type": "password",
+          "userLabel": "Default password",
+          "createdDate": 1722869276000,
+          "secretData": "{\"value\":\"bObvXU4FOF8JDDloamU4Th0+weRiJ6A/UEx3NlweKxM=\",\"salt\":\"k8hhIcgGIFLPp+FyxyACmA==\",\"additionalParameters\":{}}",
+          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": ["default-roles-agari", "Organisation Viewer"],
+      "notBefore": 0,
+      "groups": ["/org-nicd"]
+    },
+    {
+      "id": "projectadmin-uuid-005",
+      "createdTimestamp": 1722869277000,
+      "username": "projectadmin",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Project",
+      "lastName": "Admin",
+      "email": "projectadmin@org.com",
+      "credentials": [
+        {
+          "id": "projectadmin-cred-005",
+          "type": "password",
+          "userLabel": "Default password",
+          "createdDate": 1722869277000,
+          "secretData": "{\"value\":\"bObvXU4FOF8JDDloamU4Th0+weRiJ6A/UEx3NlweKxM=\",\"salt\":\"k8hhIcgGIFLPp+FyxyACmA==\",\"additionalParameters\":{}}",
+          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": ["default-roles-agari", "song.WRITE", "STUDY.agari-test-study.WRITE", "STUDY.cholera.WRITE"],
+      "clientRoles": {
+        "project-EXAMPLE": ["Admin"]
+      },
+      "notBefore": 0,
+      "groups": ["/org-nicd/project-EXAMPLE"]
+    },
+    {
+      "id": "projectcontrib-uuid-006",
+      "createdTimestamp": 1722869278000,
+      "username": "projectcontrib",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Project",
+      "lastName": "Contributor",
+      "email": "projectcontrib@org.com",
+      "credentials": [
+        {
+          "id": "projectcontrib-cred-006",
+          "type": "password",
+          "userLabel": "Default password",
+          "createdDate": 1722869278000,
+          "secretData": "{\"value\":\"bObvXU4FOF8JDDloamU4Th0+weRiJ6A/UEx3NlweKxM=\",\"salt\":\"k8hhIcgGIFLPp+FyxyACmA==\",\"additionalParameters\":{}}",
+          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": ["default-roles-agari", "song.WRITE", "STUDY.agari-test-study.WRITE", "STUDY.cholera.WRITE"],
+      "clientRoles": {
+        "project-EXAMPLE": ["Contributor"]
+      },
+      "notBefore": 0,
+      "groups": ["/org-nicd/project-EXAMPLE"]
+    },
+    {
+      "id": "projectviewer-uuid-007",
+      "createdTimestamp": 1722869279000,
+      "username": "projectviewer",
+      "enabled": true,
+      "totp": false,
+      "emailVerified": true,
+      "firstName": "Project",
+      "lastName": "Viewer",
+      "email": "projectviewer@org.com",
+      "credentials": [
+        {
+          "id": "projectviewer-cred-007",
+          "type": "password",
+          "userLabel": "Default password",
+          "createdDate": 1722869279000,
+          "secretData": "{\"value\":\"bObvXU4FOF8JDDloamU4Th0+weRiJ6A/UEx3NlweKxM=\",\"salt\":\"k8hhIcgGIFLPp+FyxyACmA==\",\"additionalParameters\":{}}",
+          "credentialData": "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+        }
+      ],
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": ["default-roles-agari"],
+      "clientRoles": {
+        "project-EXAMPLE": ["Viewer"]
+      },
+      "notBefore": 0,
+      "groups": ["/org-nicd/project-EXAMPLE"]
+    }
+  ],
+  "browserSecurityHeaders": {
+    "contentSecurityPolicyReportOnly": "",
+    "xContentTypeOptions": "nosniff",
+    "referrerPolicy": "no-referrer",
+    "xRobotsTag": "none",
+    "xFrameOptions": "SAMEORIGIN",
+    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self'; object-src 'none';",
+    "xXSSProtection": "1; mode=block",
+    "strictTransportSecurity": "max-age=31536000; includeSubDomains"
+  },
+  "smtpServer": {},
+  "eventsEnabled": false,
+  "eventsListeners": ["jboss-logging"],
+  "enabledEventTypes": [],
+  "adminEventsEnabled": false,
+  "adminEventsDetailsEnabled": false,
+  "identityProviders": [],
+  "identityProviderMappers": [],
+  "internationalizationEnabled": false,
+  "supportedLocales": [],
+  "userManagedAccessAllowed": false
+}
