@@ -8,4 +8,4 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
 data:
   agari-realm-fixed.json: |-
-{{ .Files.Get "configs/agari-realm-fixed.json" | indent 4 }}
+{{ .Files.Get "configs/agari-realm.json" | indent 4 }}

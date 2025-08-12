@@ -1,5 +1,5 @@
 # Test users from AGARI realm
-@username = owner
+@username = testuser
 # @username = orgadmin
 # @username = orgcontrib
 # @username = orgviewer
@@ -9,18 +9,18 @@
 @password = password123
 @realm = agari
 @query_realm = agari
-@client_id = project-EXAMPLE
-@client_secret = 8ftGh0Xek2F0gVGVAG5YQUkhWmoEQowX
+@client_id = song-client
+@client_secret = hVRE3H3WO5E7cysTo7KC0qJBeBWXb4tH
 
 ### TEST with admin-cli (should always work)
 # @name adminLogin
-POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
-Content-Type: application/x-www-form-urlencoded
+# POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
+# Content-Type: application/x-www-form-urlencoded
 
-username={{username}}
-&password={{password}}
-&grant_type=password
-&client_id=admin-cli
+# username={{username}}
+# &password={{password}}
+# &grant_type=password
+# &client_id=admin-cli
 
 ### LOGIN with project client
 
@@ -60,32 +60,17 @@ GET http://song.local/studies/all
 Authorization: Bearer {{token}}
 
 ### Get study by ID
-GET http://song.local/studies/agari-test-study
+GET http://song.local/studies/study1
 Authorization: Bearer {{token}}
 
 ### Create a new study (requires admin/contributor role)
 ### Try different POST endpoints
-POST http://song.local/studies/agari-test-study/
+POST http://song.local/studies/study1/
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "studyId": "agari-test-study",
-  "name": "AGARI Test Study", 
-  "description": "Test study for RBAC validation",
-  "organization": "NICD",
-  "info": {
-    "projectType": "genomics",
-    "region": "South Africa"
-  }
-}
-
-### Alternative: Try with specific study ID in URL
-POST http://song.local/studies/agari-test-study/
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
+  "studyId": "study1",
   "name": "AGARI Test Study", 
   "description": "Test study for RBAC validation",
   "organization": "NICD",
@@ -96,16 +81,16 @@ Content-Type: application/json
 }
 
 ### Get analyses for a study
-GET http://song.local/studies/cholera/analysis/
+GET http://song.local/studies/study1/analysis/
 Authorization: Bearer {{token}}
 
 ### Submit analysis metadata (requires contributor role)
-POST http://song.local/studies/cholera/analysis/
+POST http://song.local/submit/study1
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "studyId": "cholera",
+  "studyId": "study1",
   "analysisType": {
     "name": "sequencing_read",
     "version": 1
@@ -126,42 +111,8 @@ Content-Type: application/json
         "donorGender": "male"
       }
     }
-  ],
-  "files": [
-    {
-      "fileName": "sample_R1.fastq.gz",
-      "fileType": "FASTQ",
-      "fileSize": 1048576,
-      "fileMd5sum": "abc123def456",
-      "fileAccess": "open"
-    }
   ]
 }
 
-### Upload file (requires contributor role)
-POST http://song.local/upload/cholera
-Authorization: Bearer {{token}}
-Content-Type: multipart/form-data
 
-### Get file info
-GET http://song.local/studies/cholera/analysis/AN001/files
-Authorization: Bearer {{token}}
-
-### KEYCLOAK ADMIN API
-
-### Get all users in AGARI realm
-GET http://keycloak.local/admin/realms/{{query_realm}}/users
-Authorization: Bearer {{token}}
-
-### Get current user info
-GET http://keycloak.local/admin/realms/{{query_realm}}/users/{{username}}
-Authorization: Bearer {{token}}
-
-### Get user roles
-GET http://keycloak.local/admin/realms/{{query_realm}}/users/{{username}}/role-mappings
-Authorization: Bearer {{token}}
-
-
-
-
-eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI4ZXFHQ0JFTGZBcEFuVk8xTXNzNWMtUGR4VFNsX0lNWHBPbF9KQUxnLUpRIn0.eyJleHAiOjE3NTQ5Mzg2MDAsImlhdCI6MTc1NDkzNTAwMCwianRpIjoib25ydHJvOmM1YWJlMjJiLTEyMzAtMjE4YS1mNjBjLTgzMTVkMTdhZWZjZSIsImlzcyI6Imh0dHA6Ly9rZXljbG9hay5sb2NhbC9yZWFsbXMvYWdhcmkiLCJzdWIiOiJvd25lci11dWlkLTAwMSIsInR5cCI6IkJlYXJlciIsImF6cCI6InByb2plY3QtRVhBTVBMRSIsInNpZCI6IjY2YzM3NTQzLWMxYzctNDY4NS04MDUyLWJjMzZmNDA5Y2M3ZCIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiLyoiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIlNUVURZLmFnYXJpLXRlc3Qtc3R1ZHkuV1JJVEUiLCJkZWZhdWx0LXJvbGVzLWFnYXJpIiwiT3duZXIiLCJvZmZsaW5lX2FjY2VzcyIsInNvbmcuV1JJVEUiLCJPcmdhbmlzYXRpb24gQWRtaW4iLCJTVFVEWS5jaG9sZXJhLldSSVRFIl19LCJzY29wZSI6InByb2ZpbGUgZW1haWwiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6Ik9yZyBPd25lciIsImNvbnRleHQiOnsic2NvcGUiOlsiU1RVRFkuYWdhcmktdGVzdC1zdHVkeS5XUklURSIsImRlZmF1bHQtcm9sZXMtYWdhcmkiLCJPd25lciIsIm9mZmxpbmVfYWNjZXNzIiwic29uZy5XUklURSIsIk9yZ2FuaXNhdGlvbiBBZG1pbiIsIlNUVURZLmNob2xlcmEuV1JJVEUiXX0sInByZWZlcnJlZF91c2VybmFtZSI6Im93bmVyIiwiZ2l2ZW5fbmFtZSI6Ik9yZyIsImZhbWlseV9uYW1lIjoiT3duZXIiLCJlbWFpbCI6Im93bmVyQG9yZy5jb20ifQ.hvzJSuDdyU7F8LUDu-Wi3RZ4FryDwPUzwhl6cQkGRqq7ptpZ2j2XF1a2oXGMnvaJxJ0rKb0AY6TWbl1kZ_iRp2KjaVWZP5cqMhotiOMbTUlTGHK_nOgpM-rcRbQnEY4b3x3o2y6Zlrv5fj9oBVnONC4yqXLLC-ywy1rqjwJUT9Svxx22yNrk2caBmdj7W9iCxi3KXU_vBRl20p4o0YR3drF7FqwIBheiytkZ4zryDEKs7w7iEML8sw8Er02x5egtMXpgktVeJM1NWW63WI3DIn89Q5CE9-23fcRymI_3rwx0XqFeyuoxhtQNFshordVTvENfpFm4Xhyz0V5do5n_CA
+eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJPZ0tPVWZOWjMyUEYxdkcxRXo2aXg1XzY4U0V6cFlwUHA5UVpxZmcyY1o0In0.eyJleHAiOjE3NTUwMjA1NTYsImlhdCI6MTc1NTAyMDI1NiwianRpIjoib25ydHJvOjExZWZmNDhjLTM1YjgtYTBlYS0zNDMzLTcwNWQ0NDhlZmNiYyIsImlzcyI6Imh0dHA6Ly9rZXljbG9hay5sb2NhbC9yZWFsbXMvYWdhcmkiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiYTVmOTM3Y2UtMjkyZi00YzExLWFiYTItYzljYjQwZTJhYjRmIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic29uZy1jbGllbnQiLCJzaWQiOiI3NjIzNjc5OC00NTk3LTQ4NjItOWJjNi0yYjI0ZmM2NDBjY2EiLCJhY3IiOiIxIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbInNvbmcuUkVBRCIsIlNUVURZLnN0dWR5MS5XUklURSIsImNvbnRyaWJ1dG9yIiwic29uZy5XUklURSJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwibmFtZSI6IlRlc3QgVXNlciIsImNvbnRleHQiOnsic2NvcGUiOlsic29uZy5SRUFEIiwiU1RVRFkuc3R1ZHkxLldSSVRFIiwiY29udHJpYnV0b3IiLCJzb25nLldSSVRFIl19LCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJ0ZXN0dXNlciIsImdpdmVuX25hbWUiOiJUZXN0IiwiZmFtaWx5X25hbWUiOiJVc2VyIiwiZW1haWwiOiJ0ZXN0QGFnYXJpLm9yZyJ9.zSs4TN_lG9a8OynKUyU-Dp-pulO3bIe6j1LaKBLu7j1_J5dS6W3XY_xah7jHByp1GemZlw3rzTf-8nhD_AI2ymsPZHTV_UEbHhtEL0BwVgWdyRZVtZ7PrbAY6dypG-PqI_1K7-o1y_ObuSNhyxe1wduzARmowjpWbVZG15_dVcibgP3joE1Tb2U_PWquIrICIQLR0FH2OUXrL73UnJR2fALAuQdjrh9hWi0ll3KVIolCvAKtZV7_B4mcGYxYgLbF-qU8O5uUqcaxCYD_OsvjKByeCfQRxS1lRbhdX5dqL37e9fQyyCN7mi08tw3maKjaoDBQvQJEKjp2BOjn_bC10g

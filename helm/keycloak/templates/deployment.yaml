@@ -69,6 +69,12 @@ spec:
               value: "false"
             - name: KC_HOSTNAME_STRICT_HTTPS
               value: "false"
+            {{- if .Values.extraEnv }}
+            {{- range .Values.extraEnv }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+            {{- end }}
+            {{- end }}
           args:
             - {{ .Values.keycloak.startupMode }}
             {{- if .Values.keycloak.importRealm }}

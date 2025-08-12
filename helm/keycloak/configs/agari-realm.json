@@ -1,0 +1,89 @@
+{
+  "realm": "agari",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "song-client",
+      "enabled": true,
+      "publicClient": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "score-client",
+      "enabled": true,
+      "publicClient": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
+      "protocol": "openid-connect"
+    }
+  ],
+  "users" : [
+    {
+      "username" : "testuser",
+      "enabled": true,
+      "email" : "test@agari.org",
+      "firstName": "Test",
+      "lastName": "User",
+      "credentials" : [
+        { "type" : "password",
+          "value" : "test123" }
+      ],
+      "realmRoles": [ "contributor", "song.READ", "song.WRITE" ],
+      "clientRoles": {
+        "account": [ "manage-account" ]
+      }
+    }
+  ],
+  "roles" : {
+    "realm" : [
+      {
+        "name": "owner",
+        "description": "Organization owner with full permissions"
+      },
+      {
+        "name": "organisation-admin", 
+        "description": "Organization admin with member management permissions"
+      },
+      {
+        "name": "admin",
+        "description": "Project admin with project management permissions"
+      },
+      {
+        "name": "organisation-contributor",
+        "description": "Organization-wide contributor access to all projects"
+      },
+      {
+        "name": "contributor",
+        "description": "Project-specific contributor with data submission permissions"
+      },
+      {
+        "name": "organisation-viewer",
+        "description": "Organization-wide viewer access to all projects"
+      },
+      {
+        "name": "viewer",
+        "description": "Project-specific viewer with read-only access"
+      },
+      {
+        "name": "song.READ",
+        "description": "SONG service read permissions"
+      },
+      {
+        "name": "song.WRITE",
+        "description": "SONG service write permissions"
+      },
+      {
+        "name": "score.READ",
+        "description": "SCORE service read permissions"
+      },
+      {
+        "name": "score.WRITE",
+        "description": "SCORE service write permissions"
+      }
+    ]
+  }
+}
