@@ -92,27 +92,71 @@ Content-Type: application/json
 {
   "studyId": "study1",
   "analysisType": {
-    "name": "sequencing_read",
+    "name": "sequencingRead",
     "version": 1
   },
   "samples": [
     {
-      "sampleId": "SA001",
-      "sampleType": "DNA",
+      "submitterSampleId": "SA001",
+      "sampleType": "Total DNA",
+      "matchedNormalSubmitterSampleId": null,
       "specimen": {
-        "specimenId": "SP001",
+        "submitterSpecimenId": "SP001",
         "specimenType": "Normal",
-        "specimenTissueSource": "Blood"
+        "specimenTissueSource": "Blood derived",
+        "tumourNormalDesignation": "Normal"
       },
       "donor": {
-        "donorId": "D001",
-        "studyId": "cholera",
-        "donorSubmitterId": "patient-001",
-        "donorGender": "male"
+        "submitterDonorId": "D001",
+        "gender": "Male"
       }
+    }
+  ],
+  "files": [
+    {
+      "fileName": "sample_R1.fastq.gz",
+      "fileType": "FASTQ",
+      "fileSize": 1024000,
+      "fileMd5sum": "d41d8cd98f00b204e9800998ecf8427e",
+      "fileAccess": "open",
+      "dataType": "Sequencing Reads"
+    }
+  ],
+  "experiment": {
+    "libraryStrategy": "WGS",
+    "pairedEnd": true,
+    "aligned": false
+  }
+}
+
+
+}
+
+
+### Verify the submitted analysis
+GET http://song.local/studies/study1/analysis/dbeefa33-4abb-4da1-aefa-334abbbda143
+Authorization: Bearer {{token}}
+
+### Test Score API connection
+GET http://score.local/download/ping
+Authorization: Bearer {{token}}
+
+### Test uploading a file to Score
+POST http://score.local/upload/study1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "analysisId": "dbeefa33-4abb-4da1-aefa-334abbbda143",
+  "files": [
+    {
+      "fileName": "sample_R1.fastq.gz",
+      "fileType": "FASTQ",
+      "fileSize": 1024000,
+      "fileMd5sum": "d41d8cd98f00b204e9800998ecf8427e",
+      "fileAccess": "open"
     }
   ]
 }
 
-
-eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJPZ0tPVWZOWjMyUEYxdkcxRXo2aXg1XzY4U0V6cFlwUHA5UVpxZmcyY1o0In0.eyJleHAiOjE3NTUwMjA1NTYsImlhdCI6MTc1NTAyMDI1NiwianRpIjoib25ydHJvOjExZWZmNDhjLTM1YjgtYTBlYS0zNDMzLTcwNWQ0NDhlZmNiYyIsImlzcyI6Imh0dHA6Ly9rZXljbG9hay5sb2NhbC9yZWFsbXMvYWdhcmkiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiYTVmOTM3Y2UtMjkyZi00YzExLWFiYTItYzljYjQwZTJhYjRmIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic29uZy1jbGllbnQiLCJzaWQiOiI3NjIzNjc5OC00NTk3LTQ4NjItOWJjNi0yYjI0ZmM2NDBjY2EiLCJhY3IiOiIxIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbInNvbmcuUkVBRCIsIlNUVURZLnN0dWR5MS5XUklURSIsImNvbnRyaWJ1dG9yIiwic29uZy5XUklURSJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwibmFtZSI6IlRlc3QgVXNlciIsImNvbnRleHQiOnsic2NvcGUiOlsic29uZy5SRUFEIiwiU1RVRFkuc3R1ZHkxLldSSVRFIiwiY29udHJpYnV0b3IiLCJzb25nLldSSVRFIl19LCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJ0ZXN0dXNlciIsImdpdmVuX25hbWUiOiJUZXN0IiwiZmFtaWx5X25hbWUiOiJVc2VyIiwiZW1haWwiOiJ0ZXN0QGFnYXJpLm9yZyJ9.zSs4TN_lG9a8OynKUyU-Dp-pulO3bIe6j1LaKBLu7j1_J5dS6W3XY_xah7jHByp1GemZlw3rzTf-8nhD_AI2ymsPZHTV_UEbHhtEL0BwVgWdyRZVtZ7PrbAY6dypG-PqI_1K7-o1y_ObuSNhyxe1wduzARmowjpWbVZG15_dVcibgP3joE1Tb2U_PWquIrICIQLR0FH2OUXrL73UnJR2fALAuQdjrh9hWi0ll3KVIolCvAKtZV7_B4mcGYxYgLbF-qU8O5uUqcaxCYD_OsvjKByeCfQRxS1lRbhdX5dqL37e9fQyyCN7mi08tw3maKjaoDBQvQJEKjp2BOjn_bC10g
+eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJPZ0tPVWZOWjMyUEYxdkcxRXo2aXg1XzY4U0V6cFlwUHA5UVpxZmcyY1o0In0.eyJleHAiOjE3NTUwNzg3NTksImlhdCI6MTc1NTA3ODQ1OSwianRpIjoib25ydHJvOmQ4NjQ1NTc2LTQ4MDEtZjBmYS1lMTQyLWIxODhlMDA5M2MxYiIsImlzcyI6Imh0dHA6Ly9rZXljbG9hay5sb2NhbC9yZWFsbXMvYWdhcmkiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiYTVmOTM3Y2UtMjkyZi00YzExLWFiYTItYzljYjQwZTJhYjRmIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic29uZy1jbGllbnQiLCJzaWQiOiI2MTE2ZjRmMy1jN2QwLTRhNmUtOTMyZS0zNTQyMzM3NDBlODUiLCJhY3IiOiIxIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbInNvbmcuUkVBRCIsIlNUVURZLnN0dWR5MS5XUklURSIsImNvbnRyaWJ1dG9yIiwic29uZy5XUklURSIsInNjb3JlLldSSVRFIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIl19fSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJuYW1lIjoiVGVzdCBVc2VyIiwiY29udGV4dCI6eyJzY29wZSI6WyJzb25nLlJFQUQiLCJTVFVEWS5zdHVkeTEuV1JJVEUiLCJjb250cmlidXRvciIsInNvbmcuV1JJVEUiLCJzY29yZS5XUklURSJdfSwicHJlZmVycmVkX3VzZXJuYW1lIjoidGVzdHVzZXIiLCJnaXZlbl9uYW1lIjoiVGVzdCIsImZhbWlseV9uYW1lIjoiVXNlciIsImVtYWlsIjoidGVzdEBhZ2FyaS5vcmcifQ.b8DB9cUcLz7P0-hGtZojl96RTDI24pqu00Oc-6pPr4CeTLCZlwZXYQjjVmp14ne6Guwyrwk4Eh9s1DiJZxJ2VlJah9iQr-9aZvTlRKEBLoUGIlFxO_2QPjjQNtjgOuKVNGGmlUytRKuy6H84WQEIkLTweHiunO0pexh8n6JE2S1MrMEJk-MDQMP0AJ55eHv9Z7cVz1Xyq95VHI9jGpCHkFAMyvg4pMmDS5vX3CFJymNNnP8k2Ie3OeJJEA2Bz3g9YuDD4v-l7R4Oc0-4qfBCZwiv43dLNZqloqUl-CQEJ5ij9PqhkdGFIKX4aqkfnmbm_KuC8h5ac9O4lf88UMXJNw

@@ -23,6 +23,24 @@ auth:
   interBrokerProtocol: plaintext
   sasl:
     enabled: false
+    mechanism: plain
+  tls:
+    enabled: false
+
+# Listeners configuration
+listeners:
+  client:
+    protocol: plaintext
+  interbroker:
+    protocol: plaintext
+
+# Security settings
+sasl:
+  enabled: false
+  mechanism: plain
+  
+tls:
+  enabled: false
 
 # Service configuration
 service:
