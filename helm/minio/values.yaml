@@ -1,5 +1,7 @@
 replicaCount: 1
 
+fullnameOverride: "minio"
+
 url:
   hostname: "minio.local"
 
@@ -7,7 +9,7 @@ console:
   url:
     hostname: "minio-console.local"
   ingress:
-    enabled: false
+    enabled: true
     className: "nginx"
     annotations:
       nginx.ingress.kubernetes.io/proxy-body-size: "1000m"
@@ -19,7 +21,6 @@ image:
   tag: "RELEASE.2024-01-16T16-07-38Z"
 
 nameOverride: ""
-fullnameOverride: ""
 
 service:
   type: ClusterIP
@@ -27,9 +28,11 @@ service:
   consolePort: 9001
 
 ingress:
-  enabled: false
+  enabled: true
   className: "nginx"
-  annotations: {}
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "1000m"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
   hosts:
     - host: minio.local
       paths:
@@ -41,13 +44,45 @@ minio:
   accessKey: admin
   secretKey: admin123
   
-  # Buckets to create automatically
   buckets:
     - name: state
     - name: object
   
-  # Additional bucket setup (subdirectories)
   bucketSetup:
+    enabled: true
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 256Mi
+  requests:
+    cpu: 150m
+    memory: 128Mi
+
+persistence:
+  enabled: true
+  size: 5Gi
+
+probes:
+  liveness:
+    enabled: true 
+    httpGet:
+      path: /minio/health/live
+      port: api
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readiness:
+    enabled: true
+    httpGet:
+      path: /minio/health/ready
+      port: api
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
     enabled: true
 
 # Persistence

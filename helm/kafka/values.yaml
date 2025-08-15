@@ -1,23 +1,61 @@
 replicaCount: 1
 
+fullnameOverride: "kafka"
+
 url:
   hostname: "kafka.local"
 
+# Use Bitnami image instead of Confluent
 image:
-  repository: confluentinc/cp-kafka
+  repository: bitnami/kafka
   pullPolicy: IfNotPresent
-  tag: "5.2.1"
+  tag: "3.4.1"
 
 nameOverride: ""
-fullnameOverride: ""
 
 service:
   type: ClusterIP
   port: 9092
   externalPort: 29092
 
-# Zookeeper Configuration
+# Enable Zookeeper
 zookeeper:
+  enabled: true
+
+# Bitnami Kafka configuration
+kafka:
+  brokerId: 1
+  zookeeperConnect: "zookeeper:2181"
+  
+  # Simple listeners for internal cluster communication
+  listenerSecurityProtocolMap: "PLAINTEXT:PLAINTEXT"
+  advertisedListeners: "PLAINTEXT://kafka:9092"
+  
+  # Topic Configuration
+  offsetsTopicReplicationFactor: 1
+  groupInitialRebalanceDelayMs: 0
+  
+  # Performance Tuning
+  messageMaxBytes: "5242880"
+  replicaFetchMaxBytes: "5242880"
+
+# Resource limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+# Disable persistence for now
+persistence:
+  enabled: false
+
+# Security context for Bitnami
+securityContext:
+  runAsUser: 1001
+  runAsGroup: 1001
   enabled: true
   image:
     repository: wurstmeister/zookeeper

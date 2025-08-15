@@ -1,23 +1,64 @@
 replicaCount: 1
 
+fullnameOverride: "arranger"
+
 url:
   hostname: "arranger.local"
 
 image:
-  repository: ghcr.io/overture-stack/arranger-ui
+  repository: ghcr.io/overture-stack/arranger-server
   pullPolicy: IfNotPresent
-  tag: "3.0.0"
+  tag: "3.0.0-beta.33"
 
 nameOverride: ""
-fullnameOverride: "arranger"
 
 service:
   type: ClusterIP
-  port: 3000
+  port: 5050
 
 arranger:
   enableLogs: false
   
+  elasticsearch:
+    host: "http://elasticsearch:9200"
+    user: "elastic" 
+    password: "myelasticpassword"
+    compatibilityMode: true
+  
+  stage:
+    baseUrl: "http://arranger.local:3000"
+    adminRoot: "http://arranger-server:5050/graphql"
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: arranger.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+probes:
+  liveness:
+    enabled: false
+  readiness:
+    enabled: true
+    httpGet:
+      path: "/graphql" 
+    initialDelaySeconds: 30 
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
   elasticsearch:
     host: "http://elasticsearch:9200"
     user: "elastic"  

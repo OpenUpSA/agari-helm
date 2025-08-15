@@ -6,19 +6,31 @@
       "clientId": "song-client",
       "enabled": true,
       "publicClient": false,
+      "secret": "song-secret",
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": true,
       "authorizationServicesEnabled": true,
-      "protocol": "openid-connect"
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "clientAuthenticatorType": "client-secret",
+      "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email"],
+      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"]
     },
     {
-      "clientId": "score-client",
+      "clientId": "score-client", 
       "enabled": true,
       "publicClient": false,
+      "secret": "score-secret",
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": true,
       "authorizationServicesEnabled": true,
-      "protocol": "openid-connect"
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "clientAuthenticatorType": "client-secret",
+      "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email"],
+      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"]
     }
   ],
   "users" : [
@@ -32,7 +44,7 @@
         { "type" : "password",
           "value" : "test123" }
       ],
-      "realmRoles": [ "contributor", "song.READ", "song.WRITE" ],
+      "realmRoles": [ "contributor"],
       "clientRoles": {
         "account": [ "manage-account" ]
       }
@@ -67,23 +79,7 @@
       {
         "name": "viewer",
         "description": "Project-specific viewer with read-only access"
-      },
-      {
-        "name": "song.READ",
-        "description": "SONG service read permissions"
-      },
-      {
-        "name": "song.WRITE",
-        "description": "SONG service write permissions"
-      },
-      {
-        "name": "score.READ",
-        "description": "SCORE service read permissions"
-      },
-      {
-        "name": "score.WRITE",
-        "description": "SCORE service write permissions"
-      }
+      }     
     ]
   }
 }

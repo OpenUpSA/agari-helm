@@ -1,5 +1,7 @@
 replicaCount: 1
 
+fullnameOverride: "score"
+
 url:
   hostname: "score.local"
 
@@ -9,13 +11,13 @@ image:
   tag: "5.11.0"
 
 nameOverride: ""
-fullnameOverride: ""
 
 service:
   type: ClusterIP
   port: 8087
 
 score:
+  # Spring Configuration
   spring:
     profiles:
       active: "default,collaboratory,prod,secure,jwt"
@@ -26,11 +28,10 @@ score:
     ssl:
       enabled: false
   
-  # Song Variables
+  # Song Variables 
   metadata:
     url: "http://song:8080"
   
-  # Object Storage Variables
   s3:
     endpoint: "http://minio:9000"
     accesskey: "admin"
@@ -47,7 +48,55 @@ score:
       state: "state"
   
   upload:
-    partsize: 1073741824
+    partsize: "1073741824"
+    connection:
+      timeout: "1200000"
+  
+  auth:
+    server:
+      provider: "keycloak"
+      clientId: "score-client"
+      clientSecret: "score-secret" 
+      tokenName: "apiKey"
+      keycloak:
+        host: "http://keycloak:8080"
+        realm: "agari"
+      scope:
+        study:
+          prefix: "STUDY."
+        download:
+          suffix: ".READ"
+          system: "score.READ"
+        upload:
+          suffix: ".WRITE"
+          system: "score.WRITE"
+      url: "http://keycloak:8080/realms/agari/apikey/check_api_key/"
+    jwt:
+      publickeyurl: "http://keycloak:8080/oauth/token/public_key"
+    oauth2:
+      resourceserver:
+        jwt:
+          jwkSetUri: "http://keycloak:8080/realms/agari/protocol/openid-connect/certs"
+
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 768Mi
+  requests:
+    cpu: 100m
+    memory: 384Mi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+  hosts:
+    - host: score.local
+      paths:
+        - path: /
+          pathType: Prefix
     connection:
       timeout: 1200000
   
