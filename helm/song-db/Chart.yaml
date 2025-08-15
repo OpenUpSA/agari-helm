@@ -1,0 +1,6 @@
+apiVersion: v2
+name: song-db
+description: PostgreSQL database for Song
+type: application
+version: 0.1.0
+appVersion: "14"
