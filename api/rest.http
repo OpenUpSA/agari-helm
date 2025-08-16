@@ -1,16 +1,12 @@
 # Test users from AGARI realm
-@username = testuser
-# @username = orgadmin
-# @username = orgcontrib
-# @username = orgviewer
-# @username = projectadmin
-# @username = projectcontrib
-# @username = projectviewer
+# @username = submitter
+# @username = viewer  
+@username = admin
 @password = password123
 @realm = agari
 @query_realm = agari
-@client_id = song-client
-@client_secret = hVRE3H3WO5E7cysTo7KC0qJBeBWXb4tH
+@client_id = song-api
+@client_secret = song-secret
 
 ### TEST with admin-cli (should always work)
 # @name adminLogin
@@ -44,11 +40,6 @@ grant_type=client_credentials
 &client_id={{client_id}}
 &client_secret={{client_secret}}
 
-
-
-
-
-
 ###
 
 @token = {{login.response.body.access_token}}
@@ -62,6 +53,43 @@ Content-Type: application/x-www-form-urlencoded
 client_id={{client_id}}
 &client_secret={{client_secret}}
 &refresh_token={{refresh_token}}
+
+### GET RPT TOKEN HERE (Fixed version with subject_token)
+
+# @name rptToken
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=urn:ietf:params:oauth:grant-type:uma-ticket
+&client_id={{client_id}}
+&client_secret={{client_secret}}
+&audience={{client_id}}
+&subject_token={{token}}
+&subject_token_type=urn:ietf:params:oauth:token-type:access_token
+
+### GET RPT TOKEN with specific permissions
+
+# @name rptTokenWithPermissions
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Bearer {{token}}
+
+grant_type=urn:ietf:params:oauth:grant-type:uma-ticket
+&client_id={{client_id}}
+&client_secret={{client_secret}}
+&audience={{client_id}}
+&response_include_resource_name=true
+&permission=song#READ
+&permission=song#WRITE
+&permission=STUDY.study1#READ
+&permission=STUDY.study1#WRITE
+
+
+
+###
+
+@rpt_token = {{rptToken.response.body.access_token}}
+# @rpt_token = {{rptTokenWithPermissions.response.body.access_token}}
 
 ### SONG API Tests
 
@@ -188,4 +216,4 @@ Content-Type: application/json
 ### Check Elasticsearch directly
 GET http://elasticsearch.local/overture-quickstart-index/_search
 
-eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJPZ0tPVWZOWjMyUEYxdkcxRXo2aXg1XzY4U0V6cFlwUHA5UVpxZmcyY1o0In0.eyJleHAiOjE3NTUxMDg4MjksImlhdCI6MTc1NTEwODUyOSwianRpIjoib25ydHJvOjRiYmRiOGI0LWMyNmYtOTliYi00ZmRlLTRkZTljMTZjNGM5ZSIsImlzcyI6Imh0dHA6Ly9rZXljbG9hay5sb2NhbC9yZWFsbXMvYWdhcmkiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiYTVmOTM3Y2UtMjkyZi00YzExLWFiYTItYzljYjQwZTJhYjRmIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoic29uZy1jbGllbnQiLCJzaWQiOiJmNTFhMDU2ZC1hNzljLTRmYTgtYWU5Yi04MDQwNzdkYWQ2ODUiLCJhY3IiOiIxIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbInNvbmcuUkVBRCIsIlNUVURZLnN0dWR5MS5XUklURSIsImNvbnRyaWJ1dG9yIiwic29uZy5XUklURSIsInNjb3JlLldSSVRFIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIl19fSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJuYW1lIjoiVGVzdCBVc2VyIiwiY29udGV4dCI6eyJzY29wZSI6WyJzb25nLlJFQUQiLCJTVFVEWS5zdHVkeTEuV1JJVEUiLCJjb250cmlidXRvciIsInNvbmcuV1JJVEUiLCJzY29yZS5XUklURSJdfSwicHJlZmVycmVkX3VzZXJuYW1lIjoidGVzdHVzZXIiLCJnaXZlbl9uYW1lIjoiVGVzdCIsImZhbWlseV9uYW1lIjoiVXNlciIsImVtYWlsIjoidGVzdEBhZ2FyaS5vcmcifQ.lMdttYIT0JkuZcyUTMduYLTofF0kLCtIV5foTZYXFbhz1IS9z_o4kszlZUR-GADs_biba_CVh13g1dt7fjDWZpQjXnRP4wfNhJyKIkh6gX-3MygeA3Kno2XuszATUuy1imRJBSWQuklMHmiyiKTIlWSaxWuw2iAegTRCYcO4TeHqY9i5L1lm3m5yWMOkJ2R3tVNTTHsyCvqlng3tq4ITOww2GeBduZBLTnU8VagkJOHNuBS6tSzo2hdHLl4xSngfg8KOeUO0kCLzxJe0el912Sxek04VJVHhywEGfJZMCx92wo1l0dtcsA7UgQYt6puO3-DKjvyF9Mn4BTCcXH3heQ
+eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJRSzV0Z0ltLV83bXpVRmpBbEJGcDJPblczRzk0blhoN01lbDBrSVRJRUpzIn0.eyJleHAiOjE3NTUyNzkxODQsImlhdCI6MTc1NTI3ODg4NCwianRpIjoib25ydG5hOmVkZTMzMjcyLTZmMTctNDU5MS0xZjIzLTZmODlhYjc0M2M0MyIsImlzcyI6Imh0dHA6Ly9rZXljbG9hay5sb2NhbC9yZWFsbXMvYWdhcmkiLCJhdWQiOiJzb25nLWFwaSIsInR5cCI6IkJlYXJlciIsImF6cCI6InNvbmctYXBpIiwic2lkIjoiMzA2NGMyYzMtZjQ3My00NDFiLTllNzAtOWFhODcwNGIxMWNlIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbImFkbWluIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIl19fSwiYXV0aG9yaXphdGlvbiI6eyJwZXJtaXNzaW9ucyI6W3sic2NvcGVzIjpbIlJFQUQiLCJXUklURSJdLCJyc2lkIjoiNjdlNDNjNDYtNDdhZi00ZDg4LTgzY2EtYTM4YWY5ZjM1ZTc1IiwicnNuYW1lIjoiU1RVRFkuc3R1ZHkxIn0seyJzY29wZXMiOlsiUkVBRCIsIldSSVRFIl0sInJzaWQiOiI5Mzg3MDYwOC05ZWFiLTQ4YWYtYjU2OC02Yjg1ZjA1Yzc3MjkiLCJyc25hbWUiOiJzb25nIn1dfSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJBZG1pbiBVc2VyIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiYWRtaW4iLCJnaXZlbl9uYW1lIjoiQWRtaW4iLCJmYW1pbHlfbmFtZSI6IlVzZXIiLCJlbWFpbCI6ImFkbWluQGFnYXJpLm9yZyJ9.E1F6PKvXCPOSjiqXi9cgp7gTvI3mWd61GZM5J9Y1i5Gjw0n47HZEY5L1Knj70HomWzCXHOjeCx-7UEY5x8AWA_mNY14NnmrQa8aJ1CMMreb6WhvLKBk8T_PfwLD_IwtVuvZNaJzll5th0klFus_SlDpNRODSZAmi493jzSzO17cIuAKxA7kE928iVSDSYcNSP-437wXIc35Cx8E3SUzZ3XGnf-vNN8IcAcuhmSZsCMu3nv4TS4Vk4IS2q1ODqwoGep7ImPzp6USg7ilnw9tuLSLyF_RUJ9rLwdUhZrc6M2lpBGNJf2r2jgWH-u-lRqOHKIWOBEAP2aIwNSQiGosZLw

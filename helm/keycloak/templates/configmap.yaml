@@ -7,5 +7,5 @@ metadata:
     app.kubernetes.io/name: keycloak
     app.kubernetes.io/instance: {{ .Release.Name }}
 data:
-  agari-realm-fixed.json: |-
+  agari-realm.json: |-
 {{ .Files.Get "configs/agari-realm.json" | indent 4 }}

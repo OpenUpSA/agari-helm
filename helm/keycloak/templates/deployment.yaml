@@ -124,7 +124,7 @@ spec:
           configMap:
             name: keycloak-config
             items:
-              - key: agari-realm-fixed.json
+              - key: agari-realm.json
                 path: agari-realm.json
         {{- end }}
       {{- with .Values.nodeSelector }}

@@ -1,0 +1,38 @@
+# Bitnami Kafka configuration
+# This file provides configuration for the official Bitnami Kafka chart
+
+auth:
+  clientProtocol: plaintext
+  interBrokerProtocol: plaintext
+
+# Disable persistence for development
+persistence:
+  enabled: false
+
+zookeeper:
+  persistence:
+    enabled: false
+
+listeners:
+  client:
+    protocol: PLAINTEXT
+  interbroker:
+    protocol: PLAINTEXT
+
+# Resource limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+zookeeper:
+  resources:
+    limits:
+      cpu: 300m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi

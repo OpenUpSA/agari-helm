@@ -47,18 +47,19 @@ kubectl create namespace agari-dev
 #### PostgreSQL Databases
 ```bash
 # Keycloak database  
-helm install keycloak-db ./helm/databases -n agari-dev -f values-keycloak-db.yaml
+helm install keycloak-db ./helm/keycloak-db -n agari-dev
 
 # Song database
-helm install song-db ./helm/databases -n agari-dev -f values-song-db.yaml
+helm install song-db ./helm/song-db -n agari-dev
 ```
 
 #### MinIO Object Storage
 ```bash
-helm install minio ./helm/minio -n agari-dev -f values-minio.yaml
+helm install minio ./helm/minio -n agari-dev
 
-# List Buckets
-kubectl exec -it minio-86c949747-dkfzg -n agari-dev -- mc ls localminio
+# List Buckets (after MinIO is running)
+MINIO_POD=$(kubectl get pods -n agari-dev | grep minio | awk '{print $1}')
+kubectl exec -it $MINIO_POD -n agari-dev -- mc ls localminio
 ```
 
 #### Kafka
@@ -67,8 +68,8 @@ kubectl exec -it minio-86c949747-dkfzg -n agari-dev -- mc ls localminio
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 
-# Install Kafka using Bitnami chart
-helm install kafka bitnami/kafka -n agari-dev -f values-kafka-bitnami.yaml
+# Install Kafka using Bitnami chart with our values file
+helm install kafka bitnami/kafka -f helm/kafka/values-bitnami.yaml -n agari-dev 
 ```
 
 #### Keycloak Authentication
@@ -77,24 +78,24 @@ helm install kafka bitnami/kafka -n agari-dev -f values-kafka-bitnami.yaml
 kubectl create configmap keycloak-config --from-file=agari-realm-fixed.json=configs/keycloakConfigs/agari-realm-fixed.json -n agari-dev
 
 # Deploy Keycloak
-helm install keycloak ./helm/keycloak -n agari-dev -f values-keycloak.yaml
+helm install keycloak ./helm/keycloak -n agari-dev
 ```
 
 ### 4. Deploy Genomics Services
 
 #### Song Metadata Service
 ```bash
-helm install song ./helm/song -n agari-dev -f values-song.yaml
+helm install song ./helm/song -n agari-dev
 ```
 
 #### Score File Service
 ```bash
-helm install score ./helm/score -n agari-dev -f values-score.yaml
+helm install score ./helm/score -n agari-dev
 ```
 
 #### Elasticsearch
 ```bash
-helm install elasticsearch ./helm/elasticsearch -n agari-dev -f values-elasticsearch.yaml
+helm install elasticsearch ./helm/elasticsearch -n agari-dev
 ```
 
 
@@ -151,7 +152,7 @@ cd ../../..
 
 #### Maestro Workflow Orchestration
 ```bash
-helm install maestro ./helm/maestro -n agari-dev -f values-maestro.yaml
+helm install maestro ./helm/maestro -n agari-dev
 ```
 
 ### 5. Deploy Data Portal
@@ -162,7 +163,7 @@ helm install maestro ./helm/maestro -n agari-dev -f values-maestro.yaml
 kubectl create configmap arranger-config --from-file=configs/arrangerConfigs/ -n agari-dev
 
 # Deploy Arranger
-helm install arranger ./helm/arranger -n agari-dev -f values-arranger.yaml
+helm install arranger ./helm/arranger -n agari-dev
 ```
 
 ## Service Access
@@ -184,30 +185,7 @@ After deployment, services are available at:
 - **Realm**: agari
 - **User**: admin@example.com (imported with API keys)
 
-### JWT Authentication for SONG
 
-**CRITICAL**: SONG requires a specific JWT structure. You must configure a JWT protocol mapper in Keycloak:
-
-1. Go to **Clients** → **project-EXAMPLE** → **Client scopes** tab
-2. Click **project-EXAMPLE-dedicated** → **Mappers** tab
-3. **Add mapper** → **By configuration** → **User Client Role**
-4. Configure:
-   - **Name**: `context-scope-mapper`
-   - **Token Claim Name**: `context.scope`
-   - **Claim JSON Type**: `JSON`
-   - **Add to access token**: `ON`
-
-This creates the JWT structure SONG expects:
-```json
-{
-  "context": {
-    "scope": [
-      "song.WRITE",
-      "STUDY.study-name.WRITE"
-    ]
-  }
-}
-```
 
 Without this mapper, SONG will return 403 "insufficient scope" errors.
 

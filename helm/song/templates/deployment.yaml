@@ -23,6 +23,10 @@ spec:
         - name: song
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - "--auth.server.provider={{ .Values.song.auth.server.provider }}"
+            - "--auth.server.clientID={{ .Values.song.auth.server.clientId }}"
+            - "--auth.server.scope.study.prefix={{ .Values.song.auth.server.scope.study.prefix }}"
           ports:
             - name: http
               containerPort: 8080
@@ -65,6 +69,10 @@ spec:
               value: {{ .Values.song.auth.server.scope.system | quote }}
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
               value: {{ .Values.song.auth.oauth2.resourceserver.jwt.jwkSetUri | quote }}
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+              value: {{ .Values.song.auth.oauth2.resourceserver.jwt.issuerUri | quote }}
+            - name: SPRING_APPLICATION_JSON
+              value: '{"spring":{"security":{"oauth2":{"resourceserver":{"jwt":{"jwk-set-uri":"{{ .Values.song.auth.oauth2.resourceserver.jwt.jwkSetUri }}","issuer-uri":"{{ .Values.song.auth.oauth2.resourceserver.jwt.issuerUri }}"}}}}}}}'
             - name: AUTH_SERVER_INTROSPECTIONURI
               value: {{ .Values.song.auth.oauth2.introspectionUri | quote }}
             # Postgres Variables
@@ -82,6 +90,13 @@ spec:
             # Swagger Variable
             - name: SWAGGER_ALTERNATEURL
               value: {{ .Values.song.swagger.alternateUrl | quote }}
+            # Spring config location to load our override
+            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+              value: "file:/song-server/config/"
+          volumeMounts:
+            - name: song-config
+              mountPath: /song-server/config
+              readOnly: true
           {{- if .Values.probes.liveness.enabled }}
           livenessProbe:
             {{- if .Values.probes.liveness.httpGet }}
@@ -114,3 +129,22 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: song-config
+          configMap:
+            name: {{ .Values.fullnameOverride | default (printf "%s-song" .Release.Name) }}-config
+            items:
+              - key: application-override.yml
+                path: application-override.yml
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

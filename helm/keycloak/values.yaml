@@ -1,5 +1,8 @@
 replicaCount: 1
 
+url:
+  hostname: "keycloak.local"
+
 image:
   repository: quay.io/keycloak/keycloak
   pullPolicy: IfNotPresent
@@ -39,10 +42,10 @@ probes:
     enabled: true
     tcpSocket:
       port: 8080
-    initialDelaySeconds: 90 
-    periodSeconds: 15
-    timeoutSeconds: 10
-    failureThreshold: 8
+    initialDelaySeconds: 120 
+    periodSeconds: 30
+    timeoutSeconds: 15
+    failureThreshold: 12
 
 keycloak:
   database:
@@ -67,11 +70,11 @@ keycloak:
 # Resource limits - better configuration from values-keycloak.yaml
 resources:
   limits:
-    cpu: 300m
-    memory: 768Mi
+    cpu: 500m
+    memory: 1Gi
   requests:
-    cpu: 100m
-    memory: 384Mi
+    cpu: 200m
+    memory: 512Mi
 
 # Node selection
 nodeSelector: {}
