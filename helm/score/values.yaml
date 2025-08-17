@@ -20,7 +20,7 @@ score:
   # Spring Configuration
   spring:
     profiles:
-      active: "default,collaboratory,prod,secure,jwt"
+      active: "default,collaboratory,prod,secure,jwt,score-client-cred"
   
   # Server Configuration
   server:
@@ -31,6 +31,15 @@ score:
   # Song Variables 
   metadata:
     url: "http://song:8080"
+    ssl:
+      enabled: false
+  
+  # Client credentials for Score to authenticate to SONG
+  clientCredentials:
+    id: "score-service"
+    secret: "score-service-secret"
+    tokenUrl: "http://keycloak:8080/realms/agari/protocol/openid-connect/token"
+    systemScope: "song.READ"
   
   s3:
     endpoint: "http://minio:9000"
@@ -66,10 +75,10 @@ score:
           prefix: "STUDY."
         download:
           suffix: ".READ"
-          system: "score.READ"
+          system: "READ"
         upload:
           suffix: ".WRITE"
-          system: "score.WRITE"
+          system: "WRITE"
       url: "http://keycloak:8080/realms/agari/apikey/check_api_key/"
     jwt:
       publickeyurl: "http://keycloak:8080/oauth/token/public_key"

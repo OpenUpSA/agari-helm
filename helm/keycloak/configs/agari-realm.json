@@ -183,6 +183,22 @@
       "clientAuthenticatorType": "client-secret",
       "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email"],
       "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"]
+    },
+    {
+      "clientId": "score-service",
+      "name": "Score Service Account",
+      "description": "Service account for Score to authenticate to SONG",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "score-service-secret",
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "clientAuthenticatorType": "client-secret",
+      "defaultClientScopes": ["profile", "roles", "email"]
     }
   ],
 
@@ -243,6 +259,18 @@
         "account": ["manage-account"]
       },
       "groups": ["data-viewers"]
+    },
+    {
+      "username": "service-account-score-service",
+      "enabled": true,
+      "serviceAccountClientId": "score-service",
+      "email": "score-service@agari.org",
+      "firstName": "Score",
+      "lastName": "Service Account",
+      "realmRoles": ["default-roles-agari"],
+      "clientRoles": {
+        "account": ["view-profile"]
+      }
     }
   ],
 

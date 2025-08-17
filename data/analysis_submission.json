@@ -1,0 +1,39 @@
+{
+  "studyId": "study1",
+  "analysisType": {
+    "name": "sequencingRead",
+    "version": 1
+  },
+  "samples": [
+    {
+      "submitterSampleId": "SA001",
+      "sampleType": "Total DNA",
+      "matchedNormalSubmitterSampleId": null,
+      "specimen": {
+        "submitterSpecimenId": "SP001",
+        "specimenType": "Normal",
+        "specimenTissueSource": "Blood derived",
+        "tumourNormalDesignation": "Normal"
+      },
+      "donor": {
+        "submitterDonorId": "D001",
+        "gender": "Female"
+      }
+    }
+  ],
+  "files": [
+    {
+      "fileName": "test_data.fasta",
+      "fileType": "FASTA",
+      "fileSize": 298,
+      "fileMd5sum": "cc70b8e811b39c98a938edf87145e34d",
+      "fileAccess": "open",
+      "dataType": "Sequencing Reads"
+    }
+  ],
+  "experiment": {
+    "libraryStrategy": "WGS",
+    "pairedEnd": false,
+    "aligned": false
+  }
+}

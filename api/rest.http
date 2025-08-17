@@ -1,25 +1,17 @@
-# Test users from AGARI realm
-# @username = submitter
-# @username = viewer  
+# AGARI Overture Stack - Essential Workflow
+# Test file info
+@test_file_name = test_data.fasta
+@test_file_size = 298
+@test_file_md5 = cc70b8e811b39c98a938edf87145e34d
+
+# Authentication config
 @username = admin
 @password = password123
 @realm = agari
-@query_realm = agari
 @client_id = song-api
 @client_secret = song-secret
 
-### TEST with admin-cli (should always work)
-# @name adminLogin
-# POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
-# Content-Type: application/x-www-form-urlencoded
-
-# username={{username}}
-# &password={{password}}
-# &grant_type=password
-# &client_id=admin-cli
-
-### LOGIN with project client
-
+### 1. LOGIN to get access token
 # @name login
 POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
@@ -30,32 +22,10 @@ username={{username}}
 &client_id={{client_id}}
 &client_secret={{client_secret}}
 
-### Get service account token for Song to use with Score
-
-# @name serviceLogin
-POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
-Content-Type: application/x-www-form-urlencoded
-
-grant_type=client_credentials
-&client_id={{client_id}}
-&client_secret={{client_secret}}
-
 ###
-
 @token = {{login.response.body.access_token}}
-@refresh_token = {{login.response.body.refresh_token}}
 
-### LOGOUT
-
-POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/logout
-Content-Type: application/x-www-form-urlencoded
-
-client_id={{client_id}}
-&client_secret={{client_secret}}
-&refresh_token={{refresh_token}}
-
-### GET RPT TOKEN HERE (Fixed version with subject_token)
-
+### 2. GET UMA TOKEN (RPT) for resource access
 # @name rptToken
 POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
@@ -67,42 +37,10 @@ grant_type=urn:ietf:params:oauth:grant-type:uma-ticket
 &subject_token={{token}}
 &subject_token_type=urn:ietf:params:oauth:token-type:access_token
 
-### GET RPT TOKEN with specific permissions
-
-# @name rptTokenWithPermissions
-POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
-Content-Type: application/x-www-form-urlencoded
-Authorization: Bearer {{token}}
-
-grant_type=urn:ietf:params:oauth:grant-type:uma-ticket
-&client_id={{client_id}}
-&client_secret={{client_secret}}
-&audience={{client_id}}
-&response_include_resource_name=true
-&permission=song#READ
-&permission=song#WRITE
-&permission=STUDY.study1#READ
-&permission=STUDY.study1#WRITE
-
-
-
 ###
-
 @rpt_token = {{rptToken.response.body.access_token}}
-# @rpt_token = {{rptTokenWithPermissions.response.body.access_token}}
 
-### SONG API Tests
-
-### Get all studies (works!)
-GET http://song.local/studies/all
-Authorization: Bearer {{token}}
-
-### Get study by ID
-GET http://song.local/studies/study1
-Authorization: Bearer {{token}}
-
-### Create a new study (requires admin/contributor role)
-### Try different POST endpoints
+### 3. CREATE STUDY
 POST http://song.local/studies/study1/
 Authorization: Bearer {{rpt_token}}
 Content-Type: application/json
@@ -110,7 +48,7 @@ Content-Type: application/json
 {
   "studyId": "study1",
   "name": "AGARI Test Study", 
-  "description": "Test study for RBAC validation",
+  "description": "Test study for genomic data workflow",
   "organization": "NICD",
   "info": {
     "projectType": "genomics",
@@ -118,139 +56,46 @@ Content-Type: application/json
   }
 }
 
-### Get analyses for a study
-GET http://song.local/studies/study1/analysis
-Authorization: Bearer {{rpt_token}}
-
-
-
-### Verify the submitted analysis
-GET http://song.local/studies/study1/analysis/dbeefa33-4abb-4da1-aefa-334abbbda143
-Authorization: Bearer {{token}}
-
-### Test Score API connection
-GET http://score.local/download/ping
-Authorization: Bearer {{token}}
-User-Agent: rest-client-test
-
-### Submit analysis metadata with FASTA file (requires contributor role)
+### 4. SUBMIT ANALYSIS (using data/analysis_submission.json)
+# @name submitAnalysis
 POST http://song.local/submit/study1/
-Authorization: Bearer {{token}}
+Authorization: Bearer {{rpt_token}}
 Content-Type: application/json
 
-{
-  "studyId": "study1",
-  "analysisType": {
-    "name": "sequencingRead",
-    "version": 1
-  },
-  "samples": [
-    {
-      "submitterSampleId": "SA002",
-      "sampleType": "Total DNA",
-      "matchedNormalSubmitterSampleId": null,
-      "specimen": {
-        "submitterSpecimenId": "SP002",
-        "specimenType": "Normal",
-        "specimenTissueSource": "Blood derived",
-        "tumourNormalDesignation": "Normal"
-      },
-      "donor": {
-        "submitterDonorId": "D002",
-        "gender": "Female"
-      }
-    }
-  ],
-  "files": [
-    {
-      "fileName": "test_data.fasta",
-      "fileType": "FASTA",
-      "fileSize": 298,
-      "fileMd5sum": "cc70b8e811b39c98a938edf87145e34d",
-      "fileAccess": "open",
-      "dataType": "Sequencing Reads"
-    }
-  ],
-  "experiment": {
-    "libraryStrategy": "WGS",
-    "pairedEnd": false,
-    "aligned": false
-  }
-}
+< ./data/analysis_submission.json
 
-### Publish the analysis (this should trigger Maestro to index it)
-PUT http://song.local/studies/study1/analysis/ae5a411e-0cec-4a63-9a41-1e0cec7a6381/publish
-Authorization: Bearer {{token}}
-
-### Correct publish endpoint from API docs (ignore missing files)
-PUT http://song.local/studies/study1/analysis/publish/dbeefa33-4abb-4da1-aefa-334abbbda143?ignoreUndefinedMd5=true
-Authorization: Bearer {{token}}
-
-### Check if data appears in Arranger GraphQL
-POST http://arranger.local/graphql
-Content-Type: application/json
-
-{
-  "query": "{ file { hits { total edges { node { object_id file_name data_type file_type study_id analysis { analysis_id } } } } } }"
-}
-
-### Check Elasticsearch directly (using correct agari-index)
-GET http://elasticsearch.local/agari-index/_search
-Authorization: Bearer {{token}}
-
-### Check what's in Elasticsearch
-GET http://elasticsearch.local/agari-index/_count
-Authorization: Bearer {{token}}
-
-### === SCORE FILE UPLOAD WORKFLOW ===
-
-### Calculate MD5 for our test file first (you'll need to run this command locally)
-# md5sum test_data.fasta
-
-### Get file info (actual values from test_data.fasta)
-@test_file_name = test_data.fasta
-@test_file_size = 298
-@test_file_md5 = cc70b8e811b39c98a938edf87145e34d
-
-### Check if object exists in Score
-GET http://score.local/upload/{{test_file_md5}}
+### 5. GET ANALYSIS DETAILS (to extract object_id for Score)
+# Update the analysis_id below with the ID returned from step 4
+@analysis_id = REPLACE_WITH_ANALYSIS_ID_FROM_STEP_4
+GET http://song.local/studies/study1/analysis/{{analysis_id}}
 Authorization: Bearer {{rpt_token}}
 
-### Initialize multipart upload for our test file
+### 6. INITIALIZE SCORE UPLOAD
+# Update object_id below with the objectId from step 5
+@object_id = REPLACE_WITH_OBJECT_ID_FROM_STEP_5
 POST http://score.local/upload/{{test_file_md5}}/uploads
-Authorization: Bearer {{token}}
-User-Agent: rest-client-test
+Authorization: Bearer {{rpt_token}}
+Content-Type: application/x-www-form-urlencoded
 
 fileSize={{test_file_size}}
 &md5={{test_file_md5}}
+&objectId={{object_id}}
 &overwrite=true
 
-### Get upload status
+### 7. CHECK UPLOAD STATUS
 GET http://score.local/upload/{{test_file_md5}}/status?fileSize={{test_file_size}}
-Authorization: Bearer {{token}}
+Authorization: Bearer {{rpt_token}}
 
-### Test Score ping
-GET http://score.local/download/ping
-Authorization: Bearer {{token}}
-User-Agent: rest-client-test
-
-### List all objects in Score
-GET http://score.local/listing
-Authorization: Bearer {{token}}
-
-### === COMPLETE WORKFLOW TEST ===
-
-### 1. First get analysis ID from metadata submission (run the submit analysis above first)
-@analysis_id = dbeefa33-4abb-4da1-aefa-334abbbda143
-
-### 2. Check the analysis was created
-GET http://song.local/studies/study1/analysis/{{analysis_id}}
-Authorization: Bearer {{token}}
-
-### 3. Get the file object ID from the analysis
-GET http://song.local/studies/study1/analysis/{{analysis_id}}/files
-Authorization: Bearer {{token}}
-
-### 4. Publish analysis (this should make it available for indexing)
+### 8. PUBLISH ANALYSIS
 PUT http://song.local/studies/study1/analysis/publish/{{analysis_id}}?ignoreUndefinedMd5=true
+Authorization: Bearer {{rpt_token}}
+
+### === UTILITY ENDPOINTS ===
+
+### Check all studies
+GET http://song.local/studies/all
 Authorization: Bearer {{token}}
+
+### Check Score connection
+GET http://score.local/download/ping
+Authorization: Bearer {{rpt_token}}

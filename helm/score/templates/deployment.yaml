@@ -34,6 +34,21 @@ spec:
             # Song Variables
             - name: METADATA_URL
               value: {{ .Values.score.metadata.url | quote }}
+            {{- if .Values.score.metadata.ssl }}
+            - name: METADATA_SSL_ENABLED
+              value: {{ .Values.score.metadata.ssl.enabled | quote }}
+            {{- end }}
+            {{- if .Values.score.clientCredentials }}
+            # Client Credentials for Score to authenticate to SONG
+            - name: SCORE_CLIENTCREDENTIALS_ID
+              value: {{ .Values.score.clientCredentials.id | quote }}
+            - name: SCORE_CLIENTCREDENTIALS_SECRET
+              value: {{ .Values.score.clientCredentials.secret | quote }}
+            - name: SCORE_CLIENTCREDENTIALS_TOKENURL
+              value: {{ .Values.score.clientCredentials.tokenUrl | quote }}
+            - name: SCORE_CLIENTCREDENTIALS_SYSTEMSCOPE
+              value: {{ .Values.score.clientCredentials.systemScope | quote }}
+            {{- end }}
             # Server Variables
             - name: SERVER_SSL_ENABLED
               value: {{ .Values.score.server.ssl.enabled | quote }}
