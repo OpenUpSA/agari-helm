@@ -86,15 +86,17 @@ spec:
               value: {{ .Values.score.auth.server.keycloak.host | quote }}
             - name: AUTH_SERVER_KEYCLOAK_REALM
               value: {{ .Values.score.auth.server.keycloak.realm | quote }}
-            - name: AUTH_SERVER_SCOPE_STUDY_PREFIX
+            - name: AUTH_SERVER_SCOPE_UPLOAD_STUDY_PREFIX
               value: {{ .Values.score.auth.server.scope.study.prefix | quote }}
-            - name: AUTH_SERVER_SCOPE_DOWNLOAD_SUFFIX
+            - name: AUTH_SERVER_SCOPE_DOWNLOAD_STUDY_PREFIX
+              value: {{ .Values.score.auth.server.scope.study.prefix | quote }}
+            - name: AUTH_SERVER_SCOPE_DOWNLOAD_STUDY_SUFFIX
               value: {{ .Values.score.auth.server.scope.download.suffix | quote }}
             - name: AUTH_SERVER_SCOPE_DOWNLOAD_SYSTEM
               value: {{ .Values.score.auth.server.scope.download.system | quote }}
             - name: AUTH_SERVER_SCOPE_UPLOAD_SYSTEM
               value: {{ .Values.score.auth.server.scope.upload.system | quote }}
-            - name: AUTH_SERVER_SCOPE_UPLOAD_SUFFIX
+            - name: AUTH_SERVER_SCOPE_UPLOAD_STUDY_SUFFIX
               value: {{ .Values.score.auth.server.scope.upload.suffix | quote }}
             - name: AUTH_SERVER_URL
               value: {{ .Values.score.auth.server.url | quote }}

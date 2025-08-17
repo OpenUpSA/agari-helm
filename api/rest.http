@@ -66,25 +66,24 @@ Content-Type: application/json
 
 ### 5. GET ANALYSIS DETAILS (to extract object_id for Score)
 # Update the analysis_id below with the ID returned from step 4
-@analysis_id = REPLACE_WITH_ANALYSIS_ID_FROM_STEP_4
+@analysis_id = 94aef978-2694-4e03-aef9-782694ee03c5
 GET http://song.local/studies/study1/analysis/{{analysis_id}}
 Authorization: Bearer {{rpt_token}}
 
 ### 6. INITIALIZE SCORE UPLOAD
 # Update object_id below with the objectId from step 5
-@object_id = REPLACE_WITH_OBJECT_ID_FROM_STEP_5
-POST http://score.local/upload/{{test_file_md5}}/uploads
-Authorization: Bearer {{rpt_token}}
+@object_id = fa6eb686-92cb-5894-90a8-f3e9a069d090
+POST http://score.local/upload/{{object_id}}/uploads
+Authorization: Bearer {{token}}
 Content-Type: application/x-www-form-urlencoded
 
 fileSize={{test_file_size}}
 &md5={{test_file_md5}}
-&objectId={{object_id}}
 &overwrite=true
 
 ### 7. CHECK UPLOAD STATUS
-GET http://score.local/upload/{{test_file_md5}}/status?fileSize={{test_file_size}}
-Authorization: Bearer {{rpt_token}}
+GET http://score.local/upload/{{object_id}}/status?fileSize={{test_file_size}}
+Authorization: Bearer {{token}}
 
 ### 8. PUBLISH ANALYSIS
 PUT http://song.local/studies/study1/analysis/publish/{{analysis_id}}?ignoreUndefinedMd5=true
@@ -96,6 +95,28 @@ Authorization: Bearer {{rpt_token}}
 GET http://song.local/studies/all
 Authorization: Bearer {{token}}
 
+### INSPECT UMA TOKEN - see what permissions we actually have
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token/introspect
+Authorization: Bearer {{token}}
+Content-Type: application/x-www-form-urlencoded
+
+token={{rpt_token}}
+&client_id={{client_id}}
+&client_secret={{client_secret}}
+
 ### Check Score connection
 GET http://score.local/download/ping
 Authorization: Bearer {{rpt_token}}
+
+### Check Score upload endpoint (check if object exists)
+GET http://score.local/upload/{{object_id}}
+Authorization: Bearer {{rpt_token}}
+
+### Try alternate upload initialization (using object_id correctly)
+POST http://score.local/upload/{{object_id}}/uploads
+Authorization: Bearer {{rpt_token}}
+Content-Type: application/x-www-form-urlencoded
+
+fileSize={{test_file_size}}
+&md5={{test_file_md5}}
+&overwrite=true

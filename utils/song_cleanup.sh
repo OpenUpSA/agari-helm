@@ -42,6 +42,8 @@ case "$1" in
             DELETE FROM analysis WHERE study_id = '$STUDY_ID';
             -- Delete study
             DELETE FROM study WHERE id = '$STUDY_ID';
+            -- Delete info records for this study
+            DELETE FROM info WHERE id = '$STUDY_ID' AND id_type = 'Study';
             COMMIT;
         "
         echo "Study $STUDY_ID deleted successfully."

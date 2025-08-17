@@ -20,7 +20,7 @@ score:
   # Spring Configuration
   spring:
     profiles:
-      active: "default,collaboratory,prod,secure,jwt,score-client-cred"
+      active: "default,collaboratory,prod,jwt,score-client-cred"
   
   # Server Configuration
   server:
@@ -64,15 +64,15 @@ score:
   auth:
     server:
       provider: "keycloak"
-      clientId: "score-client"
-      clientSecret: "score-secret" 
+      clientId: "song-api"
+      clientSecret: "song-secret" 
       tokenName: "apiKey"
       keycloak:
         host: "http://keycloak:8080"
         realm: "agari"
       scope:
         study:
-          prefix: "STUDY."
+          prefix: "study"
         download:
           suffix: ".READ"
           system: "READ"
