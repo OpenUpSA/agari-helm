@@ -53,8 +53,7 @@ probes:
     enabled: false
   readiness:
     enabled: true
-    httpGet:
-      path: "/graphql" 
+    path: "/graphql"
     initialDelaySeconds: 30 
     periodSeconds: 10
     timeoutSeconds: 5
@@ -86,21 +85,6 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
-
-probes:
-  liveness:
-    enabled: false 
-    initialDelaySeconds: 30
-    periodSeconds: 30
-    timeoutSeconds: 5
-    failureThreshold: 3
-  
-  readiness:
-    enabled: true
-    initialDelaySeconds: 20
-    periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 3
 
 nodeSelector: {}
 tolerations: []

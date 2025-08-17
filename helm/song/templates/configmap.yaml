@@ -30,3 +30,26 @@ data:
             suffix: {{ .Values.song.auth.server.scope.study.suffix }}
           system: {{ .Values.song.auth.server.scope.system }}
         introspectionUri: {{ .Values.song.auth.oauth2.introspectionUri }}
+  application-zzz-final-override.yml: |
+    # Final override with high precedence name to load last
+    auth:
+      server:
+        provider: {{ .Values.song.auth.server.provider }}
+        clientID: {{ .Values.song.auth.server.clientId }}
+        clientSecret: {{ .Values.song.auth.server.clientSecret }}
+        tokenName: {{ .Values.song.auth.server.tokenName }}
+        keycloak:
+          host: {{ .Values.song.auth.server.keycloak.host }}
+          realm: {{ .Values.song.auth.server.keycloak.realm }}
+        scope:
+          study:
+            prefix: {{ .Values.song.auth.server.scope.study.prefix }}
+            suffix: {{ .Values.song.auth.server.scope.study.suffix }}
+          system: {{ .Values.song.auth.server.scope.system }}
+        introspectionUri: {{ .Values.song.auth.oauth2.introspectionUri }}
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              jwk-set-uri: {{ .Values.song.auth.oauth2.resourceserver.jwt.jwkSetUri }}
+              issuer-uri: {{ .Values.song.auth.oauth2.resourceserver.jwt.issuerUri }}

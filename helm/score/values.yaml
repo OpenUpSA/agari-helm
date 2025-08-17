@@ -78,15 +78,6 @@ score:
         jwt:
           jwkSetUri: "http://keycloak:8080/realms/agari/protocol/openid-connect/certs"
 
-
-resources:
-  limits:
-    cpu: 300m
-    memory: 768Mi
-  requests:
-    cpu: 100m
-    memory: 384Mi
-
 ingress:
   enabled: true
   className: "nginx"
@@ -97,37 +88,6 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
-    connection:
-      timeout: 1200000
-  
-  # Keycloak Variables
-  auth:
-    server:
-      provider: "keycloak"
-      clientId: "dms"
-      clientSecret: "t016kqXfI648ORoIP5gepqCzqtsRjlcc"
-      tokenName: "apiKey"
-      keycloak:
-        host: "http://keycloak:8080"
-        realm: "myrealm"
-      scope:
-        study:
-          prefix: "STUDY."
-        download:
-          suffix: ".READ"
-          system: "score.READ"
-        upload:
-          suffix: ".WRITE"
-          system: "score.WRITE"
-      url: "http://keycloak:8080/realms/myrealm/apikey/check_api_key/"
-    jwt:
-      publickeyurl: "http://keycloak:8080/oauth/token/public_key"
-    oauth2:
-      resourceserver:
-        jwt:
-          jwkSetUri: "http://keycloak:8080/realms/myrealm/protocol/openid-connect/certs"
-
-# Dev-friendly resources
 resources:
   limits:
     cpu: 500m

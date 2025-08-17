@@ -50,7 +50,7 @@ maestro:
         enabled: false
       fileCentric:
         enabled: true
-        name: "overture-quickstart-index"
+        name: "agari-index"
         alias: "file_centric"
   
   spring:
@@ -165,7 +165,7 @@ maestro:
         enabled: false
       fileCentric:
         enabled: true
-        name: "overture-quickstart-index"
+        name: "agari-index"
         alias: "file_centric"
   
   # Spring Configuration

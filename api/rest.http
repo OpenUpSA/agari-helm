@@ -104,7 +104,7 @@ Authorization: Bearer {{token}}
 ### Create a new study (requires admin/contributor role)
 ### Try different POST endpoints
 POST http://song.local/studies/study1/
-Authorization: Bearer {{token}}
+Authorization: Bearer {{rpt_token}}
 Content-Type: application/json
 
 {
@@ -119,11 +119,22 @@ Content-Type: application/json
 }
 
 ### Get analyses for a study
-GET http://song.local/studies/study1/analysis/
+GET http://song.local/studies/study1/analysis
+Authorization: Bearer {{rpt_token}}
+
+
+
+### Verify the submitted analysis
+GET http://song.local/studies/study1/analysis/dbeefa33-4abb-4da1-aefa-334abbbda143
 Authorization: Bearer {{token}}
 
-### Submit analysis metadata (requires contributor role)
-POST http://song.local/submit/study1
+### Test Score API connection
+GET http://score.local/download/ping
+Authorization: Bearer {{token}}
+User-Agent: rest-client-test
+
+### Submit analysis metadata with FASTA file (requires contributor role)
+POST http://song.local/submit/study1/
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -135,70 +146,40 @@ Content-Type: application/json
   },
   "samples": [
     {
-      "submitterSampleId": "SA001",
+      "submitterSampleId": "SA002",
       "sampleType": "Total DNA",
       "matchedNormalSubmitterSampleId": null,
       "specimen": {
-        "submitterSpecimenId": "SP001",
+        "submitterSpecimenId": "SP002",
         "specimenType": "Normal",
         "specimenTissueSource": "Blood derived",
         "tumourNormalDesignation": "Normal"
       },
       "donor": {
-        "submitterDonorId": "D001",
-        "gender": "Male"
+        "submitterDonorId": "D002",
+        "gender": "Female"
       }
     }
   ],
   "files": [
     {
-      "fileName": "sample_R1.fastq.gz",
-      "fileType": "FASTQ",
-      "fileSize": 1024000,
-      "fileMd5sum": "d41d8cd98f00b204e9800998ecf8427e",
+      "fileName": "test_data.fasta",
+      "fileType": "FASTA",
+      "fileSize": 298,
+      "fileMd5sum": "cc70b8e811b39c98a938edf87145e34d",
       "fileAccess": "open",
       "dataType": "Sequencing Reads"
     }
   ],
   "experiment": {
     "libraryStrategy": "WGS",
-    "pairedEnd": true,
+    "pairedEnd": false,
     "aligned": false
   }
 }
 
-
-
-
-
-### Verify the submitted analysis
-GET http://song.local/studies/study1/analysis/dbeefa33-4abb-4da1-aefa-334abbbda143
-Authorization: Bearer {{token}}
-
-### Test Score API connection
-GET http://score.local/download/ping
-Authorization: Bearer {{token}}
-
-### Test uploading a file to Score
-POST http://score.local/upload/study1
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "analysisId": "dbeefa33-4abb-4da1-aefa-334abbbda143",
-  "files": [
-    {
-      "fileName": "sample_R1.fastq.gz",
-      "fileType": "FASTQ",
-      "fileSize": 1024000,
-      "fileMd5sum": "d41d8cd98f00b204e9800998ecf8427e",
-      "fileAccess": "open"
-    }
-  ]
-}
-
 ### Publish the analysis (this should trigger Maestro to index it)
-PUT http://song.local/studies/study1/analysis/dbeefa33-4abb-4da1-aefa-334abbbda143/publish
+PUT http://song.local/studies/study1/analysis/ae5a411e-0cec-4a63-9a41-1e0cec7a6381/publish
 Authorization: Bearer {{token}}
 
 ### Correct publish endpoint from API docs (ignore missing files)
@@ -213,7 +194,63 @@ Content-Type: application/json
   "query": "{ file { hits { total edges { node { object_id file_name data_type file_type study_id analysis { analysis_id } } } } } }"
 }
 
-### Check Elasticsearch directly
-GET http://elasticsearch.local/overture-quickstart-index/_search
+### Check Elasticsearch directly (using correct agari-index)
+GET http://elasticsearch.local/agari-index/_search
+Authorization: Bearer {{token}}
 
-eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJRSzV0Z0ltLV83bXpVRmpBbEJGcDJPblczRzk0blhoN01lbDBrSVRJRUpzIn0.eyJleHAiOjE3NTUyNzkxODQsImlhdCI6MTc1NTI3ODg4NCwianRpIjoib25ydG5hOmVkZTMzMjcyLTZmMTctNDU5MS0xZjIzLTZmODlhYjc0M2M0MyIsImlzcyI6Imh0dHA6Ly9rZXljbG9hay5sb2NhbC9yZWFsbXMvYWdhcmkiLCJhdWQiOiJzb25nLWFwaSIsInR5cCI6IkJlYXJlciIsImF6cCI6InNvbmctYXBpIiwic2lkIjoiMzA2NGMyYzMtZjQ3My00NDFiLTllNzAtOWFhODcwNGIxMWNlIiwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbImFkbWluIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIl19fSwiYXV0aG9yaXphdGlvbiI6eyJwZXJtaXNzaW9ucyI6W3sic2NvcGVzIjpbIlJFQUQiLCJXUklURSJdLCJyc2lkIjoiNjdlNDNjNDYtNDdhZi00ZDg4LTgzY2EtYTM4YWY5ZjM1ZTc1IiwicnNuYW1lIjoiU1RVRFkuc3R1ZHkxIn0seyJzY29wZXMiOlsiUkVBRCIsIldSSVRFIl0sInJzaWQiOiI5Mzg3MDYwOC05ZWFiLTQ4YWYtYjU2OC02Yjg1ZjA1Yzc3MjkiLCJyc25hbWUiOiJzb25nIn1dfSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJBZG1pbiBVc2VyIiwicHJlZmVycmVkX3VzZXJuYW1lIjoiYWRtaW4iLCJnaXZlbl9uYW1lIjoiQWRtaW4iLCJmYW1pbHlfbmFtZSI6IlVzZXIiLCJlbWFpbCI6ImFkbWluQGFnYXJpLm9yZyJ9.E1F6PKvXCPOSjiqXi9cgp7gTvI3mWd61GZM5J9Y1i5Gjw0n47HZEY5L1Knj70HomWzCXHOjeCx-7UEY5x8AWA_mNY14NnmrQa8aJ1CMMreb6WhvLKBk8T_PfwLD_IwtVuvZNaJzll5th0klFus_SlDpNRODSZAmi493jzSzO17cIuAKxA7kE928iVSDSYcNSP-437wXIc35Cx8E3SUzZ3XGnf-vNN8IcAcuhmSZsCMu3nv4TS4Vk4IS2q1ODqwoGep7ImPzp6USg7ilnw9tuLSLyF_RUJ9rLwdUhZrc6M2lpBGNJf2r2jgWH-u-lRqOHKIWOBEAP2aIwNSQiGosZLw
+### Check what's in Elasticsearch
+GET http://elasticsearch.local/agari-index/_count
+Authorization: Bearer {{token}}
+
+### === SCORE FILE UPLOAD WORKFLOW ===
+
+### Calculate MD5 for our test file first (you'll need to run this command locally)
+# md5sum test_data.fasta
+
+### Get file info (actual values from test_data.fasta)
+@test_file_name = test_data.fasta
+@test_file_size = 298
+@test_file_md5 = cc70b8e811b39c98a938edf87145e34d
+
+### Check if object exists in Score
+GET http://score.local/upload/{{test_file_md5}}
+Authorization: Bearer {{rpt_token}}
+
+### Initialize multipart upload for our test file
+POST http://score.local/upload/{{test_file_md5}}/uploads
+Authorization: Bearer {{token}}
+User-Agent: rest-client-test
+
+fileSize={{test_file_size}}
+&md5={{test_file_md5}}
+&overwrite=true
+
+### Get upload status
+GET http://score.local/upload/{{test_file_md5}}/status?fileSize={{test_file_size}}
+Authorization: Bearer {{token}}
+
+### Test Score ping
+GET http://score.local/download/ping
+Authorization: Bearer {{token}}
+User-Agent: rest-client-test
+
+### List all objects in Score
+GET http://score.local/listing
+Authorization: Bearer {{token}}
+
+### === COMPLETE WORKFLOW TEST ===
+
+### 1. First get analysis ID from metadata submission (run the submit analysis above first)
+@analysis_id = dbeefa33-4abb-4da1-aefa-334abbbda143
+
+### 2. Check the analysis was created
+GET http://song.local/studies/study1/analysis/{{analysis_id}}
+Authorization: Bearer {{token}}
+
+### 3. Get the file object ID from the analysis
+GET http://song.local/studies/study1/analysis/{{analysis_id}}/files
+Authorization: Bearer {{token}}
+
+### 4. Publish analysis (this should make it available for indexing)
+PUT http://song.local/studies/study1/analysis/publish/{{analysis_id}}?ignoreUndefinedMd5=true
+Authorization: Bearer {{token}}

@@ -8,7 +8,7 @@ url:
 image:
   repository: ghcr.io/overture-stack/song-server
   pullPolicy: IfNotPresent
-  tag: "5.3.0"
+  tag: "edge"
 
 nameOverride: ""
 
@@ -22,6 +22,12 @@ song:
       active: "prod,secure,kafka,s3"
     flyway:
       enabled: true
+  
+  # Database Variables
+  datasource:
+    url: "jdbc:postgresql://song-db:5432/songDb?stringtype=unspecified"
+    username: "admin"
+    password: "song-db-pass-123"
   
   # Song Variables
   id:
@@ -56,12 +62,6 @@ song:
           issuerUri: "http://keycloak.local/realms/agari"
       introspectionUri: "http://keycloak:8080/realms/agari/apikey/check_api_key/"
   
-  # Database Variables 
-  datasource:
-    url: "jdbc:postgresql://song-db:5432/songDb?stringtype=unspecified"
-    username: "admin"
-    password: "song-db-pass-123"
-  
   # Kafka Variables
   kafka:
     bootstrapServers: "kafka.agari-dev.svc.cluster.local:9092"
@@ -71,20 +71,6 @@ song:
   # Swagger Variable
   swagger:
     alternateUrl: "/swagger-api"
-  
-  # Debug Logging for Security
-  logging:
-    level:
-      org.springframework.security: DEBUG
-      bio.overture.song.security: DEBUG
-
-resources:
-  limits:
-    cpu: 500m     
-    memory: 1.5Gi  
-  requests:
-    cpu: 150m      
-    memory: 768Mi  
 
 # Probe configuration
 probes:
