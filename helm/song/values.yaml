@@ -19,7 +19,7 @@ service:
 song:
   spring:
     profiles:
-      active: "prod,secure,kafka,s3"
+      active: "prod,secure,kafka,s3,score-client-cred"
     flyway:
       enabled: true
   
@@ -39,6 +39,12 @@ song:
   score:
     url: "http://score:8087"
     accessToken: ""
+    # Client credentials for SONG to authenticate to Score
+    clientCredentials:
+      id: "dms"
+      secret: "dms-secret"
+      tokenUrl: "http://keycloak:8080/realms/agari/protocol/openid-connect/token"
+      systemScope: "score.WRITE"
     
   
   auth:

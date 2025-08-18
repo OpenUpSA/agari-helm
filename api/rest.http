@@ -87,9 +87,8 @@ Content-Type: text/plain
 < ./data/{{test_file_name}}
 
 ###
-@etag_raw = {{uploadFile.response.headers.ETag}}
-@etag = {{etag_raw.replace('"', '')}}
-
+# @etag = {{uploadFile.response.headers.ETag.replace('"', '')}}
+@etag = a1421b18d7859ad811877b981fedca4f
 # Debug variables before step 8a
 @debug_object_id = {{object_id}}
 @debug_etag = {{etag}}
@@ -102,15 +101,11 @@ POST http://score.local/upload/{{object_id}}/parts?partNumber=1&etag={{etag}}&md
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
-{}
-
 ### 8b. Finalize upload
 # @name finalizeUpload
 POST http://score.local/upload/{{object_id}}?uploadId={{upload_id}}
 Authorization: Bearer {{token}}
 Content-Type: application/json
-
-{}
 
 
 
