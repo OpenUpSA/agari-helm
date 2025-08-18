@@ -1,5 +1,6 @@
 {
   "studyId": "study1",
+  "analysisId": "analysis001",
   "analysisType": {
     "name": "sequencingRead",
     "version": 1

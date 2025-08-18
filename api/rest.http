@@ -4,6 +4,10 @@
 @test_file_size = 298
 @test_file_md5 = cc70b8e811b39c98a938edf87145e34d
 
+# Fixed IDs for Keycloak permissions
+@study_id = study1
+@analysis_id = analysis001
+
 # Authentication config
 @username = admin
 @password = password123
@@ -41,12 +45,12 @@ grant_type=urn:ietf:params:oauth:grant-type:uma-ticket
 @rpt_token = {{rptToken.response.body.access_token}}
 
 ### 3. CREATE STUDY
-POST http://song.local/studies/study1/
+POST http://song.local/studies/{{study_id}}/
 Authorization: Bearer {{rpt_token}}
 Content-Type: application/json
 
 {
-  "studyId": "study1",
+  "studyId": "{{study_id}}",
   "name": "AGARI Test Study", 
   "description": "Test study for genomic data workflow",
   "organization": "NICD",
@@ -56,63 +60,25 @@ Content-Type: application/json
   }
 }
 
-### 4. SUBMIT ANALYSIS (using data/analysis_submission.json)
+### 4. SUBMIT ANALYSIS
 # @name submitAnalysis
-POST http://song.local/submit/study1/
+POST http://song.local/submit/{{study_id}}/
 Authorization: Bearer {{rpt_token}}
 Content-Type: application/json
 
 < ./data/analysis_submission.json
 
-### 5. GET ANALYSIS DETAILS (to extract object_id for Score)
-# Update the analysis_id below with the ID returned from step 4
-@analysis_id = 94aef978-2694-4e03-aef9-782694ee03c5
-GET http://song.local/studies/study1/analysis/{{analysis_id}}
+### 5. GET ANALYSIS DETAILS
+# Extract analysis_id from step 4 response and get full analysis details
+@submitted_analysis_id = {{submitAnalysis.response.body.analysisId}}
+# @name getAnalysis
+GET http://song.local/studies/{{study_id}}/analysis/{{submitted_analysis_id}}
 Authorization: Bearer {{rpt_token}}
 
 ### 6. INITIALIZE SCORE UPLOAD
-# Update object_id below with the objectId from step 5
-@object_id = fa6eb686-92cb-5894-90a8-f3e9a069d090
-POST http://score.local/upload/{{object_id}}/uploads
-Authorization: Bearer {{token}}
-Content-Type: application/x-www-form-urlencoded
-
-fileSize={{test_file_size}}
-&md5={{test_file_md5}}
-&overwrite=true
-
-### 7. CHECK UPLOAD STATUS
-GET http://score.local/upload/{{object_id}}/status?fileSize={{test_file_size}}
-Authorization: Bearer {{token}}
-
-### 8. PUBLISH ANALYSIS
-PUT http://song.local/studies/study1/analysis/publish/{{analysis_id}}?ignoreUndefinedMd5=true
-Authorization: Bearer {{rpt_token}}
-
-### === UTILITY ENDPOINTS ===
-
-### Check all studies
-GET http://song.local/studies/all
-Authorization: Bearer {{token}}
-
-### INSPECT UMA TOKEN - see what permissions we actually have
-POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token/introspect
-Authorization: Bearer {{token}}
-Content-Type: application/x-www-form-urlencoded
-
-token={{rpt_token}}
-&client_id={{client_id}}
-&client_secret={{client_secret}}
-
-### Check Score connection
-GET http://score.local/download/ping
-Authorization: Bearer {{rpt_token}}
-
-### Check Score upload endpoint (check if object exists)
-GET http://score.local/upload/{{object_id}}
-Authorization: Bearer {{rpt_token}}
-
-### Try alternate upload initialization (using object_id correctly)
+# Extract object_id from step 5 response
+@object_id = {{getAnalysis.response.body.files[0].objectId}}
+# @name initUpload
 POST http://score.local/upload/{{object_id}}/uploads
 Authorization: Bearer {{rpt_token}}
 Content-Type: application/x-www-form-urlencoded
@@ -120,3 +86,30 @@ Content-Type: application/x-www-form-urlencoded
 fileSize={{test_file_size}}
 &md5={{test_file_md5}}
 &overwrite=true
+
+###
+@upload_id = {{initUpload.response.body.uploadId}}
+@presigned_url = {{initUpload.response.body.parts.0.url}}
+
+### 7. UPLOAD FILE TO MINIO
+# Using hosts file entry: 127.0.0.1 minio (with port-forward to MinIO)
+# @name uploadFile
+PUT {{presigned_url}}
+Content-Type: application/octet-stream
+
+< ./data/{{test_file_name}}
+
+###
+@etag_raw = {{uploadFile.response.headers.ETag}}
+@etag = {{etag_raw.replace('"', '')}}
+
+### 8. COMPLETE UPLOAD (skip part finalization for now)
+POST http://score.local/upload/{{object_id}}
+Authorization: Bearer {{rpt_token}}
+Content-Type: application/x-www-form-urlencoded
+
+uploadId={{upload_id}}
+
+### 9. PUBLISH ANALYSIS
+PUT http://song.local/studies/{{study_id}}/analysis/publish/{{submitted_analysis_id}}?ignoreUndefinedMd5=true
+Authorization: Bearer {{rpt_token}}

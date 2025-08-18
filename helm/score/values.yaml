@@ -20,7 +20,7 @@ score:
   # Spring Configuration
   spring:
     profiles:
-      active: "default,collaboratory,prod,jwt,score-client-cred"
+      active: "default,collaboratory,prod,secure,jwt,score-client-cred"
   
   # Server Configuration
   server:
@@ -75,10 +75,10 @@ score:
           prefix: "study"
         download:
           suffix: ".READ"
-          system: "READ"
+          system: "score.READ"
         upload:
           suffix: ".WRITE"
-          system: "WRITE"
+          system: "score.WRITE"
       url: "http://keycloak:8080/realms/agari/apikey/check_api_key/"
     jwt:
       publickeyurl: "http://keycloak:8080/oauth/token/public_key"
