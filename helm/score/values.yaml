@@ -82,10 +82,6 @@ score:
       url: "http://keycloak:8080/realms/agari/apikey/check_api_key/"
     jwt:
       publickeyurl: "http://keycloak:8080/oauth/token/public_key"
-    oauth2:
-      resourceserver:
-        jwt:
-          jwkSetUri: "http://keycloak:8080/realms/agari/protocol/openid-connect/certs"
 
 ingress:
   enabled: true

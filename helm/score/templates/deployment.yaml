@@ -102,8 +102,6 @@ spec:
               value: {{ .Values.score.auth.server.url | quote }}
             - name: AUTH_JWT_PUBLICKEYURL
               value: {{ .Values.score.auth.jwt.publickeyurl | quote }}
-            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
-              value: {{ .Values.score.auth.oauth2.resourceserver.jwt.jwkSetUri | quote }}
           readinessProbe:
             tcpSocket:
               port: 8087
