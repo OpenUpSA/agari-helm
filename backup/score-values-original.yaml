@@ -36,8 +36,8 @@ score:
   
   # Client credentials for Score to authenticate to SONG
   clientCredentials:
-    id: "dms"
-    secret: "dms-secret"
+    id: "score-service"
+    secret: "score-service-secret"
     tokenUrl: "http://keycloak:8080/realms/agari/protocol/openid-connect/token"
     systemScope: "song.READ"
   

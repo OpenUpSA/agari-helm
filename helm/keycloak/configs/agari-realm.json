@@ -3,202 +3,44 @@
   "enabled": true,
   "displayName": "AGARI Genomics Platform",
   "registrationAllowed": false,
-  "registrationEmailAsUsername": false,
-  "rememberMe": false,
-  "verifyEmail": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
   "editUsernameAllowed": false,
-  "bruteForceProtected": false,
-  
+  "accessTokenLifespan": 3600,
+
   "groups": [
     {
-      "name": "data-submitters",
-      "path": "/data-submitters"
-    },
-    {
-      "name": "data-viewers",
-      "path": "/data-viewers"  
-    },
-    {
-      "name": "admins",
-      "path": "/admins"
+      "name": "admin",
+      "path": "/admin"
     }
   ],
 
   "clients": [
     {
-      "clientId": "song-api",
-      "name": "Song Metadata API",
+      "clientId": "dms",
+      "name": "Data Management System",
       "enabled": true,
       "publicClient": false,
-      "secret": "song-secret",
+      "secret": "dms-secret",
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": true,
       "authorizationServicesEnabled": true,
       "protocol": "openid-connect",
       "standardFlowEnabled": true,
-      "implicitFlowEnabled": false,
-      "clientAuthenticatorType": "client-secret",
-      "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email"],
-      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"],
-      "authorizationSettings": {
-        "allowRemoteResourceManagement": true,
-        "policyEnforcementMode": "ENFORCING",
-        "resources": [
-          {
-            "name": "song",
-            "displayName": "Song API Resource",
-            "type": "urn:song-api:resources:default",
-            "ownerManagedAccess": false,
-            "scopes": [
-              {
-                "name": "READ"
-              },
-              {
-                "name": "WRITE"
-              }
-            ]
-          },
-          {
-            "name": "STUDY.study1",
-            "displayName": "Study 1 Resource", 
-            "type": "urn:song-api:resources:study",
-            "ownerManagedAccess": false,
-            "scopes": [
-              {
-                "name": "READ"
-              },
-              {
-                "name": "WRITE"
-              }
-            ]
-          }
-        ],
-        "policies": [
-          {
-            "name": "data-submitters-policy",
-            "description": "Policy for data submitters group",
-            "type": "group",
-            "logic": "POSITIVE",
-            "decisionStrategy": "UNANIMOUS",
-            "config": {
-              "groups": "[{\"path\":\"/data-submitters\",\"extendChildren\":false}]"
-            }
-          },
-          {
-            "name": "data-viewers-policy", 
-            "description": "Policy for data viewers group",
-            "type": "group",
-            "logic": "POSITIVE",
-            "decisionStrategy": "UNANIMOUS",
-            "config": {
-              "groups": "[{\"id\":\"data-viewers\",\"extendChildren\":false}]"
-            }
-          },
-          {
-            "name": "admins-policy",
-            "description": "Policy for admin users",
-            "type": "group", 
-            "logic": "POSITIVE",
-            "decisionStrategy": "UNANIMOUS",
-            "config": {
-              "groups": "[{\"id\":\"admins\",\"extendChildren\":false}]"
-            }
-          },
-          {
-            "name": "song-read-permission",
-            "description": "Permission for reading song resources",
-            "type": "resource",
-            "logic": "POSITIVE",
-            "decisionStrategy": "AFFIRMATIVE",
-            "config": {
-              "resources": "[\"song\"]",
-              "scopes": "[\"READ\"]",
-              "applyPolicies": "[\"data-viewers-policy\",\"data-submitters-policy\",\"admins-policy\"]"
-            }
-          },
-          {
-            "name": "song-write-permission",
-            "description": "Permission for writing song resources", 
-            "type": "resource",
-            "logic": "POSITIVE",
-            "decisionStrategy": "AFFIRMATIVE",
-            "config": {
-              "resources": "[\"song\"]",
-              "scopes": "[\"WRITE\"]",
-              "applyPolicies": "[\"data-submitters-policy\",\"admins-policy\"]"
-            }
-          },
-          {
-            "name": "study1-read-permission",
-            "description": "Permission for reading study1 resources",
-            "type": "resource",
-            "logic": "POSITIVE", 
-            "decisionStrategy": "AFFIRMATIVE",
-            "config": {
-              "resources": "[\"STUDY.study1\"]",
-              "scopes": "[\"READ\"]",
-              "applyPolicies": "[\"data-viewers-policy\",\"data-submitters-policy\",\"admins-policy\"]"
-            }
-          },
-          {
-            "name": "study1-write-permission",
-            "description": "Permission for writing study1 resources",
-            "type": "resource",
-            "logic": "POSITIVE",
-            "decisionStrategy": "AFFIRMATIVE", 
-            "config": {
-              "resources": "[\"STUDY.study1\"]",
-              "scopes": "[\"WRITE\"]",
-              "applyPolicies": "[\"data-submitters-policy\",\"admins-policy\"]"
-            }
-          }
-        ],
-        "scopes": [
-          {
-            "name": "READ",
-            "displayName": "Read Access"
-          },
-          {
-            "name": "WRITE", 
-            "displayName": "Write Access"
-          }
-        ]
-      }
+      "clientAuthenticatorType": "client-secret"
     },
     {
-      "clientId": "score-api",
-      "name": "Score File API", 
+      "clientId": "song-service",
+      "name": "SONG Service Account",
       "enabled": true,
       "publicClient": false,
-      "secret": "score-secret",
-      "directAccessGrantsEnabled": true,
-      "serviceAccountsEnabled": true,
-      "authorizationServicesEnabled": true,
-      "protocol": "openid-connect",
-      "standardFlowEnabled": true,
-      "implicitFlowEnabled": false,
-      "clientAuthenticatorType": "client-secret",
-      "defaultClientScopes": ["web-origins", "role_list", "profile", "roles", "email"],
-      "optionalClientScopes": ["address", "phone", "offline_access", "microprofile-jwt"]
-    },
-    {
-      "clientId": "score-service",
-      "name": "Score Service Account",
-      "description": "Service account for Score to authenticate to SONG",
-      "enabled": true,
-      "publicClient": false,
-      "secret": "score-service-secret",
+      "secret": "song-service-secret",
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": true,
-      "authorizationServicesEnabled": false,
       "protocol": "openid-connect",
       "standardFlowEnabled": false,
-      "implicitFlowEnabled": false,
-      "clientAuthenticatorType": "client-secret",
-      "defaultClientScopes": ["profile", "roles", "email"]
+      "clientAuthenticatorType": "client-secret"
     }
   ],
 
@@ -206,104 +48,26 @@
     {
       "username": "admin",
       "enabled": true,
-      "email": "admin@agari.org",
+      "emailVerified": true,
       "firstName": "Admin",
       "lastName": "User",
+      "email": "admin@agari.org",
       "credentials": [
         {
           "type": "password",
-          "value": "admin123",
+          "value": "password123",
           "temporary": false
         }
       ],
-      "realmRoles": ["admin"],
-      "clientRoles": {
-        "account": ["manage-account"]
-      },
-      "groups": ["admins"]
+      "groups": ["/admin"]
     },
     {
-      "username": "submitter",
+      "username": "service-account-song-service",
       "enabled": true,
-      "email": "submitter@agari.org", 
-      "firstName": "Data",
-      "lastName": "Submitter",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "submitter123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["contributor"],
-      "clientRoles": {
-        "account": ["manage-account"]
-      },
-      "groups": ["data-submitters"]
-    },
-    {
-      "username": "viewer",
-      "enabled": true,
-      "email": "viewer@agari.org",
-      "firstName": "Data", 
-      "lastName": "Viewer",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "viewer123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["viewer"],
-      "clientRoles": {
-        "account": ["manage-account"]
-      },
-      "groups": ["data-viewers"]
-    },
-    {
-      "username": "service-account-score-service",
-      "enabled": true,
-      "serviceAccountClientId": "score-service",
-      "email": "score-service@agari.org",
-      "firstName": "Score",
-      "lastName": "Service Account",
-      "realmRoles": ["default-roles-agari"],
-      "clientRoles": {
-        "account": ["view-profile"]
-      }
+      "serviceAccountClientId": "song-service",
+      "email": "song-service@agari.org",
+      "firstName": "Song",
+      "lastName": "Service"
     }
-  ],
-
-  "roles": {
-    "realm": [
-      {
-        "name": "owner",
-        "description": "Organization owner with full permissions"
-      },
-      {
-        "name": "organisation-admin",
-        "description": "Organization admin with member management permissions"
-      },
-      {
-        "name": "admin", 
-        "description": "Project admin with project management permissions"
-      },
-      {
-        "name": "organisation-contributor",
-        "description": "Organization-wide contributor access to all projects"
-      },
-      {
-        "name": "contributor",
-        "description": "Project-specific contributor with data submission permissions"
-      },
-      {
-        "name": "organisation-viewer",
-        "description": "Organization-wide viewer access to all projects"
-      },
-      {
-        "name": "viewer",
-        "description": "Project-specific viewer with read-only access"
-      }
-    ]
-  }
+  ]
 }

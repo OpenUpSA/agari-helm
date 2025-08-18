@@ -38,7 +38,12 @@ song:
   # Score Variables
   score:
     url: "http://score:8087"
-    accessToken: ""
+    # Remove hardcoded token - use service account instead
+    auth:
+      clientId: "song-service"
+      clientSecret: "song-service-secret"
+      serverUrl: "http://keycloak:8080"
+      realm: "agari"
     
   
   auth:

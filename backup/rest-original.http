@@ -29,9 +29,24 @@ username={{username}}
 ###
 @token = {{login.response.body.access_token}}
 
+### 2. GET UMA TOKEN (RPT) for resource access
+# @name rptToken
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=urn:ietf:params:oauth:grant-type:uma-ticket
+&client_id={{client_id}}
+&client_secret={{client_secret}}
+&audience={{client_id}}
+&subject_token={{token}}
+&subject_token_type=urn:ietf:params:oauth:token-type:access_token
+
+###
+@rpt_token = {{rptToken.response.body.access_token}}
+
 ### 3. CREATE STUDY
 POST http://song.local/studies/{{study_id}}/
-Authorization: Bearer {{token}}
+Authorization: Bearer {{rpt_token}}
 Content-Type: application/json
 
 {
@@ -48,7 +63,7 @@ Content-Type: application/json
 ### 4. SUBMIT ANALYSIS
 # @name submitAnalysis
 POST http://song.local/submit/{{study_id}}/
-Authorization: Bearer {{token}}
+Authorization: Bearer {{rpt_token}}
 Content-Type: application/json
 
 < ./data/analysis_submission.json
@@ -58,14 +73,14 @@ Content-Type: application/json
 @submitted_analysis_id = {{submitAnalysis.response.body.analysisId}}
 # @name getAnalysis
 GET http://song.local/studies/{{study_id}}/analysis/{{submitted_analysis_id}}
-Authorization: Bearer {{token}}
+Authorization: Bearer {{rpt_token}}
 
 ### 6. INITIALIZE SCORE UPLOAD
 # Extract object_id from step 5 response
 @object_id = {{getAnalysis.response.body.files[0].objectId}}
 # @name initUpload
 POST http://score.local/upload/{{object_id}}/uploads
-Authorization: Bearer {{token}}
+Authorization: Bearer {{rpt_token}}
 Content-Type: application/x-www-form-urlencoded
 
 fileSize={{test_file_size}}
@@ -76,13 +91,11 @@ fileSize={{test_file_size}}
 @upload_id = {{initUpload.response.body.uploadId}}
 @presigned_url = {{initUpload.response.body.parts.0.url}}
 
-@md5 = {{initUpload.response.body.objectMd5}}
-
 ### 7. UPLOAD FILE TO MINIO
 # Using hosts file entry: 127.0.0.1 minio (with port-forward to MinIO)
 # @name uploadFile
 PUT {{presigned_url}}
-Content-Type: text/plain
+Content-Type: application/octet-stream
 
 < ./data/{{test_file_name}}
 
@@ -90,34 +103,30 @@ Content-Type: text/plain
 @etag_raw = {{uploadFile.response.headers.ETag}}
 @etag = {{etag_raw.replace('"', '')}}
 
-# Debug variables before step 8a
-@debug_object_id = {{object_id}}
-@debug_etag = {{etag}}
-@debug_md5 = {{md5}}
-@debug_upload_id = {{upload_id}}
+# DEBUG: Check what values we have
+# object_id: {{object_id}}
+# upload_id: {{upload_id}}
+# etag: {{etag}}
 
-### 8a. Finalise Part Upload
-# @name finalizePartUpload
-POST http://score.local/upload/{{object_id}}/parts?partNumber=1&etag={{etag}}&md5={{md5}}&uploadId={{upload_id}}
-Authorization: Bearer {{token}}
-Content-Type: application/json
+### 8. TRY RECOVERY (instead of part finalization)
+POST http://score.local/upload/{{object_id}}/recovery
+Authorization: Bearer {{rpt_token}}
+Content-Type: application/x-www-form-urlencoded
 
-{}
+fileSize={{test_file_size}}
 
-### 8b. Finalize upload
-# @name finalizeUpload
-POST http://score.local/upload/{{object_id}}?uploadId={{upload_id}}
-Authorization: Bearer {{token}}
-Content-Type: application/json
+### A. GET SERVICE ACCOUNT TOKEN for SONG
+# @name serviceToken  
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
 
-{}
-
-
-
-### 9. PUBLISH ANALYSIS (skip complete upload)
-PUT http://song.local/studies/{{study_id}}/analysis/publish/{{submitted_analysis_id}}
-Authorization: Bearer {{token}}
+grant_type=client_credentials
+&client_id={{client_id}}
+&client_secret={{client_secret}}
 
 ###
+@service_token = {{serviceToken.response.body.access_token}}
 
-GET http://score.local/download/ping
+### 9. PUBLISH ANALYSIS (skip complete upload)
+PUT http://song.local/studies/{{study_id}}/analysis/publish/{{submitted_analysis_id}}?ignoreUndefinedMd5=true
+Authorization: Bearer {{rpt_token}}
