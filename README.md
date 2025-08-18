@@ -123,16 +123,6 @@ kubectl get ingress -n agari-dev
 kubectl logs <pod-name> -n agari-dev
 ```
 
-### Test authentication
-```bash
-# Test SONG API with JWT
-curl -H "Authorization: Bearer <jwt-token>" \
-     http://song.local/studies
-
-# Test with API key
-curl -H "Authorization: Bearer F4C094A60BA88FB3F42BB9D20D75931286549D7F3C2E448F62D81CE20237B9BC" \
-     http://song.local/studies
-```
 
 ## Configuration
 
