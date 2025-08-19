@@ -36,8 +36,8 @@ score:
   
   # Client credentials for Score to authenticate to SONG
   clientCredentials:
-    id: "score-service"
-    secret: "score-service-secret"
+    id: "dms"
+    secret: "dms-secret"
     tokenUrl: "http://keycloak:8080/realms/agari/protocol/openid-connect/token"
     systemScope: "song.READ"
   
@@ -80,12 +80,11 @@ score:
           suffix: ".WRITE"
           system: "score.WRITE"
       url: "http://keycloak:8080/realms/agari/apikey/check_api_key/"
-    jwt:
-      publickeyurl: "http://keycloak:8080/oauth/token/public_key"
     oauth2:
       resourceserver:
         jwt:
           jwkSetUri: "http://keycloak:8080/realms/agari/protocol/openid-connect/certs"
+          issuerUri: "http://keycloak:8080/realms/agari"
 
 ingress:
   enabled: true

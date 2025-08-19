@@ -117,13 +117,7 @@ spec:
             # Swagger Variable
             - name: SWAGGER_ALTERNATEURL
               value: {{ .Values.song.swagger.alternateUrl | quote }}
-            # Spring config location to load our override
-            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
-              value: "file:/song-server/config/"
-          volumeMounts:
-            - name: song-config
-              mountPath: /song-server/config
-              readOnly: true
+
           {{- if .Values.probes.liveness.enabled }}
           livenessProbe:
             {{- if .Values.probes.liveness.httpGet }}
@@ -156,15 +150,6 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      volumes:
-        - name: song-config
-          configMap:
-            name: {{ .Values.fullnameOverride | default (printf "%s-song" .Release.Name) }}-config
-            items:
-              - key: application-override.yml
-                path: application-override.yml
-              - key: application-zzz-final-override.yml
-                path: application-zzz-final-override.yml
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

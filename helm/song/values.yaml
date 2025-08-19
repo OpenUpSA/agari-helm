@@ -22,8 +22,16 @@ song:
       active: "prod,secure,kafka,s3,score-client-cred"
     flyway:
       enabled: true
-  
-  # Database Variables
+    security:
+      oauth2:
+        resourceserver:
+          jwt:
+            jwkSetUri: "http://keycloak:8080/realms/agari/protocol/openid-connect/certs"
+            issuerUri: "http://keycloak.local/realms/agari"
+  client:
+    study:
+      maxUploadFileSize: 10737418240
+      maxNumberOfFilesPerUpload: 20  # Database Variables
   datasource:
     url: "jdbc:postgresql://song-db:5432/songDb?stringtype=unspecified"
     username: "admin"

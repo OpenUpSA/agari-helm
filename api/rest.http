@@ -10,7 +10,7 @@
 
 # Authentication config
 @username = admin
-@password = password123
+@password = admin123
 @realm = agari
 @client_id = dms
 @client_secret = dms-secret
@@ -109,10 +109,124 @@ Content-Type: application/json
 
 
 
-### 9. PUBLISH ANALYSIS (skip complete upload)
+
+### 9. PUBLISH ANALYSIS 
 PUT http://song.local/studies/{{study_id}}/analysis/publish/{{submitted_analysis_id}}
 Authorization: Bearer {{token}}
 
-###
+### Client credentials test
+# @name clientCredentials  
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
 
-GET http://score.local/download/ping
+grant_type=client_credentials
+&client_id={{client_id}}
+&client_secret={{client_secret}}
+&scope=score.WRITE
+
+###
+@client_token = {{clientCredentials.response.body.access_token}}
+
+###
+# @name scoreUploadTest
+GET http://score.local/upload/test/{{object_id}}
+Authorization: Bearer {{client_token}}
+
+###
+# @name scoreIsObjectExist
+GET http://score.local/upload/{{object_id}}
+Authorization: Bearer {{client_token}}
+
+### KEYCLOAK ADMIN SETUP
+# Get admin token for Keycloak management
+# @name adminToken
+POST http://keycloak.local/realms/master/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password
+&username=admin
+&password=admin123
+&client_id=admin-cli
+
+###
+@admin_token = {{adminToken.response.body.access_token}}
+
+### Create Resource in Keycloak
+# @name createResource
+POST http://keycloak.local/admin/realms/{{realm}}/clients/{{client_id}}/authz/resource-server/resource
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "study-{{study_id}}",
+  "displayName": "Study {{study_id}} Resource",
+  "uri": "/studies/{{study_id}}/*",
+  "type": "study",
+  "scopes": ["READ", "WRITE"],
+  "attributes": {}
+}
+
+###
+@resource_id = {{createResource.response.body.id}}
+
+### Create Scopes in Keycloak
+# @name createReadScope
+POST http://keycloak.local/admin/realms/{{realm}}/clients/{{client_id}}/authz/resource-server/scope
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "study.{{study_id}}.READ",
+  "displayName": "Read access to study {{study_id}}"
+}
+
+###
+# @name createWriteScope
+POST http://keycloak.local/admin/realms/{{realm}}/clients/{{client_id}}/authz/resource-server/scope
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "study.{{study_id}}.WRITE",
+  "displayName": "Write access to study {{study_id}}"
+}
+
+###
+@read_scope_id = {{createReadScope.response.body.id}}
+@write_scope_id = {{createWriteScope.response.body.id}}
+
+### Create Policy in Keycloak
+# @name createPolicy
+POST http://keycloak.local/admin/realms/{{realm}}/clients/{{client_id}}/authz/resource-server/policy/role
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "study-{{study_id}}-policy",
+  "description": "Policy for study {{study_id}} access",
+  "roles": [
+    {
+      "id": "default-roles-{{realm}}",
+      "required": false
+    }
+  ],
+  "logic": "POSITIVE"
+}
+
+###
+@policy_id = {{createPolicy.response.body.id}}
+
+### Create Permission in Keycloak
+# @name createPermission
+POST http://keycloak.local/admin/realms/{{realm}}/clients/{{client_id}}/authz/resource-server/permission/resource
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+  "name": "study-{{study_id}}-permission",
+  "description": "Permission for study {{study_id}} resource",
+  "resources": ["{{resource_id}}"],
+  "policies": ["{{policy_id}}"],
+  "scopes": ["{{read_scope_id}}", "{{write_scope_id}}"],
+  "decisionStrategy": "UNANIMOUS"
+}
