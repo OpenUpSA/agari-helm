@@ -6,7 +6,7 @@ url:
 image:
   repository: quay.io/keycloak/keycloak
   pullPolicy: IfNotPresent
-  tag: "22.0.5"
+  tag: "26.3.2"
 
 nameOverride: ""
 fullnameOverride: "keycloak"
@@ -69,7 +69,7 @@ keycloak:
   hostname: keycloak.local
   healthEnabled: true
   startupMode: start-dev
-  importRealm: true
+  importRealm: false
 
 # Resource limits - better configuration from values-keycloak.yaml
 resources:
