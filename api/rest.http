@@ -8,6 +8,9 @@
 @study_id = study1
 @analysis_id = analysis001
 
+
+
+
 # Authentication config
 @username = admin
 @password = admin123
@@ -29,7 +32,7 @@ username={{username}}
 ###
 @token = {{login.response.body.access_token}}
 
-### 3. CREATE STUDY
+### 2. CREATE STUDY
 POST http://song.local/studies/{{study_id}}/
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -45,7 +48,7 @@ Content-Type: application/json
   }
 }
 
-### 4. SUBMIT ANALYSIS
+### 3a. SUBMIT ANALYSIS
 # @name submitAnalysis
 POST http://song.local/submit/{{study_id}}/
 Authorization: Bearer {{token}}
@@ -53,14 +56,14 @@ Content-Type: application/json
 
 < ./data/analysis_submission.json
 
-### 5. GET ANALYSIS DETAILS
+### 3b. GET ANALYSIS DETAILS
 # Extract analysis_id from step 4 response and get full analysis details
 @submitted_analysis_id = {{submitAnalysis.response.body.analysisId}}
 # @name getAnalysis
 GET http://song.local/studies/{{study_id}}/analysis/{{submitted_analysis_id}}
 Authorization: Bearer {{token}}
 
-### 6. INITIALIZE SCORE UPLOAD
+### 4a. INITIALIZE SCORE UPLOAD
 # Extract object_id from step 5 response
 @object_id = {{getAnalysis.response.body.files[0].objectId}}
 # @name initUpload
@@ -78,7 +81,7 @@ fileSize={{test_file_size}}
 
 @md5 = {{initUpload.response.body.objectMd5}}
 
-### 7. UPLOAD FILE TO MINIO
+### 4b. UPLOAD FILE TO MINIO
 # Using hosts file entry: 127.0.0.1 minio (with port-forward to MinIO)
 # @name uploadFile
 PUT {{presigned_url}}
@@ -87,32 +90,72 @@ Content-Type: text/plain
 < ./data/{{test_file_name}}
 
 ###
-# @etag = {{uploadFile.response.headers.ETag.replace('"', '')}}
+# @etag = {{uploadFile.response.headers.ETag}}
 @etag = a1421b18d7859ad811877b981fedca4f
 # Debug variables before step 8a
 @debug_object_id = {{object_id}}
 @debug_etag = {{etag}}
+# @etag_stripped = {{etag.replace('"', '')}}
 @debug_md5 = {{md5}}
 @debug_upload_id = {{upload_id}}
 
-### 8a. Finalise Part Upload
+### 4c. Finalise Part Upload
 # @name finalizePartUpload
 POST http://score.local/upload/{{object_id}}/parts?partNumber=1&etag={{etag}}&md5={{md5}}&uploadId={{upload_id}}
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
-### 8b. Finalize upload
+### 4d. Finalize upload
 # @name finalizeUpload
 POST http://score.local/upload/{{object_id}}?uploadId={{upload_id}}
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
+# @analysis_id = 359047cd-7a55-462f-9047-cd7a55b62fdd
+@analysis_id = {{submitAnalysis.response.body.analysisId}}
 
 
-
-### 9. PUBLISH ANALYSIS 
-PUT http://song.local/studies/{{study_id}}/analysis/publish/{{submitted_analysis_id}}
+### 5. PUBLISH ANALYSIS 
+PUT http://song.local/studies/{{study_id}}/analysis/publish/{{analysis_id}}
 Authorization: Bearer {{token}}
+
+### 6. TRIGGER MAESTRO INDEXING
+# @name maestroIndex
+POST http://maestro.local/index/repository/song.overture/study/{{study_id}}
+Authorization: Bearer {{token}}
+
+### 6a. VERIFY SONG HAS PUBLISHED ANALYSIS
+# @name verifyPublished
+GET http://song.local/studies/{{study_id}}/analysis
+Authorization: Bearer {{token}}
+
+### 6b. CHECK MAESTRO LOGS (if needed)
+# Check what Maestro sees when trying to fetch from Song
+# @name maestroHealth
+GET http://maestro.local/health
+
+### 7. CHECK ELASTICSEARCH INDEX
+# @name checkElasticsearch
+GET http://elasticsearch.local/agari-index/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "studyId": "{{study_id}}"
+    }
+  }
+}
+
+### 8. CHECK ARRANGER DATA ACCESS
+# @name arrangerGraphQL
+POST http://arranger.local/graphql
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "query": "query { file { hits { total } edges { node { objectId fileName fileSize studyId } } } }"
+}
 
 ### Client credentials test
 # @name clientCredentials  

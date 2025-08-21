@@ -14,7 +14,7 @@ Complete Overture stack deployment on Kubernetes with authentication, file manag
 ### 1. Setup k3d Cluster
 
 ```bash
-k3d cluster create agari-dev --agents 2 --port "80:80@loadbalancer"
+k3d cluster create agari-dev --agentgroupss 2 --port "80:80@loadbalancer"
 
 # Install nginx ingress
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.1/deploy/static/provider/cloud/deploy.yaml
@@ -56,22 +56,16 @@ helm install score ./helm/score -n agari-dev
 
 # Search and indexing
 helm install elasticsearch ./helm/elasticsearch -n agari-dev
-helm install maestro ./helm/maestro -n agari-dev
 
-# GraphQL API
-helm install arranger ./helm/arranger -n agari-dev
-```
-
-### 5. Create Elasticsearch Index
-
-```bash
 # Create agari-index with proper mapping
 curl -X PUT "http://elasticsearch.local/agari-index" \
     -H "Content-Type: application/json" \
     -d @helm/elasticsearch/configs/agari-index-mapping.json
 
-# Restart Arranger to detect new index
-kubectl rollout restart deployment/arranger -n agari-dev
+helm install maestro ./helm/maestro -n agari-dev
+
+# GraphQL API
+helm install arranger ./helm/arranger -n agari-dev
 ```
 
 ## Service Access

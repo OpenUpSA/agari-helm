@@ -17,6 +17,7 @@
         "tumourNormalDesignation": "Normal"
       },
       "donor": {
+        "donorId": "D001",
         "submitterDonorId": "D001",
         "gender": "Female"
       }
