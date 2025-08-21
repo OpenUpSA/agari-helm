@@ -21,8 +21,8 @@ arranger:
   
   elasticsearch:
     host: "http://elasticsearch:9200"
-    user: "elastic" 
-    password: "myelasticpassword"
+    user: ""
+    password: ""
     compatibilityMode: true
   
   stage:

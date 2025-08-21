@@ -19,7 +19,7 @@ service:
 song:
   spring:
     profiles:
-      active: "prod,secure,default,s3,score-client-cred"
+      active: "prod,secure,kafka,s3,score-client-cred"
     flyway:
       enabled: true
     security:
@@ -76,9 +76,9 @@ song:
           issuerUri: "http://keycloak.local/realms/agari"
       introspectionUri: "http://keycloak:8080/realms/agari/apikey/check_api_key/"
   
-  # Kafka Variables (disabled - pointing to non-existent server)
+  # Kafka Variables (enabled)
   kafka:
-    bootstrapServers: "disabled-kafka:9092"
+    bootstrapServers: "kafka:9092"
     template:
       defaultTopic: "song-analysis"
   

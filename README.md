@@ -110,6 +110,91 @@ curl -d "client_id=song-api" \
 4. **Index data** → Maestro processes and indexes in Elasticsearch
 5. **Query data** → Arranger provides GraphQL API
 
+## GraphQL Query Examples
+
+Visit http://arranger.local/graphql to access the GraphQL playground. Here are example queries you can copy and paste:
+
+### 1. Basic File Query - Get all files with metadata
+```graphql
+query {
+  file {
+    hits {
+      total
+      edges {
+        node {
+          object_id
+          study_id
+          data_type
+          file_type
+          file_access
+          file {
+            name
+            size
+            md5sum
+          }
+          analysis {
+            analysis_id
+            analysis_type
+            analysis_state
+            experiment {
+              libraryStrategy
+              aligned
+              pairedEnd
+            }
+          }
+          donors {
+            donor_id
+            submitter_donor_id
+            gender
+            specimens {
+              specimen_id
+              specimen_type
+              tumour_normal_designation
+              samples {
+                sample_id
+                sample_type
+                submitter_sample_id
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### 2. Aggregated Query - Get file counts by study and data type
+```graphql
+query {
+  file {
+    hits {
+      total
+    }
+    aggregations {
+      study_id {
+        buckets {
+          key
+          doc_count
+        }
+      }
+      data_type {
+        buckets {
+          key
+          doc_count
+        }
+      }
+      file_type {
+        buckets {
+          key
+          doc_count
+        }
+      }
+    }
+  }
+}
+```
+
 ## Troubleshooting
 
 ### Check service status

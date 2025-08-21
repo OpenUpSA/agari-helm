@@ -7,16 +7,19 @@
   },
   "samples": [
     {
+      "sampleId": "SA001",
       "submitterSampleId": "SA001",
       "sampleType": "Total DNA",
       "matchedNormalSubmitterSampleId": null,
       "specimen": {
+        "specimenId": "SP001", 
         "submitterSpecimenId": "SP001",
         "specimenType": "Normal",
         "specimenTissueSource": "Blood derived",
         "tumourNormalDesignation": "Normal"
       },
       "donor": {
+        "studyId": "study1",
         "donorId": "D001",
         "submitterDonorId": "D001",
         "gender": "Female"
