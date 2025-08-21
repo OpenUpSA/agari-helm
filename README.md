@@ -39,6 +39,9 @@ helm install song-db ./helm/song-db -n agari-dev
 # Object storage
 helm install minio ./helm/minio -n agari-dev
 
+# Minio might require prot-forwarding:
+kubectl port-forward -n agari-dev service/minio 9000:9000
+
 # Message queue
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm install kafka bitnami/kafka -f helm/kafka/values-bitnami.yaml -n agari-dev
