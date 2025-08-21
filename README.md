@@ -43,7 +43,7 @@ helm install minio ./helm/minio -n agari-dev
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm install kafka bitnami/kafka -f helm/kafka/values-bitnami.yaml -n agari-dev
 
-# Authentication (Keycloak 22.0.5 for SONG compatibility)
+# Keycloak
 helm install keycloak ./helm/keycloak -n agari-dev
 ```
 
@@ -65,6 +65,9 @@ curl -X PUT "http://elasticsearch.local/agari-index" \
 helm install maestro ./helm/maestro -n agari-dev
 
 # GraphQL API
+# Create Arranger configuration ConfigMap
+kubectl create configmap arranger-config --from-file=helm/arranger/configs/ -n agari-dev
+
 helm install arranger ./helm/arranger -n agari-dev
 ```
 
