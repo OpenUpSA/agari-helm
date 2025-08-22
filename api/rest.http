@@ -13,10 +13,10 @@
 
 # Authentication config
 @username = admin
-@password = admin123
+@password = pass123
 @realm = agari
 @client_id = dms
-@client_secret = dms-secret
+@client_secret = b6nP1Xdsrlgvwf2Lp3AHuJK69P0rz768
 
 ### 1. LOGIN to get access token
 # @name login

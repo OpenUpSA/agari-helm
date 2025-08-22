@@ -2,6 +2,8 @@
 
 Complete Overture stack deployment on Kubernetes with authentication, file management, and data indexing.
 
+![Architecture Diagram](architecture.svg)
+
 ## Prerequisites
 
 - Kubernetes cluster (k3d recommended for dev)
@@ -11,7 +13,9 @@ Complete Overture stack deployment on Kubernetes with authentication, file manag
 
 ## Quick Deploy
 
-### 1. Setup k3d Cluster
+### 1. Setup Cluster
+
+In dev you might want to use **k3d** for quick setup:
 
 ```bash
 k3d cluster create agari-dev --agentgroupss 2 --port "80:80@loadbalancer"
@@ -32,10 +36,6 @@ kubectl create namespace agari-dev
 ### 3. Deploy Infrastructure
 
 ```bash
-# Databases
-helm install keycloak-db ./helm/keycloak-db -n agari-dev
-helm install song-db ./helm/song-db -n agari-dev
-
 # Object storage
 helm install minio ./helm/minio -n agari-dev
 
@@ -45,19 +45,31 @@ kubectl port-forward -n agari-dev service/minio 9000:9000
 # Message queue
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm install kafka bitnami/kafka -f helm/kafka/values-bitnami.yaml -n agari-dev
+```
+
+### 4. Setup Keycloak
+
+```bash
+# Database
+helm install keycloak-db ./helm/keycloak-db -n agari-dev
 
 # Keycloak
 helm install keycloak ./helm/keycloak -n agari-dev
 ```
 
-### 4. Deploy Overture Stack
+Set up the **client** in Keycloak and copy the **secret** to **song**, **score** and **maestro** `values.yaml`
+
+### 5. Deploy Overture Stack
 
 ```bash
-# Core services  
+# SONG  
+helm install song-db ./helm/song-db -n agari-dev
 helm install song ./helm/song -n agari-dev
+
+# SCORE
 helm install score ./helm/score -n agari-dev
 
-# Search and indexing
+# ELASTICSEARCH
 helm install elasticsearch ./helm/elasticsearch -n agari-dev
 
 # Create agari-index with proper mapping
@@ -65,10 +77,11 @@ curl -X PUT "http://elasticsearch.local/agari-index" \
     -H "Content-Type: application/json" \
     -d @helm/elasticsearch/configs/agari-index-mapping.json
 
+# MAESTRO
 helm install maestro ./helm/maestro -n agari-dev
 
-# GraphQL API
-# Create Arranger configuration ConfigMap
+# ARRANGER
+# Set up Arranger configuration
 kubectl create configmap arranger-config --from-file=helm/arranger/configs/ -n agari-dev
 
 helm install arranger ./helm/arranger -n agari-dev
@@ -89,7 +102,7 @@ Services are available at these URLs:
 
 ### Default Credentials
 - **Keycloak Admin**: admin / admin123
-- **API Key**: F4C094A60BA88FB3F42BB9D20D75931286549D7F3C2E448F62D81CE20237B9BC
+
 
 ### JWT Token Example
 ```bash
@@ -114,7 +127,8 @@ curl -d "client_id=song-api" \
 
 Visit http://arranger.local/graphql to access the GraphQL playground. Here are example queries you can copy and paste:
 
-### 1. Basic File Query - Get all files with metadata
+
+### 1. Basic File Query - Get all files with basic metadata
 ```graphql
 query {
   file {
@@ -122,41 +136,8 @@ query {
       total
       edges {
         node {
-          object_id
-          study_id
-          data_type
-          file_type
-          file_access
-          file {
-            name
-            size
-            md5sum
-          }
-          analysis {
-            analysis_id
-            analysis_type
-            analysis_state
-            experiment {
-              libraryStrategy
-              aligned
-              pairedEnd
-            }
-          }
-          donors {
-            donor_id
-            submitter_donor_id
-            gender
-            specimens {
-              specimen_id
-              specimen_type
-              tumour_normal_designation
-              samples {
-                sample_id
-                sample_type
-                submitter_sample_id
-              }
-            }
-          }
+          id
+          score
         }
       }
     }
@@ -164,31 +145,15 @@ query {
 }
 ```
 
-### 2. Aggregated Query - Get file counts by study and data type
+### 2. Show available fields in the schema
 ```graphql
 query {
-  file {
-    hits {
-      total
-    }
-    aggregations {
-      study_id {
-        buckets {
-          key
-          doc_count
-        }
-      }
-      data_type {
-        buckets {
-          key
-          doc_count
-        }
-      }
-      file_type {
-        buckets {
-          key
-          doc_count
-        }
+  __type(name: "fileNode") {
+    name
+    fields {
+      name
+      type {
+        name
       }
     }
   }
@@ -214,4 +179,3 @@ kubectl logs <pod-name> -n agari-dev
 Key configuration files:
 - `helm/*/values.yaml` - Service configurations
 - `helm/elasticsearch/configs/agari-index-mapping.json` - Elasticsearch schema
-- `helm/keycloak/configs/agari-realm.json` - Keycloak realm setup

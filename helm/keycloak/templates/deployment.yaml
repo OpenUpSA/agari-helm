@@ -77,15 +77,7 @@ spec:
             {{- end }}
           args:
             - {{ .Values.keycloak.startupMode }}
-            {{- if .Values.keycloak.importRealm }}
-            - --import-realm
-            {{- end }}
           volumeMounts:
-            {{- if .Values.keycloak.importRealm }}
-            - name: keycloak-import
-              mountPath: /opt/keycloak/data/import
-              readOnly: true
-            {{- end }}
           {{- if .Values.probes.liveness.enabled }}
           livenessProbe:
             {{- if .Values.probes.liveness.httpGet }}
@@ -118,15 +110,6 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      volumes:
-        {{- if .Values.keycloak.importRealm }}
-        - name: keycloak-import
-          configMap:
-            name: keycloak-config
-            items:
-              - key: agari-realm.json
-                path: agari-realm.json
-        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
