@@ -98,11 +98,33 @@ Services are available at these URLs:
 - **Elasticsearch**: http://elasticsearch.local
 - **MinIO Console**: http://minio-console.local
 
-## Authentication
+## Authentication and Authorization
 
 ### Default Credentials
 - **Keycloak Admin**: admin / admin123
 
+### Basic End to End Requirements
+
+- **Realm**: `agari`
+
+  - **Group**:
+    - `admin`
+  - **User**:
+    - `admin` / `admin123` (member of `admin` group) 
+  - **Client**:
+    - `dms` - Data Management System (for SONG, Score, Maestro). Policy enforcement: `permissive` and Decision strategy: `affirmative`
+      - **Scopes**:
+        - `READ`
+        - `WRITE`
+      - **Resources**:
+        - `song` - SONG API - with `READ` and `WRITE` scopes
+        - `score` - Score API - with `READ` and `WRITE` scopes
+      - **Policies**:
+        - `admin-policy` - group policy - with `admin` group
+        - `client-policy` - client policy - with `dms` client (**This is very Important as it enables song and score to communicate**)
+      - **Permissions**:
+        - `admin-permission` - resources `song` and `score` with `admin-policy`
+        - `client-permission` - resources `song` and `score` with `client-policy`
 
 ### JWT Token Example
 ```bash
