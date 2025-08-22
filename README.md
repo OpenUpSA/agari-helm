@@ -87,6 +87,20 @@ kubectl create configmap arranger-config --from-file=helm/arranger/configs/ -n a
 helm install arranger ./helm/arranger -n agari-dev
 ```
 
+## Ingress Configuration
+
+For local development, you can use `/etc/hosts` to map the services:
+
+```bash
+echo "127.0.0.1 song.local
+127.0.0.1 score.local
+127.0.0.1 maestro.local
+127.0.0.1 arranger.local
+127.0.0.1 keycloak.local
+127.0.0.1 elasticsearch.local
+127.0.0.1 minio-console.local" | sudo tee -a /etc/hosts
+```
+
 ## Service Access
 
 Services are available at these URLs:
