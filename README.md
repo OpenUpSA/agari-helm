@@ -91,8 +91,8 @@ helm install arranger ./helm/arranger -n agari-dev
 
 Services are available at these URLs:
 
-- **SONG API**: http://song.local
-- **Score API**: http://score.local  
+- **SONG API**: http://song.local/swagger-ui.html
+- **Score API**: http://score.local/swagger-ui.html  
 - **Arranger GraphQL**: http://arranger.local/graphql
 - **Keycloak**: http://keycloak.local
 - **Elasticsearch**: http://elasticsearch.local
