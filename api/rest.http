@@ -143,3 +143,72 @@ Content-Type: application/json
 {
   "query": "query { file { hits { total } edges { node { objectId fileName fileSize studyId } } } }"
 }
+
+### === FOLIO PROJECTS SERVICE ===
+
+### 1. Folio Health Check
+GET http://folio.local/health
+
+### 2. Get Folio JWT Token
+# @name folio_login
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password
+&client_id=folio
+&username={{username}}
+&password={{password}}
+
+### 3. List Projects
+GET http://folio.local/api/projects
+Authorization: Bearer {{folio_login.response.body.access_token}}
+
+### 4. Create Project
+# @name create_project
+POST http://folio.local/api/projects
+Authorization: Bearer {{folio_login.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "name": "COVID-19 Variants Study",
+  "description": "Analysis of SARS-CoV-2 variants from South African samples",
+  "pathogen_id": null
+}
+
+### 5. Get Project by ID
+GET http://folio.local/api/projects/{{create_project.response.body.id}}
+Authorization: Bearer {{folio_login.response.body.access_token}}
+
+### 6. List Pathogens
+GET http://folio.local/api/pathogens
+Authorization: Bearer {{folio_login.response.body.access_token}}
+
+### 7. Create Pathogen
+# @name create_pathogen
+POST http://folio.local/api/pathogens
+Authorization: Bearer {{folio_login.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "name": "SARS-CoV-2",
+  "scientific_name": "Severe acute respiratory syndrome coronavirus 2",
+  "description": "Novel coronavirus causing COVID-19",
+  "schema": {
+    "genome_length": 29903,
+    "genes": ["ORF1ab", "S", "ORF3a", "E", "M", "ORF6", "ORF7a", "ORF7b", "ORF8", "N", "ORF10"]
+  }
+}
+
+### 8. Update Project with Pathogen
+PUT http://folio.local/api/projects/{{create_project.response.body.id}}
+Authorization: Bearer {{folio_login.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "name": "COVID-19 Variants Study",
+  "description": "Analysis of SARS-CoV-2 variants from South African samples - Updated",
+  "pathogen_id": "{{create_pathogen.response.body.id}}"
+}
+
+### 9. Folio API Documentation
+GET http://folio.local/docs

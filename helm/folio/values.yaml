@@ -1,0 +1,68 @@
+replicaCount: 1
+
+fullnameOverride: "folio"
+
+url:
+  hostname: "folio.local"
+
+image:
+  repository: folio
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+nameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 8000
+
+folio:
+  # Keycloak configuration
+  keycloak:
+    serverUrl: "http://keycloak:8080"
+    realm: "agari"
+    clientId: "folio"
+    clientSecret: "dms-secret"  # Same as other services
+  
+  # Service configuration
+  debug: true
+  corsOrigins: "*"
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# Probe configuration
+probes:
+  liveness:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readiness:
+    enabled: true
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations: {}
+  hosts:
+    - host: folio.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+autoscaling:
+  enabled: false
