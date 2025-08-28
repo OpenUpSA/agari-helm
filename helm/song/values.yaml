@@ -3,7 +3,7 @@ replicaCount: 1
 fullnameOverride: "song"
 
 url:
-  hostname: "song.local"
+  hostname: "song-ilifu.openup.org.za"
 
 image:
   repository: ghcr.io/overture-stack/song-server
@@ -27,7 +27,7 @@ song:
         resourceserver:
           jwt:
             jwkSetUri: "http://keycloak:8080/realms/agari/protocol/openid-connect/certs"
-            issuerUri: "http://keycloak.local/realms/agari"
+            issuerUri: "http://keycloak-ilifu.openup.org.za/realms/agari"
   client:
     study:
       maxUploadFileSize: 10737418240
@@ -73,7 +73,7 @@ song:
       resourceserver:
         jwt:
           jwkSetUri: "http://keycloak:8080/realms/agari/protocol/openid-connect/certs"
-          issuerUri: "http://keycloak.local/realms/agari"
+          issuerUri: "http://keycloak-ilifu.openup.org.za/realms/agari"
       introspectionUri: "http://keycloak:8080/realms/agari/apikey/check_api_key/"
   
   # Kafka Variables (enabled)
@@ -109,11 +109,11 @@ probes:
 
 ingress:
   enabled: true
-  className: "nginx"
+  className: "private"
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
   hosts:
-    - host: song.local
+    - host: song-ilifu.openup.org.za
       paths:
         - path: /
           pathType: Prefix

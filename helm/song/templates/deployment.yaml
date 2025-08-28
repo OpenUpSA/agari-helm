@@ -98,8 +98,6 @@ spec:
               value: {{ .Values.song.auth.oauth2.resourceserver.jwt.jwkSetUri | quote }}
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: {{ .Values.song.auth.oauth2.resourceserver.jwt.issuerUri | quote }}
-            - name: SPRING_APPLICATION_JSON
-              value: '{"auth":{"server":{"provider":"{{ .Values.song.auth.server.provider }}","clientID":"{{ .Values.song.auth.server.clientId }}","clientSecret":"{{ .Values.song.auth.server.clientSecret }}","tokenName":"{{ .Values.song.auth.server.tokenName }}","keycloak":{"host":"{{ .Values.song.auth.server.keycloak.host }}","realm":"{{ .Values.song.auth.server.keycloak.realm }}"},"scope":{"study":{"prefix":"{{ .Values.song.auth.server.scope.study.prefix }}","suffix":"{{ .Values.song.auth.server.scope.study.suffix }}"},"system":"{{ .Values.song.auth.server.scope.system }}"},"introspectionUri":"{{ .Values.song.auth.oauth2.introspectionUri }}"}},"score":{"clientCredentials":{"id":"{{ .Values.song.score.clientCredentials.id }}","secret":"{{ .Values.song.score.clientCredentials.secret }}","tokenUrl":"{{ .Values.song.score.clientCredentials.tokenUrl }}","systemScope":"{{ .Values.song.score.clientCredentials.systemScope }}"}},"spring":{"security":{"oauth2":{"resourceserver":{"jwt":{"jwk-set-uri":"{{ .Values.song.auth.oauth2.resourceserver.jwt.jwkSetUri }}","issuer-uri":"{{ .Values.song.auth.oauth2.resourceserver.jwt.issuerUri }}"}}}},"basic":{"enabled":false}},"logging":{"level":{"bio.overture.song.server.security":"DEBUG","org.springframework.security":"DEBUG"}}}'
             - name: AUTH_SERVER_INTROSPECTIONURI
               value: {{ .Values.song.auth.oauth2.introspectionUri | quote }}
             # Postgres Variables

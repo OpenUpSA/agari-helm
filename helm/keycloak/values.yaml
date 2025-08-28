@@ -1,7 +1,7 @@
 replicaCount: 1
 
 url:
-  hostname: "keycloak.local"
+  hostname: "keycloak-ilifu.openup.org.za"
 
 image:
   repository: quay.io/keycloak/keycloak
@@ -17,13 +17,13 @@ service:
 
 ingress:
   enabled: true
-  className: "nginx"
+  className: "private"
   annotations:
     nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
     nginx.ingress.kubernetes.io/proxy-buffering: "on"
     nginx.ingress.kubernetes.io/proxy-buffers-number: "20"
   hosts:
-    - host: keycloak.local
+    - host: keycloak-ilifu.openup.org.za
       paths:
         - path: /
           pathType: Prefix
@@ -38,6 +38,8 @@ extraEnv:
     value: "false"
   - name: JAVA_OPTS_APPEND
     value: "-Djava.awt.headless=true -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.net.preferIPv4Stack=true -server -Xms512m -Xmx768m"
+  - name: KC_CORS_ORIGINS
+    value: "*"
 
 probes:
   liveness:
@@ -66,7 +68,7 @@ keycloak:
     password: admin123
   
   # Keycloak settings
-  hostname: keycloak.local
+  hostname: keycloak-ilifu.openup.org.za
   healthEnabled: true
   startupMode: start-dev
 

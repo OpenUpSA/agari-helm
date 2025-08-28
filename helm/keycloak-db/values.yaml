@@ -10,8 +10,8 @@ fullnameOverride: "keycloak-db"
 
 podAnnotations: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+podSecurityContext:
+  fsGroup: 999
 
 securityContext:
   # capabilities:

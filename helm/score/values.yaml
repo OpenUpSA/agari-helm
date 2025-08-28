@@ -3,7 +3,7 @@ replicaCount: 1
 fullnameOverride: "score"
 
 url:
-  hostname: "score.local"
+  hostname: "score-ilifu.openup.org.za"
 
 image:
   repository: ghcr.io/overture-stack/score-server
@@ -86,7 +86,7 @@ score:
       resourceserver:
         jwt:
           jwkSetUri: "http://keycloak:8080/realms/agari/protocol/openid-connect/certs"
-          issuerUri: "http://keycloak.local/realms/agari"
+          issuerUri: "http://keycloak-ilifu.openup.org.za/realms/agari"
 
 ingress:
   enabled: true
@@ -94,7 +94,7 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
   hosts:
-    - host: score.local
+    - host: score-ilifu.openup.org.za
       paths:
         - path: /
           pathType: Prefix
@@ -112,7 +112,7 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
   hosts:
-    - host: score.local
+    - host: score-ilifu.openup.org.za
       paths:
         - path: /
           pathType: Prefix
