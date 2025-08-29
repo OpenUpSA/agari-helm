@@ -39,7 +39,7 @@ resources:
 
 ingress:
   enabled: true
-  className: "nginx"
+  className: "private"
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
   hosts:
@@ -70,14 +70,14 @@ probes:
 resources:
   limits:
     cpu: 200m
-    memory: 512Mi
+    memory: 1Gi
   requests:
     cpu: 100m
     memory: 256Mi
 
 ingress:
   enabled: true
-  className: "nginx"
+  className: "private"
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
   hosts:
