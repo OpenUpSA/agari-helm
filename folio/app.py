@@ -6,6 +6,30 @@ import os
 import jwt
 from functools import wraps
 import time
+import psycopg2
+from psycopg2.extras import RealDictCursor, Json
+import uuid
+from datetime import datetime
+import traceback
+import json
+
+
+def serialize_datetime(obj):
+    """Convert datetime objects to ISO format strings for JSON serialization"""
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    return obj
+
+
+def serialize_record(record):
+    """Convert a database record to a JSON-serializable dictionary"""
+    if not record:
+        return None
+    
+    result = {}
+    for key, value in record.items():
+        result[key] = serialize_datetime(value)
+    return result
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -26,6 +50,13 @@ KEYCLOAK_ADMIN_CLIENT_ID = "admin-cli"
 
 # UMA Resource Server endpoints (proper way for DMS client)
 KEYCLOAK_UMA_RESOURCE_URI = f"{KEYCLOAK_HOST}/realms/{KEYCLOAK_REALM}/authz/protection/resource_set"
+
+# Database configuration
+DB_HOST = os.getenv("DB_HOST", "folio-db")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_NAME = os.getenv("DB_NAME", "folio")
+DB_USER = os.getenv("DB_USER", "admin")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "admin")
 
 app = Flask(__name__)
 
@@ -51,6 +82,8 @@ api = Api(
 health_ns = api.namespace('health', description='Health check operations')
 auth_ns = api.namespace('auth', description='Authentication test operations') 
 projects_ns = api.namespace('projects', description='Project management operations')
+pathogens_ns = api.namespace('pathogens', description='Pathogen management operations')
+studies_ns = api.namespace('studies', description='Study management operations')
 
 # Define data models for Swagger documentation
 user_model = api.model('User', {
@@ -91,8 +124,103 @@ error_model = api.model('Error', {
     'rpt_permissions': fields.List(fields.Raw, description='Raw RPT permissions')
 })
 
+pathogen_model = api.model('Pathogen', {
+    'id': fields.String(description='Pathogen UUID', readonly=True),
+    'name': fields.String(required=True, description='Pathogen name'),
+    'scientific_name': fields.String(description='Scientific name'),
+    'description': fields.String(description='Pathogen description'),
+    'created_at': fields.DateTime(description='Creation timestamp', readonly=True),
+    'updated_at': fields.DateTime(description='Last update timestamp', readonly=True)
+})
+
+pathogen_input_model = api.model('PathogenInput', {
+    'name': fields.String(required=True, description='Pathogen name'),
+    'scientific_name': fields.String(description='Scientific name'),
+    'description': fields.String(description='Pathogen description')
+})
+
+project_model = api.model('Project', {
+    'id': fields.String(description='Project UUID', readonly=True),
+    'slug': fields.String(required=True, description='Project slug/identifier'),
+    'name': fields.String(required=True, description='Project name'),
+    'description': fields.String(description='Project description'),
+    'organization_id': fields.String(description='Organization ID from Keycloak', readonly=True),
+    'user_id': fields.String(description='User ID from Keycloak (creator)', readonly=True),
+    'status': fields.String(description='Project status'),
+    'pathogen_id': fields.String(description='Associated pathogen UUID'),
+    'pathogen_name': fields.String(description='Pathogen name', readonly=True),
+    'created_at': fields.DateTime(description='Creation timestamp', readonly=True),
+    'updated_at': fields.DateTime(description='Last update timestamp', readonly=True),
+    'deleted_at': fields.DateTime(description='Deletion timestamp', readonly=True)
+})
+
+project_input_model = api.model('ProjectInput', {
+    'slug': fields.String(required=True, description='Project slug/identifier'),
+    'name': fields.String(required=True, description='Project name'),
+    'description': fields.String(description='Project description'),
+    'pathogen_id': fields.String(required=True, description='Associated pathogen UUID')
+})
+
+study_model = api.model('Study', {
+    'id': fields.String(description='Study UUID', readonly=True),
+    'study_id': fields.String(required=True, description='Study identifier'),
+    'name': fields.String(required=True, description='Study name'),
+    'description': fields.String(description='Study description'),
+    'project_id': fields.String(required=True, description='Associated project UUID'),
+    'project_slug': fields.String(description='Project slug', readonly=True),
+    'start_date': fields.Date(description='Study start date'),
+    'end_date': fields.Date(description='Study end date'),
+    'status': fields.String(description='Study status'),
+    'song_created': fields.Boolean(description='Whether study was created in SONG', readonly=True),
+    'created_at': fields.DateTime(description='Creation timestamp', readonly=True),
+    'updated_at': fields.DateTime(description='Last update timestamp', readonly=True),
+    'deleted_at': fields.DateTime(description='Deletion timestamp', readonly=True)
+})
+
+study_input_model = api.model('StudyInput', {
+    'study_id': fields.String(required=True, description='Study identifier'),
+    'name': fields.String(required=True, description='Study name'), 
+    'description': fields.String(description='Study description'),
+    'project_id': fields.String(required=True, description='Associated project UUID'),
+    'start_date': fields.Date(description='Study start date'),
+    'end_date': fields.Date(description='Study end date')
+})
+
 
 def get_service_token():
+    """Get a service token from Keycloak for admin operations"""
+    try:
+        logger.info("Getting service token from Keycloak")
+        
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        
+        data = {
+            'grant_type': 'client_credentials',
+            'client_id': KEYCLOAK_CLIENT_ID,
+            'client_secret': KEYCLOAK_CLIENT_SECRET
+        }
+        
+        response = requests.post(KEYCLOAK_PERMISSION_URI, headers=headers, data=data, timeout=10)
+        response.raise_for_status()
+        
+        token_data = response.json()
+        access_token = token_data.get('access_token')
+        
+        if access_token:
+            logger.info("Successfully obtained service token")
+            return access_token
+        else:
+            logger.error("No access token in response")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Failed to get service token: {e}")
+        return None
+
+
+def get_dms_client_token():
     """Get client credentials token for DMS client (service-to-service auth)"""
     try:
         logger.info("=== Getting DMS client credentials token for resource management ===")
@@ -507,6 +635,136 @@ def get_project_group_members(project_slug):
         return None
 
 
+def create_project_group_with_permission(project_slug, permission):
+    """Create a Keycloak group for a project with specific permission (read or write)"""
+    try:
+        group_name = f"project-{project_slug}-{permission}"
+        logger.info(f"=== CREATING {permission.upper()} GROUP FOR PROJECT: {project_slug} ===")
+        
+        service_token = get_service_token()
+        if not service_token:
+            logger.error("Failed to get service token")
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Create the group data
+        group_data = {
+            'name': group_name,
+            'path': f"/{group_name}",
+            'attributes': {
+                'project_slug': [project_slug],
+                'permission': [permission],
+                'created_by': ['folio-service'],
+                'group_type': ['project'],
+                'description': [f"Project {permission} group for {project_slug}"]
+            }
+        }
+        
+        # Create the group using Keycloak Admin API
+        response = requests.post(f"{KEYCLOAK_ADMIN_BASE_URI}/groups", 
+                               headers=headers, json=group_data, timeout=10)
+        
+        if response.status_code == 201:
+            # Get the created group ID from Location header
+            location = response.headers.get('Location')
+            group_id = location.split('/')[-1] if location else None
+            logger.info(f"Successfully created {permission} group '{group_name}' with ID: {group_id}")
+            return True
+        elif response.status_code == 409:
+            logger.warning(f"{permission.capitalize()} group for project '{project_slug}' already exists")
+            return True
+        else:
+            logger.error(f"Failed to create {permission} group: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to create {permission} group for project {project_slug}: {e}")
+        return False
+
+
+def add_user_to_project_group_with_permission(project_slug, username, permission):
+    """Add a user to a project group with specific permission (read or write)"""
+    try:
+        group_name = f"project-{project_slug}-{permission}"
+        logger.info(f"=== ADDING USER '{username}' TO {permission.upper()} GROUP '{group_name}' ===")
+        
+        # Get the specific permission group
+        group = get_project_group_by_name(group_name)
+        if not group:
+            logger.error(f"Project {permission} group '{group_name}' not found")
+            return False
+        
+        # Get the user
+        user = get_user_by_username(username)
+        if not user:
+            logger.error(f"User '{username}' not found")
+            return False
+        
+        service_token = get_service_token()
+        if not service_token:
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        group_id = group['id']
+        user_id = user['id']
+        
+        # Add user to group
+        response = requests.put(f"{KEYCLOAK_ADMIN_BASE_URI}/users/{user_id}/groups/{group_id}", 
+                              headers=headers, timeout=10)
+        
+        if response.status_code == 204:
+            logger.info(f"Successfully added user '{username}' to {permission} group '{group_name}'")
+            return True
+        else:
+            logger.error(f"Failed to add user to {permission} group: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to add user '{username}' to {permission} group: {e}")
+        return False
+
+
+def get_project_group_by_name(group_name):
+    """Get a project group by its exact name"""
+    try:
+        service_token = get_service_token()
+        if not service_token:
+            return None
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Search for the group by name
+        response = requests.get(f"{KEYCLOAK_ADMIN_BASE_URI}/groups?search={group_name}", 
+                              headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        groups = response.json()
+        
+        # Find exact match
+        for group in groups:
+            if group.get('name') == group_name:
+                logger.info(f"Found group '{group_name}' with ID: {group['id']}")
+                return group
+        
+        logger.warning(f"Group '{group_name}' not found")
+        return None
+        
+    except Exception as e:
+        logger.error(f"Failed to get group by name '{group_name}': {e}")
+        return None
+
+
 def get_rpt_permissions(access_token):
     """Exchange JWT access token for RPT permissions (Following SONG's pattern)"""
     try:
@@ -666,6 +924,7 @@ def authenticate_token(f):
         
         # Extract user info and store in g
         g.user = extract_user_info(payload)
+        g.token = token  # Store the token for SONG API calls
         
         return f(*args, **kwargs)
     
@@ -682,14 +941,14 @@ def require_permissions(required_scopes):
             # Get token from Authorization header
             auth_header = request.headers.get('Authorization')
             if not auth_header or not auth_header.startswith('Bearer '):
-                return jsonify({'error': 'No token provided'}), 401
+                return {'error': 'No token provided'}, 401
             
             token = auth_header.split(' ')[1]
             
             # Validate the JWT token and get RPT permissions
             payload = validate_jwt_token(token)
             if not payload:
-                return jsonify({'error': 'Invalid token'}), 401
+                return {'error': 'Invalid token'}, 401
             
             # Extract user info with RPT permissions
             user_info = extract_user_info(payload)
@@ -708,14 +967,15 @@ def require_permissions(required_scopes):
                 logger.warning(f"User {user_info['username']} missing required RPT scopes: {missing_scopes}")
                 logger.info(f"User has permissions: {user_permissions}")
                 logger.info(f"Raw RPT permissions: {user_info.get('rpt_permissions', [])}")
-                return jsonify({
+                return {
                     'error': f'Missing required RPT permissions: {missing_scopes}',
                     'user_permissions': user_permissions,
                     'rpt_permissions': user_info.get('rpt_permissions', [])
-                }), 403
+                }, 403
             
             # Store user info in g
             g.user = user_info
+            g.token = token  # Store the token for SONG API calls
             
             return f(*args, **kwargs)
         
@@ -1099,17 +1359,777 @@ class ProjectGroupMember(Resource):
             }, 500
 
 
-@app.route('/debug')
-def debug_routes():
-    """Debug endpoint to show all registered routes"""
-    routes = []
-    for rule in app.url_map.iter_rules():
-        routes.append({
-            'endpoint': rule.endpoint,
-            'methods': list(rule.methods),
-            'rule': rule.rule
-        })
-    return {"routes": routes}
+@projects_ns.route('/<string:project_slug>/users')
+@projects_ns.param('project_slug', 'The project slug/identifier')
+class ProjectUsers(Resource):
+    @projects_ns.doc('get_project_users', security='Bearer')
+    @projects_ns.marshal_list_with(member_model)
+    @projects_ns.response(401, 'Invalid or missing token')
+    @projects_ns.response(403, 'Insufficient permissions', error_model)
+    @projects_ns.response(404, 'Project not found')
+    @require_permissions(["READ"])
+    def get(self, project_slug):
+        """Get all users/members in a project (based on project group membership)"""
+        logger.info(f"Getting users for project {project_slug} by user: {g.user['username']}")
+        
+        # This is an alias for the existing group members endpoint for convenience
+        members = get_project_group_members(project_slug)
+        
+        if members is not None:
+            return members
+        else:
+            return {"error": f"Project '{project_slug}' not found or no group exists"}, 404
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, debug=True)
+
+@projects_ns.route('/<string:project_slug>/studies')
+@projects_ns.param('project_slug', 'The project slug/identifier')
+class ProjectStudies(Resource):
+    @projects_ns.doc('get_project_studies', security='Bearer')
+    @projects_ns.marshal_list_with(study_model)
+    @projects_ns.response(401, 'Invalid or missing token')
+    @projects_ns.response(403, 'Insufficient permissions', error_model)
+    @projects_ns.response(404, 'Project not found')
+    @require_permissions(["READ"])
+    def get(self, project_slug):
+        """Get all studies for a specific project"""
+        logger.info(f"Getting studies for project {project_slug} by user: {g.user['username']}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # First verify project exists
+                cur.execute("SELECT id FROM projects WHERE slug = %s", (project_slug,))
+                project = cur.fetchone()
+                if not project:
+                    return {"error": f"Project {project_slug} not found"}, 404
+                
+                # Get studies for this project
+                query = """
+                    SELECT s.*, p.slug as project_slug, p.name as project_name
+                    FROM studies s
+                    JOIN projects p ON s.project_id = p.id
+                    WHERE p.slug = %s
+                    ORDER BY s.name
+                """
+                cur.execute(query, (project_slug,))
+                studies = cur.fetchall()
+                
+                # Add song_created flag to each study (simplified - no metadata)
+                studies_with_flags = []
+                for study in studies:
+                    study_dict = serialize_record(study)
+                    # Default song_created to False since we don't persist it anymore
+                    study_dict['song_created'] = False
+                    studies_with_flags.append(study_dict)
+                
+                return studies_with_flags
+                
+        except Exception as e:
+            logger.error(f"Failed to get studies for project: {e}")
+            return {"error": "Failed to retrieve studies"}, 500
+        finally:
+            conn.close()
+
+
+# Add a summary endpoint that gives an overview of a project
+@projects_ns.route('/<string:project_slug>/summary')
+@projects_ns.param('project_slug', 'The project slug/identifier')
+class ProjectSummary(Resource):
+    @projects_ns.doc('get_project_summary', security='Bearer')
+    @projects_ns.marshal_with(api.model('ProjectSummary', {
+        'project': fields.Nested(project_model, description='Project details'),
+        'studies_count': fields.Integer(description='Number of studies'),
+        'users_count': fields.Integer(description='Number of users'),
+        'studies': fields.List(fields.Nested(study_model), description='Project studies'),
+        'users': fields.List(fields.Nested(member_model), description='Project users'),
+        'status': fields.String(description='Operation status')
+    }))
+    @projects_ns.response(401, 'Invalid or missing token')
+    @projects_ns.response(403, 'Insufficient permissions', error_model)
+    @projects_ns.response(404, 'Project not found')
+    @require_permissions(["READ"])
+    def get(self, project_slug):
+        """Get a complete summary of a project including details, studies, and users"""
+        logger.info(f"Getting project summary for {project_slug} by user: {g.user['username']}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # Get project details with pathogen info
+                query = """
+                    SELECT p.*, pat.name as pathogen_name
+                    FROM projects p
+                    LEFT JOIN pathogens pat ON p.pathogen_id = pat.id
+                    WHERE p.slug = %s
+                """
+                cur.execute(query, (project_slug,))
+                project = cur.fetchone()
+                
+                if not project:
+                    return {"error": f"Project {project_slug} not found"}, 404
+                
+                # Get studies for this project
+                studies_query = """
+                    SELECT s.*, p.slug as project_slug, p.name as project_name
+                    FROM studies s
+                    JOIN projects p ON s.project_id = p.id
+                    WHERE p.slug = %s
+                    ORDER BY s.name
+                """
+                cur.execute(studies_query, (project_slug,))
+                studies = cur.fetchall()
+                
+                # Add song_created flag to studies
+                studies_with_flags = []
+                for study in studies:
+                    study_dict = serialize_record(study)
+                    study_dict['song_created'] = False  # Simplified - no metadata persistence
+                    studies_with_flags.append(study_dict)
+                
+                # Get users/members from project group
+                users = get_project_group_members(project_slug)
+                if users is None:
+                    users = []
+                
+                return {
+                    "project": dict(project),
+                    "studies_count": len(studies_with_flags),
+                    "users_count": len(users),
+                    "studies": studies_with_flags,
+                    "users": users,
+                    "status": "success"
+                }
+                
+        except Exception as e:
+            logger.error(f"Failed to get project summary: {e}")
+            return {"error": "Failed to retrieve project summary"}, 500
+        finally:
+            conn.close()
+
+
+# Pathogen CRUD endpoints
+@pathogens_ns.route('')
+class PathogenList(Resource):
+    """Operations for multiple pathogens"""
+    
+    @pathogens_ns.doc('list_pathogens')
+    @pathogens_ns.response(200, 'Success', [pathogen_model])
+    @pathogens_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["READ"])
+    def get(self):
+        """Get all pathogens"""
+        logger.info(f"Getting all pathogens for user: {g.user['username']}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("SELECT * FROM pathogens ORDER BY name")
+                pathogens = cur.fetchall()
+                return [serialize_record(pathogen) for pathogen in pathogens]
+        except Exception as e:
+            logger.error(f"Failed to get pathogens: {e}")
+            return {"error": "Failed to retrieve pathogens"}, 500
+        finally:
+            conn.close()
+    
+    @pathogens_ns.doc('create_pathogen')
+    @pathogens_ns.expect(pathogen_input_model, validate=True)
+    @pathogens_ns.response(201, 'Pathogen created', pathogen_model)
+    @pathogens_ns.response(400, 'Invalid input', error_model)
+    @pathogens_ns.response(409, 'Pathogen already exists', error_model)
+    @pathogens_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["WRITE"])
+    def post(self):
+        """Create a new pathogen"""
+        logger.info(f"Creating new pathogen by user: {g.user['username']}")
+        
+        data = request.json
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # Check if pathogen already exists
+                cur.execute("SELECT id FROM pathogens WHERE name = %s", (data['name'],))
+                if cur.fetchone():
+                    return {"error": "Pathogen already exists"}, 409
+                
+                # Create pathogen
+                insert_query = """
+                    INSERT INTO pathogens (name, scientific_name, description)
+                    VALUES (%s, %s, %s)
+                    RETURNING *
+                """
+                cur.execute(insert_query, (
+                    data['name'],
+                    data.get('scientific_name'),
+                    data.get('description')
+                ))
+                pathogen = cur.fetchone()
+                conn.commit()
+                
+                logger.info(f"Created pathogen: {pathogen['name']}")
+                return serialize_record(pathogen), 201
+                
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to create pathogen: {e}")
+            return {"error": "Failed to create pathogen"}, 500
+        finally:
+            conn.close()
+
+
+@pathogens_ns.route('/<string:pathogen_id>')
+class PathogenDetail(Resource):
+    """Operations for a single pathogen"""
+    
+    @pathogens_ns.doc('get_pathogen')
+    @pathogens_ns.response(200, 'Success', pathogen_model)
+    @pathogens_ns.response(404, 'Pathogen not found', error_model)
+    @pathogens_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["READ"])
+    def get(self, pathogen_id):
+        """Get a specific pathogen by ID"""
+        logger.info(f"Getting pathogen {pathogen_id} for user: {g.user['username']}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("SELECT * FROM pathogens WHERE id = %s", (pathogen_id,))
+                pathogen = cur.fetchone()
+                
+                if not pathogen:
+                    return {"error": "Pathogen not found"}, 404
+                
+                return serialize_record(pathogen)
+        except Exception as e:
+            logger.error(f"Failed to get pathogen: {e}")
+            return {"error": "Failed to retrieve pathogen"}, 500
+        finally:
+            conn.close()
+    
+    @pathogens_ns.doc('update_pathogen')
+    @pathogens_ns.expect(pathogen_input_model, validate=True)
+    @pathogens_ns.response(200, 'Pathogen updated', pathogen_model)
+    @pathogens_ns.response(404, 'Pathogen not found', error_model)
+    @pathogens_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["WRITE"])
+    def put(self, pathogen_id):
+        """Update a pathogen"""
+        logger.info(f"Updating pathogen {pathogen_id} by user: {g.user['username']}")
+        
+        data = request.json
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # Check if pathogen exists
+                cur.execute("SELECT id FROM pathogens WHERE id = %s", (pathogen_id,))
+                if not cur.fetchone():
+                    return {"error": "Pathogen not found"}, 404
+                
+                # Update pathogen
+                update_query = """
+                    UPDATE pathogens 
+                    SET name = %s, scientific_name = %s, description = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = %s
+                    RETURNING *
+                """
+                cur.execute(update_query, (
+                    data['name'],
+                    data.get('scientific_name'),
+                    data.get('description'),
+                    pathogen_id
+                ))
+                pathogen = cur.fetchone()
+                conn.commit()
+                
+                logger.info(f"Updated pathogen: {pathogen['name']}")
+                return serialize_record(pathogen)
+                
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to update pathogen: {e}")
+            return {"error": "Failed to update pathogen"}, 500
+        finally:
+            conn.close()
+    
+    @pathogens_ns.doc('delete_pathogen')
+    @pathogens_ns.response(204, 'Pathogen deleted')
+    @pathogens_ns.response(404, 'Pathogen not found', error_model)
+    @pathogens_ns.response(409, 'Cannot delete pathogen with associated projects', error_model)
+    @pathogens_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["DELETE"])
+    def delete(self, pathogen_id):
+        """Delete a pathogen"""
+        logger.info(f"Deleting pathogen {pathogen_id} by user: {g.user['username']}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # Check if pathogen exists
+                cur.execute("SELECT id FROM pathogens WHERE id = %s", (pathogen_id,))
+                if not cur.fetchone():
+                    return {"error": "Pathogen not found"}, 404
+                
+                # Check if pathogen has associated projects
+                cur.execute("SELECT COUNT(*) as count FROM projects WHERE pathogen_id = %s", (pathogen_id,))
+                result = cur.fetchone()
+                if result['count'] > 0:
+                    return {"error": "Cannot delete pathogen with associated projects"}, 409
+                
+                # Delete pathogen
+                cur.execute("DELETE FROM pathogens WHERE id = %s", (pathogen_id,))
+                conn.commit()
+                
+                logger.info(f"Deleted pathogen: {pathogen_id}")
+                return '', 204
+                
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to delete pathogen: {e}")
+            return {"error": "Failed to delete pathogen"}, 500
+        finally:
+            conn.close()
+
+
+# Project CRUD endpoints
+@projects_ns.route('')
+class ProjectList(Resource):
+    """Operations for multiple projects"""
+    
+    @projects_ns.doc('list_projects')
+    @projects_ns.response(200, 'Success', [project_model])
+    @projects_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["READ"])
+    def get(self):
+        """Get all projects"""
+        logger.info(f"Getting all projects for user: {g.user['username']}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                query = """
+                    SELECT p.*, pat.name as pathogen_name
+                    FROM projects p
+                    LEFT JOIN pathogens pat ON p.pathogen_id = pat.id
+                    WHERE p.deleted_at IS NULL
+                    ORDER BY p.name
+                """
+                cur.execute(query)
+                projects = cur.fetchall()
+                return [serialize_record(project) for project in projects]
+        except Exception as e:
+            logger.error(f"Failed to get projects: {e}")
+            return {"error": "Failed to retrieve projects"}, 500
+        finally:
+            conn.close()
+    
+    @projects_ns.doc('create_project')
+    @projects_ns.expect(project_input_model, validate=True)
+    @projects_ns.response(201, 'Project created', project_model)
+    @projects_ns.response(400, 'Invalid input', error_model)
+    @projects_ns.response(409, 'Project already exists', error_model)
+    @projects_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["WRITE"])
+    def post(self):
+        """Create a new project"""
+        logger.info(f"Creating new project by user: {g.user['username']}")
+        
+        data = request.json
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # Check if project slug already exists
+                cur.execute("SELECT id FROM projects WHERE slug = %s", (data['slug'],))
+                if cur.fetchone():
+                    return {"error": "Project slug already exists"}, 409
+                
+                # Verify pathogen exists if provided
+                if data.get('pathogen_id'):
+                    cur.execute("SELECT id FROM pathogens WHERE id = %s", (data['pathogen_id'],))
+                    if not cur.fetchone():
+                        return {"error": "Pathogen not found"}, 400
+                
+                # Create project
+                insert_query = """
+                    INSERT INTO projects (name, slug, description, organization_id, user_id, pathogen_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING *
+                """
+                # Extract user and organization info from JWT
+                user_id = g.user.get('sub')  # Keycloak user ID
+                organization_id = g.user.get('organization_id', 'default-org')  # TODO: Get from Keycloak claims
+                
+                cur.execute(insert_query, (
+                    data['name'],
+                    data['slug'],
+                    data.get('description'),
+                    organization_id,
+                    user_id,
+                    data.get('pathogen_id')
+                ))
+                project = cur.fetchone()
+                conn.commit()
+                
+                project_slug = project['slug']
+                username = g.user.get('username', 'unknown')
+                
+                logger.info(f"Created project: {project['name']} ({project_slug})")
+                
+                # Automatically create Keycloak resources and groups for the new project
+                try:
+                    logger.info(f"Setting up Keycloak resources and groups for project: {project_slug}")
+                    
+                    # 1. Create the project resource in Keycloak
+                    resource_created = create_project_resource(project_slug)
+                    if resource_created:
+                        logger.info(f"Successfully created Keycloak resource for project: {project_slug}")
+                    else:
+                        logger.warning(f"Failed to create Keycloak resource for project: {project_slug}")
+                    
+                    # 2. Create read and write groups
+                    read_group_created = create_project_group_with_permission(project_slug, 'read')
+                    write_group_created = create_project_group_with_permission(project_slug, 'write')
+                    
+                    if read_group_created:
+                        logger.info(f"Successfully created read group for project: {project_slug}")
+                    if write_group_created:
+                        logger.info(f"Successfully created write group for project: {project_slug}")
+                    
+                    # 3. Add the project creator to both read and write groups
+                    if read_group_created:
+                        add_user_to_project_group_with_permission(project_slug, username, 'read')
+                        logger.info(f"Added user {username} to read group for project: {project_slug}")
+                    
+                    if write_group_created:
+                        add_user_to_project_group_with_permission(project_slug, username, 'write')
+                        logger.info(f"Added user {username} to write group for project: {project_slug}")
+                
+                except Exception as keycloak_error:
+                    logger.error(f"Failed to set up Keycloak resources for project {project_slug}: {keycloak_error}")
+                    # Don't fail the project creation if Keycloak setup fails
+                
+                return serialize_record(project), 201
+                
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to create project: {e}")
+            return {"error": "Failed to create project"}, 500
+        finally:
+            conn.close()
+
+
+# Study CRUD endpoints
+@studies_ns.route('')
+class StudyList(Resource):
+    """Operations for multiple studies"""
+    
+    @studies_ns.doc('list_studies')
+    @studies_ns.response(200, 'Success', [study_model])
+    @studies_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["READ"])
+    def get(self):
+        """Get all studies"""
+        logger.info(f"Getting all studies for user: {g.user['username']}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                query = """
+                    SELECT s.*, p.slug as project_slug, p.name as project_name
+                    FROM studies s
+                    JOIN projects p ON s.project_id = p.id
+                    ORDER BY s.name
+                """
+                cur.execute(query)
+                studies = cur.fetchall()
+                
+                # Add song_created flag to studies
+                studies_with_flags = []
+                for study in studies:
+                    study_dict = dict(study)
+                    study_dict['song_created'] = False  # Will be updated in response
+                    studies_with_flags.append(study_dict)
+                
+                return studies_with_flags
+        except Exception as e:
+            logger.error(f"Failed to get studies: {e}")
+            return {"error": "Failed to retrieve studies"}, 500
+        finally:
+            conn.close()
+    
+    @studies_ns.doc('create_study')
+    @studies_ns.expect(study_input_model, validate=True)
+    @studies_ns.response(201, 'Study created', study_model)
+    @studies_ns.response(400, 'Invalid input', error_model)
+    @studies_ns.response(409, 'Study already exists', error_model)
+    @studies_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["WRITE"])
+    def post(self):
+        """Create a new study and automatically create it in SONG"""
+        logger.info(f"Creating new study by user: {g.user['username']}")
+        
+        data = request.json
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # Check if study_id already exists
+                cur.execute("SELECT id FROM studies WHERE study_id = %s", (data['study_id'],))
+                if cur.fetchone():
+                    return {"error": "Study ID already exists"}, 409
+                
+                # Verify project exists
+                cur.execute("SELECT id FROM projects WHERE id = %s", (data['project_id'],))
+                if not cur.fetchone():
+                    return {"error": "Project not found"}, 400
+                
+                # Create study in database first
+                insert_query = """
+                    INSERT INTO studies (study_id, name, description, project_id, start_date, end_date)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING *
+                """
+                cur.execute(insert_query, (
+                    data['study_id'],
+                    data['name'],
+                    data.get('description'),
+                    data['project_id'],
+                    data.get('start_date'),
+                    data.get('end_date')
+                ))
+                study = cur.fetchone()
+                
+                # Try to create study in SONG
+                song_result = create_song_study(dict(study), g.token)
+                
+                # Note: We simplified the schema and removed metadata field
+                # Track SONG creation status in the response only
+                conn.commit()
+                
+                logger.info(f"Created study: {study['name']} (SONG: {'success' if song_result else 'failed'})")
+                
+                study_dict = serialize_record(study)
+                study_dict['song_created'] = song_result is not None
+                return study_dict, 201
+                
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to create study: {e}")
+            return {"error": "Failed to create study"}, 500
+        finally:
+            conn.close()
+
+
+@studies_ns.route('/<string:study_id>')
+class StudyDetail(Resource):
+    """Operations for a single study"""
+    
+    @studies_ns.doc('get_study')
+    @studies_ns.response(200, 'Success', study_model)
+    @studies_ns.response(404, 'Study not found', error_model)
+    @studies_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["READ"])
+    def get(self, study_id):
+        """Get a specific study by study_id"""
+        logger.info(f"Getting study {study_id} for user: {g.user['username']}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                query = """
+                    SELECT s.*, p.slug as project_slug, p.name as project_name
+                    FROM studies s
+                    JOIN projects p ON s.project_id = p.id
+                    WHERE s.study_id = %s
+                """
+                cur.execute(query, (study_id,))
+                study = cur.fetchone()
+                
+                if not study:
+                    return {"error": "Study not found"}, 404
+
+                study_dict = dict(study)
+                study_dict['song_created'] = False  # Will be updated in response
+                return study_dict
+        except Exception as e:
+            logger.error(f"Failed to get study: {e}")
+            return {"error": "Failed to retrieve study"}, 500
+        finally:
+            conn.close()
+    
+    @studies_ns.doc('update_study')
+    @studies_ns.expect(study_input_model, validate=True)
+    @studies_ns.response(200, 'Study updated', study_model)
+    @studies_ns.response(404, 'Study not found', error_model)
+    @studies_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["WRITE"])
+    def put(self, study_id):
+        """Update a study"""
+        logger.info(f"Updating study {study_id} by user: {g.user['username']}")
+        
+        data = request.json
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # Check if study exists
+                cur.execute("SELECT * FROM studies WHERE study_id = %s", (study_id,))
+                existing_study = cur.fetchone()
+                if not existing_study:
+                    return {"error": "Study not found"}, 404
+                
+                # Verify project exists if being updated
+                if data.get('project_id') and data['project_id'] != existing_study['project_id']:
+                    cur.execute("SELECT id FROM projects WHERE id = %s", (data['project_id'],))
+                    if not cur.fetchone():
+                        return {"error": "Project not found"}, 400
+                
+                # Update study (simplified schema)
+                update_query = """
+                    UPDATE studies 
+                    SET name = %s, description = %s, project_id = %s, updated_at = CURRENT_TIMESTAMP
+                    WHERE study_id = %s
+                    RETURNING *
+                """
+                cur.execute(update_query, (
+                    data['name'],
+                    data.get('description'),
+                    data.get('project_id', existing_study['project_id']),
+                    study_id
+                ))
+                study = cur.fetchone()
+                conn.commit()
+                
+                logger.info(f"Updated study: {study['name']}")
+                
+                study_dict = dict(study)
+                study_dict['song_created'] = False  # Will be updated in response
+                return study_dict
+                
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to update study: {e}")
+            return {"error": "Failed to update study"}, 500
+        finally:
+            conn.close()
+    
+    @studies_ns.doc('delete_study')
+    @studies_ns.response(204, 'Study deleted')
+    @studies_ns.response(404, 'Study not found', error_model)
+    @studies_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["DELETE"])
+    def delete(self, study_id):
+        """Delete a study"""
+        logger.info(f"Deleting study {study_id} by user: {g.user['username']}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # Check if study exists
+                cur.execute("SELECT id FROM studies WHERE study_id = %s", (study_id,))
+                if not cur.fetchone():
+                    return {"error": "Study not found"}, 404
+                
+                # Delete study
+                cur.execute("DELETE FROM studies WHERE study_id = %s", (study_id,))
+                conn.commit()
+                
+                logger.info(f"Deleted study: {study_id}")
+                return '', 204
+                
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to delete study: {e}")
+            return {"error": "Failed to delete study"}, 500
+        finally:
+            conn.close()
+
+
+def get_db_connection():
+    """Get a database connection"""
+    try:
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
+        return conn
+    except Exception as e:
+        logger.error(f"Failed to connect to database: {e}")
+        return None
+
+
+def create_song_study(study_data, token):
+    """Create a study in SONG using the SONG API"""
+    try:
+        logger.info(f"Creating SONG study: {study_data.get('study_id')}")
+        
+        # Prepare SONG study payload (simplified)
+        song_payload = {
+            "studyId": study_data.get('study_id'),
+            "name": study_data.get('name'),
+            "description": study_data.get('description'),
+            "organization": study_data.get('organization', 'SANBI'),
+            "info": {}  # Empty info object for simplified schema
+        }
+        
+        headers = {
+            'Authorization': f'Bearer {token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Create study in SONG
+        song_url = f"http://song:8080/studies/{study_data.get('study_id')}/"
+        response = requests.post(song_url, headers=headers, json=song_payload, timeout=30)
+        
+        if response.status_code in [200, 201]:
+            logger.info(f"Successfully created SONG study: {study_data.get('study_id')}")
+            return response.json()
+        else:
+            logger.error(f"Failed to create SONG study: {response.status_code} - {response.text}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error creating SONG study: {e}")
+        return None

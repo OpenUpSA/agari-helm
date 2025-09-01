@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: folio
-  tag: "rpt"
+  tag: "latest"
   pullPolicy: Never
 
 service:
@@ -19,6 +19,12 @@ folio:
       issuer: "http://keycloak.local/realms/agari"
       clientId: "dms"
       clientSecret: "dms-secret"
+  database:
+    host: "folio-db"
+    port: "5432"
+    name: "folio"
+    user: "admin"
+    password: "folio-db-pass-123"
 
 ingress:
   enabled: true

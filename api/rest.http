@@ -54,6 +54,10 @@ Authorization: Bearer {{token}}
 GET http://song.local/studies/{{study_id}}/analysis
 Authorization: Bearer {{token}}
 
+### 2d. LIST STUDIES
+GET http://song.local/studies/all
+Authorization: Bearer {{token}}
+
 ### 3a. SUBMIT ANALYSIS
 # @name submitAnalysis
 POST http://song.local/submit/{{study_id}}/
@@ -178,76 +182,172 @@ username={{username}}
 ###
 @folio_token = {{folio_login.response.body.access_token}}
 
-### 3. Test Basic Authentication
-GET http://folio.local/api/test
-Authorization: Bearer {{folio_token}}
+# ### 3. Test Basic Authentication
+# GET http://folio.local/api/test
+# Authorization: Bearer {{folio_token}}
 
-### 4. Test READ Permission
-GET http://folio.local/api/test/read
-Authorization: Bearer {{folio_token}}
+# ### 4. Test READ Permission
+# GET http://folio.local/api/test/read
+# Authorization: Bearer {{folio_token}}
 
-### 5. Test WRITE Permission  
-GET http://folio.local/api/test/write
-Authorization: Bearer {{folio_token}}
+# ### 5. Test WRITE Permission  
+# GET http://folio.local/api/test/write
+# Authorization: Bearer {{folio_token}}
 
-### 6. Test Admin (READ + WRITE) Permission
-POST http://folio.local/api/test/admin
+# ### 6. Test Admin (READ + WRITE) Permission
+# POST http://folio.local/api/test/admin
+# Authorization: Bearer {{folio_token}}
+# Content-Type: application/json
+
+# {
+#   "test": "admin access"
+# }
+
+### TEST FOLIO ADMIN FUNCTIONS - Resource Management
+
+# ### Test 1: Create a project resource
+# POST http://folio.local/projects/malaria-study/resource
+# Authorization: Bearer {{token}}
+
+# ### Test 2: Get the created project resource  
+# GET http://folio.local/projects/malaria-study/resource
+# Authorization: Bearer {{token}}
+
+# ### Test 3: Try to create another project resource
+# POST http://folio.local/projects/tb-study/resource
+# Authorization: Bearer {{token}}
+
+# ### Test 4: Get the second project resource
+# GET http://folio.local/projects/tb-study/resource
+# Authorization: Bearer {{token}}
+
+# ### TEST FOLIO GROUP MANAGEMENT
+
+# ### Test 5: Create a project group
+# POST http://folio.local/projects/malaria-study/group
+# Authorization: Bearer {{token}}
+
+# ### Test 6: Get the created project group
+# GET http://folio.local/projects/malaria-study/group
+# Authorization: Bearer {{token}}
+
+# ### Test 7: Add admin user to the malaria-study group
+# POST http://folio.local/projects/malaria-study/group/members/admin
+# Authorization: Bearer {{token}}
+
+# ### Test 8: Get group members for malaria-study
+# GET http://folio.local/projects/malaria-study/group/members
+# Authorization: Bearer {{token}}
+
+# ### Test 9: Create a group for tb-study project
+# POST http://folio.local/projects/tb-study/group
+# Authorization: Bearer {{token}}
+
+# ### Test 10: Add admin user to tb-study group
+# POST http://folio.local/projects/tb-study/group/members/admin
+# Authorization: Bearer {{token}}
+
+# ### Test 11: Get group members for tb-study
+# GET http://folio.local/projects/tb-study/group/members
+# Authorization: Bearer {{token}}
+
+# ### Test 12: Remove admin user from malaria-study group
+# DELETE http://folio.local/projects/malaria-study/group/members/admin
+# Authorization: Bearer {{token}}
+
+### === FOLIO DATABASE CRUD OPERATIONS ===
+
+### Test 13: Create a pathogen
+POST http://folio.local/pathogens
 Authorization: Bearer {{folio_token}}
 Content-Type: application/json
 
 {
-  "test": "admin access"
+  "name": "SARS-CoV-2",
+  "scientific_name": "Severe acute respiratory syndrome coronavirus 2",
+  "description": "The virus that causes COVID-19"
 }
 
-### TEST FOLIO ADMIN FUNCTIONS - Resource Management
+### Test 14: Get all pathogens
+GET http://folio.local/pathogens
+Authorization: Bearer {{folio_token}}
 
-### Test 1: Create a project resource
-POST http://folio.local/api/projects/malaria-study/resource
-Authorization: Bearer {{token}}
+### Test 15: Create another pathogen (Malaria)
+POST http://folio.local/pathogens
+Authorization: Bearer {{folio_token}}
+Content-Type: application/json
 
-### Test 2: Get the created project resource  
-GET http://folio.local/api/projects/malaria-study/resource
-Authorization: Bearer {{token}}
+{
+  "name": "Malaria",
+  "scientific_name": "Plasmodium falciparum",
+  "description": "Most severe form of malaria parasite"
+}
 
-### Test 3: Try to create another project resource
-POST http://folio.local/api/projects/tb-study/resource
-Authorization: Bearer {{token}}
+### Test 16: Create a project for SARS-CoV-2 (use pathogen ID from Test 13 response)
+# @name createProject
+POST http://folio.local/projects
+Authorization: Bearer {{folio_token}}
+Content-Type: application/json
 
-### Test 4: Get the second project resource
-GET http://folio.local/api/projects/tb-study/resource
-Authorization: Bearer {{token}}
+{
+  "slug": "covid-genomics-2025",
+  "name": "COVID-19 Genomics Study 2025",
+  "description": "Large-scale genomic surveillance of SARS-CoV-2 variants",
+  "pathogen_id": "f788a2d4-98ae-458c-b97b-9391aa692adc"
+}
 
-### TEST FOLIO GROUP MANAGEMENT
+### Test 17: Get all projects
+GET http://folio.local/projects
+Authorization: Bearer {{folio_token}}
 
-### Test 5: Create a project group
-POST http://folio.local/api/projects/malaria-study/group
-Authorization: Bearer {{token}}
+### Test 18: Get specific project by slug
+GET http://folio.local/projects/covid-genomics-2025/summary
+Authorization: Bearer {{folio_token}}
 
-### Test 6: Get the created project group
-GET http://folio.local/api/projects/malaria-study/group
-Authorization: Bearer {{token}}
+### Test 19: Create a study in Folio (which will also create it in SONG)
+# @name createStudy
+POST http://folio.local/studies
+Authorization: Bearer {{folio_token}}
+Content-Type: application/json
 
-### Test 7: Add admin user to the malaria-study group
-POST http://folio.local/api/projects/malaria-study/group/members/admin
-Authorization: Bearer {{token}}
+{
+  "study_id": "covid-001",
+  "name": "COVID-19 Variant Tracking Study",
+  "description": "Analysis of SARS-CoV-2 genetic variants in South Africa",
+  "project_id": "0a001280-5dce-487d-9770-3a6919f1aede"
+}
 
-### Test 8: Get group members for malaria-study
-GET http://folio.local/api/projects/malaria-study/group/members
-Authorization: Bearer {{token}}
+### Test 20: Get all studies
+GET http://folio.local/studies
+Authorization: Bearer {{folio_token}}
 
-### Test 9: Create a group for tb-study project
-POST http://folio.local/api/projects/tb-study/group
-Authorization: Bearer {{token}}
+### Test 21: Get specific study by ID
+GET http://folio.local/studies/covid-001
+Authorization: Bearer {{folio_token}}
 
-### Test 10: Add admin user to tb-study group
-POST http://folio.local/api/projects/tb-study/group/members/admin
-Authorization: Bearer {{token}}
+### Test 22: Get studies for a specific project
+GET http://folio.local/studies/project/covid-genomics-2025
+Authorization: Bearer {{folio_token}}
 
-### Test 11: Get group members for tb-study
-GET http://folio.local/api/projects/tb-study/group/members
-Authorization: Bearer {{token}}
+### Test 23: Verify study was created in SONG
+GET http://song.local/studies/covid-001/
+Authorization: Bearer {{folio_token}}
 
-### Test 12: Remove admin user from malaria-study group
-DELETE http://folio.local/api/projects/malaria-study/group/members/admin
-Authorization: Bearer {{token}}
+### === FOLIO CONVENIENCE ENDPOINTS ===
+
+### Test 24: Get all users in a project (convenience endpoint)
+GET http://folio.local/projects/covid-genomics-2025/users
+Authorization: Bearer {{folio_token}}
+
+### Test 25: Get all studies in a project (convenience endpoint)
+GET http://folio.local/projects/covid-genomics-2025/studies
+Authorization: Bearer {{folio_token}}
+
+### Test 26: Get complete project summary (project + studies + users)
+GET http://folio.local/projects/covid-genomics-2025/summary
+Authorization: Bearer {{folio_token}}
+
+### Test 27: Get specific pathogen by ID
+GET http://folio.local/pathogens/{{PUT_PATHOGEN_ID_HERE}}
+Authorization: Bearer {{folio_token}}
 

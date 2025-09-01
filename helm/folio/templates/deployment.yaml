@@ -34,6 +34,16 @@ spec:
               value: {{ .Values.folio.auth.keycloak.clientId | quote }}
             - name: KEYCLOAK_CLIENT_SECRET
               value: {{ .Values.folio.auth.keycloak.clientSecret | quote }}
+            - name: DB_HOST
+              value: {{ .Values.folio.database.host | quote }}
+            - name: DB_PORT
+              value: {{ .Values.folio.database.port | quote }}
+            - name: DB_NAME
+              value: {{ .Values.folio.database.name | quote }}
+            - name: DB_USER
+              value: {{ .Values.folio.database.user | quote }}
+            - name: DB_PASSWORD
+              value: {{ .Values.folio.database.password | quote }}
           livenessProbe:
             httpGet:
               path: /health
