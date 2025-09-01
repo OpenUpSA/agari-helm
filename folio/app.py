@@ -78,19 +78,20 @@ api = Api(
     - **Complete CRUD Operations**: Full Create, Read, Update, Delete operations for all entities
     - **Soft Deletes**: All delete operations preserve data integrity with timestamp-based soft deletion
     - **Cascade Protection**: Prevents deletion of entities with dependencies (e.g., pathogen with projects)
-    - **Keycloak Integration**: Automatic project group creation and user management
+    - **Keycloak Integration**: Automatic project and study group creation and user management
     
     ## Entity Hierarchy
     ```
     Pathogens (managed by super users)
     └── Projects (with read/write/admin groups)
-        └── Studies (linked to projects)
+        └── Studies (with read/write/admin groups)
     ```
     
     ## Permission Model
     - **Public Access**: Anyone with valid token can view pathogens
-    - **Super User (`folio.WRITE`)**: Can create/edit/delete pathogens and projects
+    - **Super User (`folio.WRITE`)**: Can create/edit/delete pathogens, projects, and studies
     - **Project Members**: Automatic group-based permissions (read/write/admin) for project access
+    - **Study Members**: Automatic group-based permissions (read/write/admin) for study access
     - **Data Protection**: Cascade deletion prevention maintains referential integrity
     
     ## Getting Started
@@ -116,7 +117,7 @@ health_ns = api.namespace('health', description='Health check operations')
 auth_ns = api.namespace('auth', description='Authentication and permission testing endpoints') 
 projects_ns = api.namespace('projects', description='Project CRUD operations and group management - Full lifecycle management including Keycloak integration')
 pathogens_ns = api.namespace('pathogens', description='Pathogen CRUD operations - Super user management of pathogen entities with cascade protection')
-studies_ns = api.namespace('studies', description='Study CRUD operations - Research study management within projects')
+studies_ns = api.namespace('studies', description='Study CRUD operations and group management - Complete lifecycle management including Keycloak integration and user management')
 
 # Define data models for Swagger documentation
 user_model = api.model('User', {
@@ -205,6 +206,7 @@ study_model = api.model('Study', {
     'end_date': fields.Date(description='Study end date'),
     'status': fields.String(description='Study status'),
     'song_created': fields.Boolean(description='Whether study was created in SONG', readonly=True),
+    'keycloak_created': fields.Raw(description='Keycloak integration status (resource, group, permissions)', readonly=True),
     'created_at': fields.DateTime(description='Creation timestamp', readonly=True),
     'updated_at': fields.DateTime(description='Last update timestamp', readonly=True),
     'deleted_at': fields.DateTime(description='Deletion timestamp', readonly=True)
@@ -941,6 +943,420 @@ def get_project_group_by_name(group_name):
     except Exception as e:
         logger.error(f"Failed to get group by name '{group_name}': {e}")
         return None
+
+
+def create_study_resource(study_id):
+    """Create a Keycloak resource for a study using UMA Resource Registration API"""
+    try:
+        logger.info(f"=== CREATING UMA RESOURCE FOR STUDY: {study_id} ===")
+        
+        service_token = get_service_token()
+        if not service_token:
+            logger.error("Failed to get service token")
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Create the resource using UMA Resource Registration API
+        resource_data = {
+            'name': study_id,
+            'displayName': f"Study: {study_id}",
+            'type': 'urn:folio:resources:study',
+            'scopes': ['READ', 'WRITE', 'ADMIN'],  # Include ADMIN scope
+            'attributes': {
+                'study_id': [study_id],
+                'created_by': ['folio-service']
+            }
+        }
+        
+        # Use UMA Resource Registration endpoint
+        response = requests.post(KEYCLOAK_UMA_RESOURCE_URI, headers=headers, json=resource_data, timeout=10)
+        
+        if response.status_code == 201:
+            resource = response.json()
+            logger.info(f"Successfully created UMA resource '{study_id}' with ID: {resource.get('_id')}")
+            logger.info(f"Resource scopes: {resource.get('scopes', [])}")
+            return resource
+        elif response.status_code == 409:
+            logger.warning(f"UMA Resource '{study_id}' already exists")
+            return None
+        else:
+            logger.error(f"Failed to create UMA resource: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to create study resource: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return False
+
+
+def get_study_resource(study_id):
+    """Get an existing study resource from Keycloak using UMA Resource Registration API"""
+    try:
+        service_token = get_service_token()
+        if not service_token:
+            return None
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Get all resources and filter by name (UMA API doesn't support name filtering directly)
+        response = requests.get(KEYCLOAK_UMA_RESOURCE_URI, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        resource_ids = response.json()
+        
+        # Search through resources to find the one with matching name
+        for resource_id in resource_ids:
+            resource_response = requests.get(f"{KEYCLOAK_UMA_RESOURCE_URI}/{resource_id}", 
+                                           headers=headers, timeout=10)
+            if resource_response.status_code == 200:
+                resource = resource_response.json()
+                if resource.get('name') == study_id:
+                    logger.info(f"Found existing UMA resource '{study_id}': {resource.get('_id')}")
+                    return resource
+        
+        logger.info(f"UMA resource '{study_id}' not found")
+        return None
+        
+    except Exception as e:
+        logger.error(f"Failed to get study resource: {e}")
+        return None
+
+
+def create_study_group(study_id):
+    """Create a Keycloak group for a study"""
+    try:
+        logger.info(f"=== CREATING GROUP FOR STUDY: {study_id} ===")
+        
+        service_token = get_service_token()
+        if not service_token:
+            logger.error("Failed to get service token")
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Create the group data
+        group_data = {
+            'name': f"study-{study_id}",
+            'path': f"/study-{study_id}",
+            'attributes': {
+                'study_id': [study_id],
+                'created_by': ['folio-service'],
+                'group_type': ['study'],
+                'description': [f"Study group for {study_id}"]
+            }
+        }
+        
+        # Create the group using Keycloak Admin API
+        response = requests.post(f"{KEYCLOAK_ADMIN_BASE_URI}/groups", 
+                               headers=headers, json=group_data, timeout=10)
+        
+        if response.status_code == 201:
+            # Get the created group ID from Location header
+            location = response.headers.get('Location')
+            group_id = location.split('/')[-1] if location else None
+            
+            if group_id:
+                # Get the full group details
+                group_response = requests.get(f"{KEYCLOAK_ADMIN_BASE_URI}/groups/{group_id}", 
+                                            headers=headers, timeout=10)
+                if group_response.status_code == 200:
+                    group = group_response.json()
+                    logger.info(f"Successfully created group '{group['name']}' with ID: {group['id']}")
+                    return group
+            
+            logger.info(f"Successfully created group for study '{study_id}'")
+            return {"name": group_data["name"], "id": group_id}
+            
+        elif response.status_code == 409:
+            logger.warning(f"Group for study '{study_id}' already exists")
+            return None
+        else:
+            logger.error(f"Failed to create group: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to create study group: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return False
+
+
+def get_study_group(study_id):
+    """Get an existing study group from Keycloak"""
+    try:
+        service_token = get_service_token()
+        if not service_token:
+            return None
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Get all groups and search for the study group
+        response = requests.get(f"{KEYCLOAK_ADMIN_BASE_URI}/groups", headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        groups = response.json()
+        group_name = f"study-{study_id}"
+        
+        # Search for the group by name
+        for group in groups:
+            if group.get('name') == group_name:
+                logger.info(f"Found existing group '{group_name}': {group.get('id')}")
+                return group
+        
+        logger.info(f"Group '{group_name}' not found")
+        return None
+        
+    except Exception as e:
+        logger.error(f"Failed to get study group: {e}")
+        return None
+
+
+def add_user_to_study_group(study_id, username):
+    """Add a user to a study group"""
+    try:
+        logger.info(f"=== ADDING USER '{username}' TO STUDY GROUP '{study_id}' ===")
+        
+        # Get the study group
+        group = get_study_group(study_id)
+        if not group:
+            logger.error(f"Study group for '{study_id}' not found")
+            return False
+        
+        # Get the user
+        user = get_user_by_username(username)
+        if not user:
+            logger.error(f"User '{username}' not found")
+            return False
+        
+        service_token = get_service_token()
+        if not service_token:
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        group_id = group['id']
+        user_id = user['id']
+        
+        # Add user to group
+        response = requests.put(f"{KEYCLOAK_ADMIN_BASE_URI}/users/{user_id}/groups/{group_id}", 
+                              headers=headers, timeout=10)
+        
+        if response.status_code == 204:
+            logger.info(f"Successfully added user '{username}' to group '{group['name']}'")
+            return True
+        else:
+            logger.error(f"Failed to add user to group: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to add user to study group: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return False
+
+
+def remove_user_from_study_group(study_id, username):
+    """Remove a user from a study group"""
+    try:
+        logger.info(f"=== REMOVING USER '{username}' FROM STUDY GROUP '{study_id}' ===")
+        
+        # Get the study group
+        group = get_study_group(study_id)
+        if not group:
+            logger.error(f"Study group for '{study_id}' not found")
+            return False
+        
+        # Get the user
+        user = get_user_by_username(username)
+        if not user:
+            logger.error(f"User '{username}' not found")
+            return False
+        
+        service_token = get_service_token()
+        if not service_token:
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        group_id = group['id']
+        user_id = user['id']
+        
+        # Remove user from group
+        response = requests.delete(f"{KEYCLOAK_ADMIN_BASE_URI}/users/{user_id}/groups/{group_id}", 
+                                 headers=headers, timeout=10)
+        
+        if response.status_code == 204:
+            logger.info(f"Successfully removed user '{username}' from group '{group['name']}'")
+            return True
+        else:
+            logger.error(f"Failed to remove user from group: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to remove user from study group: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return False
+
+
+def get_study_group_members(study_id):
+    """Get all members of a study group"""
+    try:
+        # Get the study group
+        group = get_study_group(study_id)
+        if not group:
+            logger.error(f"Study group for '{study_id}' not found")
+            return None
+        
+        service_token = get_service_token()
+        if not service_token:
+            return None
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        group_id = group['id']
+        
+        # Get group members
+        response = requests.get(f"{KEYCLOAK_ADMIN_BASE_URI}/groups/{group_id}/members", 
+                              headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        members = response.json()
+        logger.info(f"Found {len(members)} members in group '{group['name']}'")
+        
+        # Return simplified member info
+        member_list = []
+        for member in members:
+            member_list.append({
+                'id': member.get('id'),
+                'username': member.get('username'),
+                'email': member.get('email'),
+                'firstName': member.get('firstName'),
+                'lastName': member.get('lastName'),
+                'enabled': member.get('enabled')
+            })
+        
+        return member_list
+        
+    except Exception as e:
+        logger.error(f"Failed to get study group members: {e}")
+        return None
+
+
+def create_study_group_with_permission(study_id, permission):
+    """Create a Keycloak group for a study with specific permission (read, write, or admin)"""
+    try:
+        group_name = f"study-{study_id}-{permission}"
+        logger.info(f"=== CREATING {permission.upper()} GROUP FOR STUDY: {study_id} ===")
+        
+        service_token = get_service_token()
+        if not service_token:
+            logger.error("Failed to get service token")
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Create the group data
+        group_data = {
+            'name': group_name,
+            'path': f"/{group_name}",
+            'attributes': {
+                'study_id': [study_id],
+                'permission': [permission],
+                'created_by': ['folio-service'],
+                'group_type': ['study'],
+                'description': [f"Study {permission} group for {study_id}"]
+            }
+        }
+        
+        # Create the group using Keycloak Admin API
+        response = requests.post(f"{KEYCLOAK_ADMIN_BASE_URI}/groups", 
+                               headers=headers, json=group_data, timeout=10)
+        
+        if response.status_code == 201:
+            # Get the created group ID from Location header
+            location = response.headers.get('Location')
+            group_id = location.split('/')[-1] if location else None
+            logger.info(f"Successfully created {permission} group '{group_name}' with ID: {group_id}")
+            return True
+        elif response.status_code == 409:
+            logger.warning(f"{permission.capitalize()} group for study '{study_id}' already exists")
+            return True
+        else:
+            logger.error(f"Failed to create {permission} group: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to create {permission} group for study {study_id}: {e}")
+        return False
+
+
+def add_user_to_study_group_with_permission(study_id, username, permission):
+    """Add a user to a study group with specific permission (read, write, or admin)"""
+    try:
+        group_name = f"study-{study_id}-{permission}"
+        logger.info(f"=== ADDING USER '{username}' TO {permission.upper()} GROUP '{group_name}' ===")
+        
+        # Get the specific permission group
+        group = get_project_group_by_name(group_name)
+        if not group:
+            logger.error(f"Study {permission} group '{group_name}' not found")
+            return False
+        
+        # Get the user
+        user = get_user_by_username(username)
+        if not user:
+            logger.error(f"User '{username}' not found")
+            return False
+        
+        service_token = get_service_token()
+        if not service_token:
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        group_id = group['id']
+        user_id = user['id']
+        
+        # Add user to group
+        response = requests.put(f"{KEYCLOAK_ADMIN_BASE_URI}/users/{user_id}/groups/{group_id}", 
+                              headers=headers, timeout=10)
+        
+        if response.status_code == 204:
+            logger.info(f"Successfully added user '{username}' to {permission} group '{group_name}'")
+            return True
+        else:
+            logger.error(f"Failed to add user to {permission} group: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to add user '{username}' to {permission} group: {e}")
+        return False
 
 
 def get_rpt_permissions(access_token):
@@ -1681,7 +2097,7 @@ class ProjectSummary(Resource):
                     "users_count": len(users),
                     "studies": studies_with_flags,
                     "users": users,
-                    "status": "success"
+                    "status": ""
                 }
                 
         except Exception as e:
@@ -2421,14 +2837,35 @@ class StudyList(Resource):
                 # Try to create study in SONG
                 song_result = create_song_study(dict(study), g.token)
                 
+                # Create Keycloak resource and groups for the study
+                logger.info(f"Creating Keycloak resources for study: {data['study_id']}")
+                
+                # Create UMA resource
+                resource_result = create_study_resource(data['study_id'])
+                
+                # Create groups (main group and permission-specific groups)
+                group_result = create_study_group(data['study_id'])
+                
+                # Create permission-specific groups
+                read_group = create_study_group_with_permission(data['study_id'], 'read')
+                write_group = create_study_group_with_permission(data['study_id'], 'write')
+                admin_group = create_study_group_with_permission(data['study_id'], 'admin')
+                
                 # Note: We simplified the schema and removed metadata field
                 # Track SONG creation status in the response only
                 conn.commit()
                 
-                logger.info(f"Created study: {study['name']} (SONG: {'success' if song_result else 'failed'})")
+                keycloak_status = {
+                    'resource': resource_result is not False,
+                    'group': group_result is not False,
+                    'permissions': read_group and write_group and admin_group
+                }
+                
+                logger.info(f"Created study: {study['name']} (SONG: {'success' if song_result else 'failed'}, Keycloak: {keycloak_status})")
                 
                 study_dict = serialize_record(study)
                 study_dict['song_created'] = song_result is not None
+                study_dict['keycloak_created'] = keycloak_status
                 return study_dict, 201
                 
         except Exception as e:
@@ -2581,6 +3018,301 @@ class StudyDetail(Resource):
             return {"error": "Failed to delete study"}, 500
         finally:
             conn.close()
+
+
+@studies_ns.route('/<string:study_id>/resource')
+@studies_ns.param('study_id', 'The study identifier')
+class StudyResource(Resource):
+    @studies_ns.doc('create_study_resource', security='Bearer')
+    @studies_ns.marshal_with(api.model('StudyResourceResponse', {
+        'message': fields.String(description='Response message'),
+        'resource': fields.Nested(resource_model, description='Created resource'),
+        'status': fields.String(description='Operation status')
+    }))
+    @studies_ns.response(400, 'Invalid study ID')
+    @studies_ns.response(401, 'Invalid or missing token')
+    @studies_ns.response(403, 'Insufficient permissions', error_model)
+    @studies_ns.response(409, 'Resource already exists')
+    @studies_ns.response(500, 'Failed to create resource')
+    @require_permissions(["WRITE"])
+    def post(self, study_id):
+        """Create a Keycloak resource for a study"""
+        logger.info(f"Creating resource for study: {study_id} by user: {g.user['username']}")
+        
+        # Validate study ID (basic validation)
+        if not study_id or len(study_id) < 2:
+            return {"error": "Invalid study ID"}, 400
+        
+        # Check if resource already exists
+        existing_resource = get_study_resource(study_id)
+        if existing_resource:
+            return {
+                "message": f"Resource for study '{study_id}' already exists",
+                "resource": existing_resource,
+                "status": "exists"
+            }, 409
+        
+        # Create the resource
+        result = create_study_resource(study_id)
+        
+        if result is False:
+            return {"error": f"Failed to create resource for study '{study_id}'"}, 500
+        elif result is None:
+            return {"error": f"Resource for study '{study_id}' already exists"}, 409
+        else:
+            return {
+                "message": f"Successfully created resource for study '{study_id}'",
+                "resource": result,
+                "status": "created"
+            }, 201
+
+    @studies_ns.doc('get_study_resource', security='Bearer')
+    @studies_ns.marshal_with(api.model('GetStudyResourceResponse', {
+        'message': fields.String(description='Response message'),
+        'resource': fields.Nested(resource_model, description='Found resource'),
+        'status': fields.String(description='Operation status')
+    }))
+    @studies_ns.response(401, 'Invalid or missing token')
+    @studies_ns.response(403, 'Insufficient permissions', error_model)
+    @studies_ns.response(404, 'Resource not found')
+    @require_permissions(["READ"])
+    def get(self, study_id):
+        """Get the Keycloak resource for a study"""
+        logger.info(f"Getting resource for study: {study_id} by user: {g.user['username']}")
+        
+        resource = get_study_resource(study_id)
+        
+        if resource:
+            return {
+                "message": f"Found resource for study '{study_id}'",
+                "resource": resource,
+                "status": "found"
+            }
+        else:
+            return {
+                "message": f"Resource for study '{study_id}' not found",
+                "status": "not_found"
+            }, 404
+
+
+@studies_ns.route('/<string:study_id>/group')
+@studies_ns.param('study_id', 'The study identifier')
+class StudyGroup(Resource):
+    @studies_ns.doc('create_study_group', security='Bearer')
+    @studies_ns.marshal_with(api.model('StudyGroupResponse', {
+        'message': fields.String(description='Response message'),
+        'group': fields.Nested(group_model, description='Created group'),
+        'status': fields.String(description='Operation status')
+    }))
+    @studies_ns.response(400, 'Invalid study ID')
+    @studies_ns.response(401, 'Invalid or missing token')
+    @studies_ns.response(403, 'Insufficient permissions', error_model)
+    @studies_ns.response(409, 'Group already exists')
+    @studies_ns.response(500, 'Failed to create group')
+    @require_permissions(["WRITE"])
+    def post(self, study_id):
+        """Create a Keycloak group for a study"""
+        logger.info(f"Creating group for study: {study_id} by user: {g.user['username']}")
+        
+        # Validate study ID (basic validation)
+        if not study_id or len(study_id) < 2:
+            return {"error": "Invalid study ID"}, 400
+        
+        # Check if group already exists
+        existing_group = get_study_group(study_id)
+        if existing_group:
+            return {
+                "message": f"Group for study '{study_id}' already exists",
+                "group": existing_group,
+                "status": "exists"
+            }, 409
+        
+        # Create the group
+        result = create_study_group(study_id)
+        
+        if result is False:
+            return {"error": f"Failed to create group for study '{study_id}'"}, 500
+        elif result is None:
+            return {"error": f"Group for study '{study_id}' already exists"}, 409
+        else:
+            return {
+                "message": f"Successfully created group for study '{study_id}'",
+                "group": result,
+                "status": "created"
+            }, 201
+
+    @studies_ns.doc('get_study_group', security='Bearer')
+    @studies_ns.marshal_with(api.model('GetStudyGroupResponse', {
+        'message': fields.String(description='Response message'),
+        'group': fields.Nested(group_model, description='Found group'),
+        'status': fields.String(description='Operation status')
+    }))
+    @studies_ns.response(401, 'Invalid or missing token')
+    @studies_ns.response(403, 'Insufficient permissions', error_model)
+    @studies_ns.response(404, 'Group not found')
+    @require_permissions(["READ"])
+    def get(self, study_id):
+        """Get the Keycloak group for a study"""
+        logger.info(f"Getting group for study: {study_id} by user: {g.user['username']}")
+        
+        group = get_study_group(study_id)
+        
+        if group:
+            return {
+                "message": f"Found group for study '{study_id}'",
+                "group": group,
+                "status": "found"
+            }
+        else:
+            return {
+                "message": f"Group for study '{study_id}' not found",
+                "status": "not_found"
+            }, 404
+
+
+@studies_ns.route('/<string:study_id>/group/members')
+@studies_ns.param('study_id', 'The study identifier')
+class StudyGroupMembers(Resource):
+    @studies_ns.doc('get_study_group_members', security='Bearer')
+    @studies_ns.marshal_with(api.model('StudyGroupMembersResponse', {
+        'message': fields.String(description='Response message'),
+        'study': fields.String(description='Study ID'),
+        'members': fields.List(fields.Nested(member_model), description='Group members'),
+        'count': fields.Integer(description='Number of members'),
+        'status': fields.String(description='Operation status')
+    }))
+    @studies_ns.response(401, 'Invalid or missing token')
+    @studies_ns.response(403, 'Insufficient permissions', error_model)
+    @studies_ns.response(404, 'Group not found')
+    @require_permissions(["READ"])
+    def get(self, study_id):
+        """Get all members of a study group"""
+        logger.info(f"Getting group members for study: {study_id} by user: {g.user['username']}")
+        
+        members = get_study_group_members(study_id)
+        
+        if members is not None:
+            return {
+                "message": f"Found {len(members)} members in study group '{study_id}'",
+                "study": study_id,
+                "members": members,
+                "count": len(members),
+                "status": "found"
+            }
+        else:
+            return {
+                "message": f"Group for study '{study_id}' not found or error occurred",
+                "status": "error"
+            }, 404
+
+
+@studies_ns.route('/<string:study_id>/group/members/<string:username>')
+@studies_ns.param('study_id', 'The study identifier')
+@studies_ns.param('username', 'The username to add/remove from the group')
+class StudyGroupMember(Resource):
+    @studies_ns.doc('add_user_to_study_group', security='Bearer')
+    @studies_ns.marshal_with(api.model('StudyGroupMemberResponse', {
+        'message': fields.String(description='Response message'),
+        'study': fields.String(description='Study ID'),
+        'username': fields.String(description='Username'),
+        'status': fields.String(description='Operation status')
+    }))
+    @studies_ns.response(400, 'Invalid study ID or username')
+    @studies_ns.response(401, 'Invalid or missing token')
+    @studies_ns.response(403, 'Insufficient permissions', error_model)
+    @studies_ns.response(500, 'Failed to add user to group')
+    @require_permissions(["WRITE"])
+    def post(self, study_id, username):
+        """Add a user to a study group"""
+        logger.info(f"Adding user '{username}' to study group '{study_id}' by user: {g.user['username']}")
+        
+        # Validate inputs
+        if not study_id or len(study_id) < 2:
+            return {"error": "Invalid study ID"}, 400
+        
+        if not username or len(username) < 1:
+            return {"error": "Invalid username"}, 400
+        
+        # Add user to group
+        result = add_user_to_study_group(study_id, username)
+        
+        if result:
+            return {
+                "message": f"Successfully added user '{username}' to study group '{study_id}'",
+                "study": study_id,
+                "username": username,
+                "status": "added"
+            }, 200
+        else:
+            return {
+                "error": f"Failed to add user '{username}' to study group '{study_id}'",
+                "study": study_id,
+                "username": username,
+                "status": "failed"
+            }, 500
+
+    @studies_ns.doc('remove_user_from_study_group', security='Bearer')
+    @studies_ns.marshal_with(api.model('StudyGroupMemberRemoveResponse', {
+        'message': fields.String(description='Response message'),
+        'study': fields.String(description='Study ID'),
+        'username': fields.String(description='Username'),
+        'status': fields.String(description='Operation status')
+    }))
+    @studies_ns.response(400, 'Invalid study ID or username')
+    @studies_ns.response(401, 'Invalid or missing token')
+    @studies_ns.response(403, 'Insufficient permissions', error_model)
+    @studies_ns.response(500, 'Failed to remove user from group')
+    @require_permissions(["WRITE"])
+    def delete(self, study_id, username):
+        """Remove a user from a study group"""
+        logger.info(f"Removing user '{username}' from study group '{study_id}' by user: {g.user['username']}")
+        
+        # Validate inputs
+        if not study_id or len(study_id) < 2:
+            return {"error": "Invalid study ID"}, 400
+        
+        if not username or len(username) < 1:
+            return {"error": "Invalid username"}, 400
+        
+        # Remove user from group
+        result = remove_user_from_study_group(study_id, username)
+        
+        if result:
+            return {
+                "message": f"Successfully removed user '{username}' from study group '{study_id}'",
+                "study": study_id,
+                "username": username,
+                "status": "removed"
+            }, 200
+        else:
+            return {
+                "error": f"Failed to remove user '{username}' from study group '{study_id}'",
+                "study": study_id,
+                "username": username,
+                "status": "failed"
+            }, 500
+
+
+@studies_ns.route('/<string:study_id>/users')
+@studies_ns.param('study_id', 'The study ID/identifier')
+class StudyUsers(Resource):
+    @studies_ns.doc('get_study_users', security='Bearer')
+    @studies_ns.marshal_list_with(member_model)
+    @studies_ns.response(401, 'Invalid or missing token')
+    @studies_ns.response(403, 'Insufficient permissions', error_model)
+    @studies_ns.response(404, 'Study not found')
+    @require_permissions(["READ"])
+    def get(self, study_id):
+        """Get all users/members in a study (based on study group membership)"""
+        logger.info(f"Getting users for study {study_id} by user: {g.user['username']}")
+        
+        # This is an alias for the existing group members endpoint for convenience
+        members = get_study_group_members(study_id)
+        
+        if members is not None:
+            return members
+        else:
+            return {"error": f"Study '{study_id}' not found or no group exists"}, 404
 
 
 def get_db_connection():
