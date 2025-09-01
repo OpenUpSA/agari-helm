@@ -65,7 +65,40 @@ api = Api(
     app,
     version='1.0',
     title='Folio API',
-    description='JWT Authentication and Group Management API for AGARI Genomics Data Management',
+    description='''
+    **Folio API - Complete CRUD API for AGARI Genomics Data Management**
+    
+    ## Overview
+    Folio provides a comprehensive REST API for managing genomics research data with JWT authentication, 
+    role-based access control, and Keycloak integration.
+    
+    ## Features
+    - **JWT Authentication**: Secure token-based authentication via Keycloak
+    - **Role-based Access Control**: Granular permissions with `folio.READ` and `folio.WRITE` scopes
+    - **Complete CRUD Operations**: Full Create, Read, Update, Delete operations for all entities
+    - **Soft Deletes**: All delete operations preserve data integrity with timestamp-based soft deletion
+    - **Cascade Protection**: Prevents deletion of entities with dependencies (e.g., pathogen with projects)
+    - **Keycloak Integration**: Automatic project group creation and user management
+    
+    ## Entity Hierarchy
+    ```
+    Pathogens (managed by super users)
+    └── Projects (with read/write/admin groups)
+        └── Studies (linked to projects)
+    ```
+    
+    ## Permission Model
+    - **Public Access**: Anyone with valid token can view pathogens
+    - **Super User (`folio.WRITE`)**: Can create/edit/delete pathogens and projects
+    - **Project Members**: Automatic group-based permissions (read/write/admin) for project access
+    - **Data Protection**: Cascade deletion prevention maintains referential integrity
+    
+    ## Getting Started
+    1. Obtain JWT token from Keycloak
+    2. Include token in Authorization header: `Bearer <your-jwt-token>`
+    3. Use `/auth/test` endpoints to verify permissions
+    4. Explore entity endpoints: `/pathogens`, `/projects`, `/studies`
+    ''',
     doc='/docs/',  # Swagger UI will be available at /docs/
     authorizations={
         'Bearer': {
@@ -80,10 +113,10 @@ api = Api(
 
 # Create API namespaces
 health_ns = api.namespace('health', description='Health check operations')
-auth_ns = api.namespace('auth', description='Authentication test operations') 
-projects_ns = api.namespace('projects', description='Project management operations')
-pathogens_ns = api.namespace('pathogens', description='Pathogen management operations')
-studies_ns = api.namespace('studies', description='Study management operations')
+auth_ns = api.namespace('auth', description='Authentication and permission testing endpoints') 
+projects_ns = api.namespace('projects', description='Project CRUD operations and group management - Full lifecycle management including Keycloak integration')
+pathogens_ns = api.namespace('pathogens', description='Pathogen CRUD operations - Super user management of pathogen entities with cascade protection')
+studies_ns = api.namespace('studies', description='Study CRUD operations - Research study management within projects')
 
 # Define data models for Swagger documentation
 user_model = api.model('User', {
@@ -125,40 +158,40 @@ error_model = api.model('Error', {
 })
 
 pathogen_model = api.model('Pathogen', {
-    'id': fields.String(description='Pathogen UUID', readonly=True),
-    'name': fields.String(required=True, description='Pathogen name'),
-    'scientific_name': fields.String(description='Scientific name'),
-    'description': fields.String(description='Pathogen description'),
-    'created_at': fields.DateTime(description='Creation timestamp', readonly=True),
-    'updated_at': fields.DateTime(description='Last update timestamp', readonly=True)
+    'id': fields.String(description='Pathogen UUID (auto-generated)', readonly=True),
+    'name': fields.String(required=True, description='Pathogen name (unique identifier)'),
+    'scientific_name': fields.String(description='Scientific name of the pathogen'),
+    'description': fields.String(description='Detailed description of the pathogen'),
+    'created_at': fields.DateTime(description='Creation timestamp (auto-generated)', readonly=True),
+    'updated_at': fields.DateTime(description='Last update timestamp (auto-generated)', readonly=True)
 })
 
 pathogen_input_model = api.model('PathogenInput', {
-    'name': fields.String(required=True, description='Pathogen name'),
-    'scientific_name': fields.String(description='Scientific name'),
-    'description': fields.String(description='Pathogen description')
+    'name': fields.String(required=True, description='Pathogen name (must be unique)'),
+    'scientific_name': fields.String(description='Scientific name of the pathogen'),
+    'description': fields.String(description='Detailed description of the pathogen')
 })
 
 project_model = api.model('Project', {
-    'id': fields.String(description='Project UUID', readonly=True),
-    'slug': fields.String(required=True, description='Project slug/identifier'),
-    'name': fields.String(required=True, description='Project name'),
-    'description': fields.String(description='Project description'),
-    'organization_id': fields.String(description='Organization ID from Keycloak', readonly=True),
-    'user_id': fields.String(description='User ID from Keycloak (creator)', readonly=True),
-    'status': fields.String(description='Project status'),
-    'pathogen_id': fields.String(description='Associated pathogen UUID'),
-    'pathogen_name': fields.String(description='Pathogen name', readonly=True),
-    'created_at': fields.DateTime(description='Creation timestamp', readonly=True),
-    'updated_at': fields.DateTime(description='Last update timestamp', readonly=True),
-    'deleted_at': fields.DateTime(description='Deletion timestamp', readonly=True)
+    'id': fields.String(description='Project UUID (auto-generated)', readonly=True),
+    'slug': fields.String(required=True, description='Project slug/identifier (unique, URL-friendly)'),
+    'name': fields.String(required=True, description='Human-readable project name'),
+    'description': fields.String(description='Detailed project description'),
+    'organization_id': fields.String(description='Organization ID from Keycloak (auto-assigned)', readonly=True),
+    'user_id': fields.String(description='Creator user ID from Keycloak (auto-assigned)', readonly=True),
+    'status': fields.String(description='Project status (active, completed, etc.)'),
+    'pathogen_id': fields.String(description='Associated pathogen UUID (must exist)'),
+    'pathogen_name': fields.String(description='Pathogen name (auto-populated)', readonly=True),
+    'created_at': fields.DateTime(description='Creation timestamp (auto-generated)', readonly=True),
+    'updated_at': fields.DateTime(description='Last update timestamp (auto-generated)', readonly=True),
+    'deleted_at': fields.DateTime(description='Soft deletion timestamp (null if active)', readonly=True)
 })
 
 project_input_model = api.model('ProjectInput', {
-    'slug': fields.String(required=True, description='Project slug/identifier'),
-    'name': fields.String(required=True, description='Project name'),
-    'description': fields.String(description='Project description'),
-    'pathogen_id': fields.String(required=True, description='Associated pathogen UUID')
+    'slug': fields.String(required=True, description='Project slug/identifier (must be unique and URL-friendly)'),
+    'name': fields.String(required=True, description='Human-readable project name'),
+    'description': fields.String(description='Detailed project description'),
+    'pathogen_id': fields.String(required=True, description='Associated pathogen UUID (must exist and not be deleted)')
 })
 
 study_model = api.model('Study', {
@@ -1664,11 +1697,16 @@ class PathogenList(Resource):
     """Operations for multiple pathogens"""
     
     @pathogens_ns.doc('list_pathogens')
-    @pathogens_ns.response(200, 'Success', [pathogen_model])
+    @pathogens_ns.response(200, 'Success - Returns list of active pathogens', [pathogen_model])
     @pathogens_ns.response(500, 'Internal server error', error_model)
     @authenticate_token
     def get(self):
-        """Get all pathogens (public access - no specific permissions required)"""
+        """Get all active pathogens
+        
+        **Public Access**: Any authenticated user can view all pathogens.
+        Only returns non-deleted pathogens. This endpoint provides the foundation
+        data for project creation and pathogen selection throughout the system.
+        """
         logger.info(f"Getting all pathogens for user: {g.user['username']}")
         
         conn = get_db_connection()
@@ -1689,13 +1727,19 @@ class PathogenList(Resource):
     
     @pathogens_ns.doc('create_pathogen')
     @pathogens_ns.expect(pathogen_input_model, validate=True)
-    @pathogens_ns.response(201, 'Pathogen created', pathogen_model)
-    @pathogens_ns.response(400, 'Invalid input', error_model)
-    @pathogens_ns.response(409, 'Pathogen already exists', error_model)
+    @pathogens_ns.response(201, 'Pathogen created successfully', pathogen_model)
+    @pathogens_ns.response(400, 'Invalid input data', error_model)
+    @pathogens_ns.response(403, 'Insufficient permissions - requires folio.WRITE scope', error_model)
+    @pathogens_ns.response(409, 'Pathogen name already exists', error_model)
     @pathogens_ns.response(500, 'Internal server error', error_model)
     @require_permissions(["WRITE"])
     def post(self):
-        """Create a new pathogen"""
+        """Create a new pathogen
+        
+        **Super User Only**: Requires `folio.WRITE` permission.
+        Creates a new pathogen entity that can be associated with projects.
+        Pathogen names must be unique across the system.
+        """
         logger.info(f"Creating new pathogen by user: {g.user['username']}")
         
         data = request.json
@@ -1894,14 +1938,25 @@ class PathogenDetail(Resource):
             conn.close()
     
     @pathogens_ns.doc('delete_pathogen')
-    @pathogens_ns.response(204, 'Pathogen deleted')
-    @pathogens_ns.response(404, 'Pathogen not found', error_model)
-    @pathogens_ns.response(403, 'Insufficient permissions - requires WRITE permission', error_model)
-    @pathogens_ns.response(409, 'Cannot delete pathogen with associated projects', error_model)
+    @pathogens_ns.response(204, 'Pathogen successfully soft deleted')
+    @pathogens_ns.response(404, 'Pathogen not found or already deleted', error_model)
+    @pathogens_ns.response(403, 'Insufficient permissions - requires folio.WRITE scope', error_model)
+    @pathogens_ns.response(409, 'Cannot delete pathogen - has associated projects', error_model)
     @pathogens_ns.response(500, 'Internal server error', error_model)
     @require_permissions(["WRITE"])
     def delete(self, pathogen_id):
-        """Soft delete a pathogen (requires WRITE permission)"""
+        """Soft delete a pathogen
+        
+        **Super User Only**: Requires `folio.WRITE` permission.
+        
+        **Soft Delete**: Sets `deleted_at` timestamp instead of hard deletion.
+        
+        **Cascade Protection**: Cannot delete if pathogen has any associated 
+        projects. All projects must be deleted first to maintain data integrity.
+        
+        **Safety**: Once deleted, pathogen will no longer appear in listings
+        or be available for new project associations.
+        """
         logger.info(f"Deleting pathogen {pathogen_id} by user: {g.user['username']}")
         
         conn = get_db_connection()
@@ -1985,13 +2040,26 @@ class ProjectList(Resource):
     
     @projects_ns.doc('create_project')
     @projects_ns.expect(project_input_model, validate=True)
-    @projects_ns.response(201, 'Project created', project_model)
-    @projects_ns.response(400, 'Invalid input', error_model)
-    @projects_ns.response(409, 'Project already exists', error_model)
+    @projects_ns.response(201, 'Project created successfully with Keycloak integration', project_model)
+    @projects_ns.response(400, 'Invalid input - pathogen not found or invalid data', error_model)
+    @projects_ns.response(403, 'Insufficient permissions - requires folio.WRITE scope', error_model)
+    @projects_ns.response(409, 'Project slug already exists', error_model)
     @projects_ns.response(500, 'Internal server error', error_model)
     @require_permissions(["WRITE"])
     def post(self):
-        """Create a new project"""
+        """Create a new project with automatic Keycloak integration
+        
+        **Super User Only**: Requires `folio.WRITE` permission.
+        
+        **Automatic Setup**: Creates project and automatically sets up:
+        - Keycloak UMA resource registration
+        - Three permission groups: `project-{slug}-read`, `project-{slug}-write`, `project-{slug}-admin`
+        - Creator is automatically added to all groups (full access)
+        
+        **Requirements**: 
+        - Project slug must be unique and URL-friendly
+        - Associated pathogen must exist and not be deleted
+        """
         logger.info(f"Creating new project by user: {g.user['username']}")
         
         data = request.json
