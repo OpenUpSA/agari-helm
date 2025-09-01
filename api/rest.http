@@ -14,7 +14,7 @@
 @password = pass123
 @realm = agari
 @client_id = dms
-@client_secret = dms-secret
+@client_secret = ZawPwfuMXZq4BeWry8GAwPj9mmIywe4b
 
 ### 1. LOGIN to get access token
 # @name login
@@ -30,7 +30,7 @@ username={{username}}
 ###
 @token = {{login.response.body.access_token}}
 
-### 2. CREATE STUDY
+### 2a. CREATE STUDY
 POST http://song.local/studies/{{study_id}}/
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -45,6 +45,14 @@ Content-Type: application/json
     "region": "South Africa"
   }
 }
+
+### 2b. GET STUDY DETAILS
+GET http://song.local/studies/{{study_id}}/
+Authorization: Bearer {{token}}
+
+### 2c. GET STUDY ANALYSES
+GET http://song.local/studies/{{study_id}}/analysis
+Authorization: Bearer {{token}}
 
 ### 3a. SUBMIT ANALYSIS
 # @name submitAnalysis
@@ -112,8 +120,14 @@ Content-Type: application/json
 # @analysis_id = 359047cd-7a55-462f-9047-cd7a55b62fdd
 @analysis_id = {{submitAnalysis.response.body.analysisId}}
 
-### 5. PUBLISH ANALYSIS 
+# @analysis_id = 0f768dc5-d8b9-447d-b68d-c5d8b9c47d25
+
+### 5a. PUBLISH ANALYSIS 
 PUT http://song.local/studies/{{study_id}}/analysis/publish/{{analysis_id}}
+Authorization: Bearer {{token}}
+
+### 5b. UNPUBLISH ANALYSIS
+PUT http://song.local/studies/{{study_id}}/analysis/unpublish/{{analysis_id}}
 Authorization: Bearer {{token}}
 
 ### 6. TRIGGER MAESTRO INDEXING
@@ -141,7 +155,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "query": "query { file { hits { total } edges { node { objectId fileName fileSize studyId } } } }"
+  "query": "query {file {hits {total}}}"
 }
 
 ### === FOLIO PROJECTS SERVICE ===
@@ -149,66 +163,39 @@ Content-Type: application/json
 ### 1. Folio Health Check
 GET http://folio.local/health
 
-### 2. Get Folio JWT Token
+
+### 2. Get Folio JWT Token (use same dms client as other services)
 # @name folio_login
 POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=password
-&client_id=folio
-&username={{username}}
+username={{username}}
 &password={{password}}
+&grant_type=password
+&client_id={{client_id}}
+&client_secret={{client_secret}}
 
-### 3. List Projects
-GET http://folio.local/api/projects
-Authorization: Bearer {{folio_login.response.body.access_token}}
+###
+@folio_token = {{folio_login.response.body.access_token}}
 
-### 4. Create Project
-# @name create_project
-POST http://folio.local/api/projects
-Authorization: Bearer {{folio_login.response.body.access_token}}
+### 3. Test Basic Authentication
+GET http://folio.local/api/test
+Authorization: Bearer {{folio_token}}
+
+### 4. Test READ Permission
+GET http://folio.local/api/test/read
+Authorization: Bearer {{folio_token}}
+
+### 5. Test WRITE Permission  
+GET http://folio.local/api/test/write
+Authorization: Bearer {{folio_token}}
+
+### 6. Test Admin (READ + WRITE) Permission
+POST http://folio.local/api/test/admin
+Authorization: Bearer {{folio_token}}
 Content-Type: application/json
 
 {
-  "name": "COVID-19 Variants Study",
-  "description": "Analysis of SARS-CoV-2 variants from South African samples",
-  "pathogen_id": null
+  "test": "admin access"
 }
 
-### 5. Get Project by ID
-GET http://folio.local/api/projects/{{create_project.response.body.id}}
-Authorization: Bearer {{folio_login.response.body.access_token}}
-
-### 6. List Pathogens
-GET http://folio.local/api/pathogens
-Authorization: Bearer {{folio_login.response.body.access_token}}
-
-### 7. Create Pathogen
-# @name create_pathogen
-POST http://folio.local/api/pathogens
-Authorization: Bearer {{folio_login.response.body.access_token}}
-Content-Type: application/json
-
-{
-  "name": "SARS-CoV-2",
-  "scientific_name": "Severe acute respiratory syndrome coronavirus 2",
-  "description": "Novel coronavirus causing COVID-19",
-  "schema": {
-    "genome_length": 29903,
-    "genes": ["ORF1ab", "S", "ORF3a", "E", "M", "ORF6", "ORF7a", "ORF7b", "ORF8", "N", "ORF10"]
-  }
-}
-
-### 8. Update Project with Pathogen
-PUT http://folio.local/api/projects/{{create_project.response.body.id}}
-Authorization: Bearer {{folio_login.response.body.access_token}}
-Content-Type: application/json
-
-{
-  "name": "COVID-19 Variants Study",
-  "description": "Analysis of SARS-CoV-2 variants from South African samples - Updated",
-  "pathogen_id": "{{create_pathogen.response.body.id}}"
-}
-
-### 9. Folio API Documentation
-GET http://folio.local/docs

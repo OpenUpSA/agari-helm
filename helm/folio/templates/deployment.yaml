@@ -16,42 +16,35 @@ spec:
     spec:
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 8000
+              containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
           env:
-            - name: DATABASE_URL
-              value: "postgresql://admin:folio-db-pass-123@folio-db:5432/folio"
-            - name: KEYCLOAK_SERVER_URL
-              value: "{{ .Values.folio.keycloak.serverUrl }}"
+            # Keycloak authentication configuration
+            - name: KEYCLOAK_HOST
+              value: {{ .Values.folio.auth.keycloak.host | quote }}
             - name: KEYCLOAK_REALM
-              value: "{{ .Values.folio.keycloak.realm }}"
+              value: {{ .Values.folio.auth.keycloak.realm | quote }}
+            - name: KEYCLOAK_ISSUER
+              value: {{ .Values.folio.auth.keycloak.issuer | quote }}
             - name: KEYCLOAK_CLIENT_ID
-              value: "{{ .Values.folio.keycloak.clientId }}"
+              value: {{ .Values.folio.auth.keycloak.clientId | quote }}
             - name: KEYCLOAK_CLIENT_SECRET
-              value: "{{ .Values.folio.keycloak.clientSecret }}"
-            - name: DEBUG
-              value: "{{ .Values.folio.debug }}"
-            - name: CORS_ORIGINS
-              value: "{{ .Values.folio.corsOrigins }}"
-          {{- if .Values.probes.liveness.enabled }}
+              value: {{ .Values.folio.auth.keycloak.clientSecret | quote }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.probes.liveness.httpGet.path }}
-              port: {{ .Values.probes.liveness.httpGet.port }}
-            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
-            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
-          {{- end }}
-          {{- if .Values.probes.readiness.enabled }}
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: {{ .Values.probes.readiness.httpGet.path }}
-              port: {{ .Values.probes.readiness.httpGet.port }}
-            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
-            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
-          {{- end }}
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
