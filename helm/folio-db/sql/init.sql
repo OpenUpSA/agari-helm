@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS pathogens (
     name VARCHAR(255) NOT NULL UNIQUE,
     scientific_name VARCHAR(255),
     description TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_T
+    IMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE NULL
 );
@@ -97,7 +98,7 @@ SELECT
     pat.scientific_name as pathogen_scientific_name,
     COUNT(s.id) as study_count
 FROM projects p
-LEFT JOIN pathogens pat ON p.pathogen_id = pat.id
+LEFT JOIN pathogens pat ON p.pathogen_id = pat.id AND pat.deleted_at IS NULL
 LEFT JOIN studies s ON p.id = s.project_id AND s.deleted_at IS NULL
 WHERE p.deleted_at IS NULL
 GROUP BY p.id, p.slug, p.name, p.description, p.organization_id, 
@@ -120,9 +121,9 @@ SELECT
     p.name as project_name,
     pat.name as pathogen_name
 FROM studies s
-JOIN projects p ON s.project_id = p.id
-LEFT JOIN pathogens pat ON p.pathogen_id = pat.id
-WHERE s.deleted_at IS NULL AND p.deleted_at IS NULL;
+JOIN projects p ON s.project_id = p.id AND p.deleted_at IS NULL
+LEFT JOIN pathogens pat ON p.pathogen_id = pat.id AND pat.deleted_at IS NULL
+WHERE s.deleted_at IS NULL;
 
 -- Grant permissions to the folio application user (if needed)
 -- Note: This assumes the folio app connects with the same user as the database owner

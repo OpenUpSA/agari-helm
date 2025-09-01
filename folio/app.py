@@ -301,7 +301,7 @@ def create_project_resource(project_slug):
             'name': project_slug,
             'displayName': f"Project: {project_slug}",
             'type': 'urn:folio:resources:project',
-            'scopes': ['READ', 'WRITE'],  # Use existing scopes
+            'scopes': ['READ', 'WRITE', 'ADMIN'],  # Include ADMIN scope
             'attributes': {
                 'project_slug': [project_slug],
                 'created_by': ['folio-service']
@@ -636,7 +636,7 @@ def get_project_group_members(project_slug):
 
 
 def create_project_group_with_permission(project_slug, permission):
-    """Create a Keycloak group for a project with specific permission (read or write)"""
+    """Create a Keycloak group for a project with specific permission (read, write, or admin)"""
     try:
         group_name = f"project-{project_slug}-{permission}"
         logger.info(f"=== CREATING {permission.upper()} GROUP FOR PROJECT: {project_slug} ===")
@@ -683,6 +683,151 @@ def create_project_group_with_permission(project_slug, permission):
             
     except Exception as e:
         logger.error(f"Failed to create {permission} group for project {project_slug}: {e}")
+        return False
+
+
+def create_pathogen_resource(pathogen_name):
+    """Create a Keycloak resource for a pathogen using UMA Resource Registration API"""
+    try:
+        logger.info(f"=== CREATING UMA RESOURCE FOR PATHOGEN: {pathogen_name} ===")
+        
+        service_token = get_service_token()
+        if not service_token:
+            logger.error("Failed to get service token")
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Create the resource using UMA Resource Registration API
+        resource_data = {
+            'name': pathogen_name,
+            'displayName': f"Pathogen: {pathogen_name}",
+            'type': 'urn:folio:resources:pathogen',
+            'scopes': ['ADMIN'],  # Only ADMIN scope - anyone can read, only admin can edit
+            'attributes': {
+                'pathogen_name': [pathogen_name],
+                'created_by': ['folio-service']
+            }
+        }
+        
+        # Use UMA Resource Registration endpoint
+        response = requests.post(KEYCLOAK_UMA_RESOURCE_URI, headers=headers, json=resource_data, timeout=10)
+        
+        if response.status_code == 201:
+            resource = response.json()
+            logger.info(f"Successfully created UMA resource '{pathogen_name}' with ID: {resource.get('_id')}")
+            logger.info(f"Resource scopes: {resource.get('scopes', [])}")
+            return resource
+        elif response.status_code == 409:
+            logger.warning(f"UMA Resource '{pathogen_name}' already exists")
+            return None
+        else:
+            logger.error(f"Failed to create UMA resource: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to create pathogen resource: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return False
+
+
+def create_pathogen_group_with_permission(pathogen_name, permission):
+    """Create a Keycloak group for a pathogen with specific permission (read, write, or admin)"""
+    try:
+        group_name = f"pathogen-{pathogen_name}-{permission}"
+        logger.info(f"=== CREATING {permission.upper()} GROUP FOR PATHOGEN: {pathogen_name} ===")
+        
+        service_token = get_service_token()
+        if not service_token:
+            logger.error("Failed to get service token")
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Create the group data
+        group_data = {
+            'name': group_name,
+            'path': f"/{group_name}",
+            'attributes': {
+                'pathogen_name': [pathogen_name],
+                'permission': [permission],
+                'created_by': ['folio-service'],
+                'group_type': ['pathogen'],
+                'description': [f"Pathogen {permission} group for {pathogen_name}"]
+            }
+        }
+        
+        # Create the group using Keycloak Admin API
+        response = requests.post(f"{KEYCLOAK_ADMIN_BASE_URI}/groups", 
+                               headers=headers, json=group_data, timeout=10)
+        
+        if response.status_code == 201:
+            # Get the created group ID from Location header
+            location = response.headers.get('Location')
+            group_id = location.split('/')[-1] if location else None
+            logger.info(f"Successfully created {permission} group '{group_name}' with ID: {group_id}")
+            return True
+        elif response.status_code == 409:
+            logger.warning(f"{permission.capitalize()} group for pathogen '{pathogen_name}' already exists")
+            return True
+        else:
+            logger.error(f"Failed to create {permission} group: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to create {permission} group for pathogen {pathogen_name}: {e}")
+        return False
+
+
+def add_user_to_pathogen_group_with_permission(pathogen_name, username, permission):
+    """Add a user to a pathogen group with specific permission (read, write, or admin)"""
+    try:
+        group_name = f"pathogen-{pathogen_name}-{permission}"
+        logger.info(f"=== ADDING USER '{username}' TO {permission.upper()} GROUP '{group_name}' ===")
+        
+        # Get the specific permission group
+        group = get_project_group_by_name(group_name)
+        if not group:
+            logger.error(f"Pathogen {permission} group '{group_name}' not found")
+            return False
+        
+        # Get the user
+        user = get_user_by_username(username)
+        if not user:
+            logger.error(f"User '{username}' not found")
+            return False
+        
+        service_token = get_service_token()
+        if not service_token:
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        group_id = group['id']
+        user_id = user['id']
+        
+        # Add user to group
+        response = requests.put(f"{KEYCLOAK_ADMIN_BASE_URI}/users/{user_id}/groups/{group_id}", 
+                              headers=headers, timeout=10)
+        
+        if response.status_code == 204:
+            logger.info(f"Successfully added user '{username}' to {permission} group '{group_name}'")
+            return True
+        else:
+            logger.error(f"Failed to add user to {permission} group: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to add user '{username}' to {permission} group: {e}")
         return False
 
 
@@ -1521,9 +1666,9 @@ class PathogenList(Resource):
     @pathogens_ns.doc('list_pathogens')
     @pathogens_ns.response(200, 'Success', [pathogen_model])
     @pathogens_ns.response(500, 'Internal server error', error_model)
-    @require_permissions(["READ"])
+    @authenticate_token
     def get(self):
-        """Get all pathogens"""
+        """Get all pathogens (public access - no specific permissions required)"""
         logger.info(f"Getting all pathogens for user: {g.user['username']}")
         
         conn = get_db_connection()
@@ -1532,7 +1677,8 @@ class PathogenList(Resource):
         
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                cur.execute("SELECT * FROM pathogens ORDER BY name")
+                # Only return non-deleted pathogens
+                cur.execute("SELECT * FROM pathogens WHERE deleted_at IS NULL ORDER BY name")
                 pathogens = cur.fetchall()
                 return [serialize_record(pathogen) for pathogen in pathogens]
         except Exception as e:
@@ -1579,6 +1725,7 @@ class PathogenList(Resource):
                 conn.commit()
                 
                 logger.info(f"Created pathogen: {pathogen['name']}")
+                
                 return serialize_record(pathogen), 201
                 
         except Exception as e:
@@ -1597,9 +1744,9 @@ class PathogenDetail(Resource):
     @pathogens_ns.response(200, 'Success', pathogen_model)
     @pathogens_ns.response(404, 'Pathogen not found', error_model)
     @pathogens_ns.response(500, 'Internal server error', error_model)
-    @require_permissions(["READ"])
+    @authenticate_token
     def get(self, pathogen_id):
-        """Get a specific pathogen by ID"""
+        """Get a specific pathogen by ID (public access - no specific permissions required)"""
         logger.info(f"Getting pathogen {pathogen_id} for user: {g.user['username']}")
         
         conn = get_db_connection()
@@ -1608,7 +1755,8 @@ class PathogenDetail(Resource):
         
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                cur.execute("SELECT * FROM pathogens WHERE id = %s", (pathogen_id,))
+                # Only return non-deleted pathogens
+                cur.execute("SELECT * FROM pathogens WHERE id = %s AND deleted_at IS NULL", (pathogen_id,))
                 pathogen = cur.fetchone()
                 
                 if not pathogen:
@@ -1628,7 +1776,7 @@ class PathogenDetail(Resource):
     @pathogens_ns.response(500, 'Internal server error', error_model)
     @require_permissions(["WRITE"])
     def put(self, pathogen_id):
-        """Update a pathogen"""
+        """Update a pathogen (requires WRITE permission)"""
         logger.info(f"Updating pathogen {pathogen_id} by user: {g.user['username']}")
         
         data = request.json
@@ -1638,9 +1786,10 @@ class PathogenDetail(Resource):
         
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                # Check if pathogen exists
-                cur.execute("SELECT id FROM pathogens WHERE id = %s", (pathogen_id,))
-                if not cur.fetchone():
+                # Check if pathogen exists and get current data
+                cur.execute("SELECT * FROM pathogens WHERE id = %s", (pathogen_id,))
+                existing_pathogen = cur.fetchone()
+                if not existing_pathogen:
                     return {"error": "Pathogen not found"}, 404
                 
                 # Update pathogen
@@ -1668,15 +1817,91 @@ class PathogenDetail(Resource):
             return {"error": "Failed to update pathogen"}, 500
         finally:
             conn.close()
+
+    @pathogens_ns.doc('patch_pathogen')
+    @pathogens_ns.expect(api.model('PathogenPatch', {
+        'name': fields.String(description='Pathogen name'),
+        'scientific_name': fields.String(description='Scientific name'),
+        'description': fields.String(description='Pathogen description')
+    }), validate=False)
+    @pathogens_ns.response(200, 'Pathogen updated', pathogen_model)
+    @pathogens_ns.response(404, 'Pathogen not found', error_model)
+    @pathogens_ns.response(403, 'Insufficient permissions - requires WRITE permission', error_model)
+    @pathogens_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["WRITE"])
+    def patch(self, pathogen_id):
+        """Partially update a pathogen (requires WRITE permission)"""
+        logger.info(f"Patching pathogen {pathogen_id} by user: {g.user['username']}")
+        
+        data = request.json or {}
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # Check if pathogen exists and is not deleted
+                cur.execute("SELECT * FROM pathogens WHERE id = %s AND deleted_at IS NULL", (pathogen_id,))
+                existing_pathogen = cur.fetchone()
+                if not existing_pathogen:
+                    return {"error": "Pathogen not found"}, 404
+                
+                # Build update query dynamically for PATCH
+                update_fields = []
+                update_values = []
+                
+                if 'name' in data:
+                    update_fields.append("name = %s")
+                    update_values.append(data['name'])
+                
+                if 'scientific_name' in data:
+                    update_fields.append("scientific_name = %s")
+                    update_values.append(data['scientific_name'])
+                
+                if 'description' in data:
+                    update_fields.append("description = %s")
+                    update_values.append(data['description'])
+                
+                if not update_fields:
+                    return {"error": "No fields to update"}, 400
+                
+                # Add timestamp and ID
+                update_fields.append("updated_at = CURRENT_TIMESTAMP")
+                update_values.append(pathogen_id)
+                
+                # Execute update
+                update_query = f"""
+                    UPDATE pathogens 
+                    SET {', '.join(update_fields)}
+                    WHERE id = %s AND deleted_at IS NULL
+                    RETURNING *
+                """
+                cur.execute(update_query, update_values)
+                pathogen = cur.fetchone()
+                
+                if not pathogen:
+                    return {"error": "Pathogen not found or already deleted"}, 404
+                
+                conn.commit()
+                logger.info(f"Patched pathogen: {pathogen['name']}")
+                return serialize_record(pathogen)
+                
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to patch pathogen: {e}")
+            return {"error": "Failed to update pathogen"}, 500
+        finally:
+            conn.close()
     
     @pathogens_ns.doc('delete_pathogen')
     @pathogens_ns.response(204, 'Pathogen deleted')
     @pathogens_ns.response(404, 'Pathogen not found', error_model)
+    @pathogens_ns.response(403, 'Insufficient permissions - requires WRITE permission', error_model)
     @pathogens_ns.response(409, 'Cannot delete pathogen with associated projects', error_model)
     @pathogens_ns.response(500, 'Internal server error', error_model)
-    @require_permissions(["DELETE"])
+    @require_permissions(["WRITE"])
     def delete(self, pathogen_id):
-        """Delete a pathogen"""
+        """Soft delete a pathogen (requires WRITE permission)"""
         logger.info(f"Deleting pathogen {pathogen_id} by user: {g.user['username']}")
         
         conn = get_db_connection()
@@ -1685,22 +1910,34 @@ class PathogenDetail(Resource):
         
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                # Check if pathogen exists
-                cur.execute("SELECT id FROM pathogens WHERE id = %s", (pathogen_id,))
-                if not cur.fetchone():
+                # Check if pathogen exists and is not already deleted
+                cur.execute("SELECT * FROM pathogens WHERE id = %s AND deleted_at IS NULL", (pathogen_id,))
+                existing_pathogen = cur.fetchone()
+                if not existing_pathogen:
                     return {"error": "Pathogen not found"}, 404
                 
-                # Check if pathogen has associated projects
-                cur.execute("SELECT COUNT(*) as count FROM projects WHERE pathogen_id = %s", (pathogen_id,))
+                pathogen_name = existing_pathogen['name']
+                
+                # Check if pathogen has associated projects (prevent cascade deletion)
+                cur.execute("SELECT COUNT(*) as count FROM projects WHERE pathogen_id = %s AND deleted_at IS NULL", (pathogen_id,))
                 result = cur.fetchone()
                 if result['count'] > 0:
-                    return {"error": "Cannot delete pathogen with associated projects"}, 409
+                    return {
+                        "error": f"Cannot delete pathogen '{pathogen_name}' - it has {result['count']} associated project(s). Please delete all projects first."
+                    }, 409
                 
-                # Delete pathogen
-                cur.execute("DELETE FROM pathogens WHERE id = %s", (pathogen_id,))
+                # Soft delete pathogen (set deleted_at timestamp)
+                cur.execute("""
+                    UPDATE pathogens 
+                    SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = %s AND deleted_at IS NULL
+                """, (pathogen_id,))
+                
+                if cur.rowcount == 0:
+                    return {"error": "Pathogen not found or already deleted"}, 404
+                
                 conn.commit()
-                
-                logger.info(f"Deleted pathogen: {pathogen_id}")
+                logger.info(f"Soft deleted pathogen: {pathogen_name} ({pathogen_id})")
                 return '', 204
                 
         except Exception as e:
@@ -1812,23 +2049,24 @@ class ProjectList(Resource):
                     else:
                         logger.warning(f"Failed to create Keycloak resource for project: {project_slug}")
                     
-                    # 2. Create read and write groups
+                    # 2. Create read, write, and admin groups
                     read_group_created = create_project_group_with_permission(project_slug, 'read')
                     write_group_created = create_project_group_with_permission(project_slug, 'write')
+                    admin_group_created = create_project_group_with_permission(project_slug, 'admin')
                     
                     if read_group_created:
                         logger.info(f"Successfully created read group for project: {project_slug}")
                     if write_group_created:
                         logger.info(f"Successfully created write group for project: {project_slug}")
+                    if admin_group_created:
+                        logger.info(f"Successfully created admin group for project: {project_slug}")
                     
-                    # 3. Add the project creator to both read and write groups
-                    if read_group_created:
-                        add_user_to_project_group_with_permission(project_slug, username, 'read')
-                        logger.info(f"Added user {username} to read group for project: {project_slug}")
-                    
-                    if write_group_created:
-                        add_user_to_project_group_with_permission(project_slug, username, 'write')
-                        logger.info(f"Added user {username} to write group for project: {project_slug}")
+                    # 3. Add the project creator to all groups (full access)
+                    for permission in ['read', 'write', 'admin']:
+                        group_created = locals()[f'{permission}_group_created']
+                        if group_created:
+                            add_user_to_project_group_with_permission(project_slug, username, permission)
+                            logger.info(f"Added user {username} to {permission} group for project: {project_slug}")
                 
                 except Exception as keycloak_error:
                     logger.error(f"Failed to set up Keycloak resources for project {project_slug}: {keycloak_error}")
@@ -1840,6 +2078,188 @@ class ProjectList(Resource):
             conn.rollback()
             logger.error(f"Failed to create project: {e}")
             return {"error": "Failed to create project"}, 500
+        finally:
+            conn.close()
+
+
+@projects_ns.route('/<string:project_id>')
+class ProjectDetail(Resource):
+    """Operations for a single project"""
+    
+    @projects_ns.doc('get_project')
+    @projects_ns.response(200, 'Success', project_model)
+    @projects_ns.response(404, 'Project not found', error_model)
+    @projects_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["READ"])
+    def get(self, project_id):
+        """Get a specific project by ID"""
+        logger.info(f"Getting project {project_id} for user: {g.user['username']}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # Only return non-deleted projects
+                query = """
+                    SELECT p.*, pat.name as pathogen_name
+                    FROM projects p
+                    LEFT JOIN pathogens pat ON p.pathogen_id = pat.id AND pat.deleted_at IS NULL
+                    WHERE p.id = %s AND p.deleted_at IS NULL
+                """
+                cur.execute(query, (project_id,))
+                project = cur.fetchone()
+                
+                if not project:
+                    return {"error": "Project not found"}, 404
+                
+                return serialize_record(project)
+        except Exception as e:
+            logger.error(f"Failed to get project: {e}")
+            return {"error": "Failed to retrieve project"}, 500
+        finally:
+            conn.close()
+    
+    @projects_ns.doc('patch_project')
+    @projects_ns.expect(api.model('ProjectPatch', {
+        'name': fields.String(description='Project name'),
+        'description': fields.String(description='Project description'),
+        'pathogen_id': fields.String(description='Associated pathogen UUID')
+    }), validate=False)
+    @projects_ns.response(200, 'Project updated', project_model)
+    @projects_ns.response(404, 'Project not found', error_model)
+    @projects_ns.response(403, 'Insufficient permissions - requires WRITE permission', error_model)
+    @projects_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["WRITE"])
+    def patch(self, project_id):
+        """Partially update a project (requires WRITE permission)"""
+        logger.info(f"Patching project {project_id} by user: {g.user['username']}")
+        
+        data = request.json or {}
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # Check if project exists and is not deleted
+                cur.execute("SELECT * FROM projects WHERE id = %s AND deleted_at IS NULL", (project_id,))
+                existing_project = cur.fetchone()
+                if not existing_project:
+                    return {"error": "Project not found"}, 404
+                
+                # Build update query dynamically for PATCH
+                update_fields = []
+                update_values = []
+                
+                if 'name' in data:
+                    update_fields.append("name = %s")
+                    update_values.append(data['name'])
+                
+                if 'description' in data:
+                    update_fields.append("description = %s")
+                    update_values.append(data['description'])
+                
+                if 'pathogen_id' in data:
+                    # Verify pathogen exists if provided
+                    if data['pathogen_id']:
+                        cur.execute("SELECT id FROM pathogens WHERE id = %s AND deleted_at IS NULL", (data['pathogen_id'],))
+                        if not cur.fetchone():
+                            return {"error": "Pathogen not found"}, 400
+                    update_fields.append("pathogen_id = %s")
+                    update_values.append(data['pathogen_id'])
+                
+                if not update_fields:
+                    return {"error": "No fields to update"}, 400
+                
+                # Add timestamp and ID
+                update_fields.append("updated_at = CURRENT_TIMESTAMP")
+                update_values.append(project_id)
+                
+                # Execute update
+                update_query = f"""
+                    UPDATE projects 
+                    SET {', '.join(update_fields)}
+                    WHERE id = %s AND deleted_at IS NULL
+                    RETURNING *
+                """
+                cur.execute(update_query, update_values)
+                project = cur.fetchone()
+                
+                if not project:
+                    return {"error": "Project not found or already deleted"}, 404
+                
+                # Get pathogen name for response
+                if project['pathogen_id']:
+                    cur.execute("SELECT name FROM pathogens WHERE id = %s", (project['pathogen_id'],))
+                    pathogen_result = cur.fetchone()
+                    project = dict(project)
+                    project['pathogen_name'] = pathogen_result['name'] if pathogen_result else None
+                
+                conn.commit()
+                logger.info(f"Patched project: {project['name']}")
+                return serialize_record(project)
+                
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to patch project: {e}")
+            return {"error": "Failed to update project"}, 500
+        finally:
+            conn.close()
+    
+    @projects_ns.doc('delete_project')
+    @projects_ns.response(204, 'Project deleted')
+    @projects_ns.response(404, 'Project not found', error_model)
+    @projects_ns.response(403, 'Insufficient permissions - requires WRITE permission', error_model)
+    @projects_ns.response(409, 'Cannot delete project with associated studies', error_model)
+    @projects_ns.response(500, 'Internal server error', error_model)
+    @require_permissions(["WRITE"])
+    def delete(self, project_id):
+        """Soft delete a project (requires WRITE permission)"""
+        logger.info(f"Deleting project {project_id} by user: {g.user['username']}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "Database connection failed"}, 500
+        
+        try:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                # Check if project exists and is not already deleted
+                cur.execute("SELECT * FROM projects WHERE id = %s AND deleted_at IS NULL", (project_id,))
+                existing_project = cur.fetchone()
+                if not existing_project:
+                    return {"error": "Project not found"}, 404
+                
+                project_name = existing_project['name']
+                project_slug = existing_project['slug']
+                
+                # Check if project has associated studies (prevent cascade deletion)
+                cur.execute("SELECT COUNT(*) as count FROM studies WHERE project_id = %s AND deleted_at IS NULL", (project_id,))
+                result = cur.fetchone()
+                if result['count'] > 0:
+                    return {
+                        "error": f"Cannot delete project '{project_name}' - it has {result['count']} associated study/studies. Please delete all studies first."
+                    }, 409
+                
+                # Soft delete project (set deleted_at timestamp)
+                cur.execute("""
+                    UPDATE projects 
+                    SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = %s AND deleted_at IS NULL
+                """, (project_id,))
+                
+                if cur.rowcount == 0:
+                    return {"error": "Project not found or already deleted"}, 404
+                
+                conn.commit()
+                logger.info(f"Soft deleted project: {project_name} ({project_slug})")
+                return '', 204
+                
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Failed to delete project: {e}")
+            return {"error": "Failed to delete project"}, 500
         finally:
             conn.close()
 
@@ -2052,10 +2472,11 @@ class StudyDetail(Resource):
     @studies_ns.doc('delete_study')
     @studies_ns.response(204, 'Study deleted')
     @studies_ns.response(404, 'Study not found', error_model)
+    @studies_ns.response(403, 'Insufficient permissions - requires WRITE permission', error_model)
     @studies_ns.response(500, 'Internal server error', error_model)
-    @require_permissions(["DELETE"])
+    @require_permissions(["WRITE"])
     def delete(self, study_id):
-        """Delete a study"""
+        """Soft delete a study (requires WRITE permission)"""
         logger.info(f"Deleting study {study_id} by user: {g.user['username']}")
         
         conn = get_db_connection()
@@ -2064,16 +2485,26 @@ class StudyDetail(Resource):
         
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                # Check if study exists
-                cur.execute("SELECT id FROM studies WHERE study_id = %s", (study_id,))
-                if not cur.fetchone():
+                # Check if study exists and is not already deleted
+                cur.execute("SELECT * FROM studies WHERE study_id = %s AND deleted_at IS NULL", (study_id,))
+                existing_study = cur.fetchone()
+                if not existing_study:
                     return {"error": "Study not found"}, 404
                 
-                # Delete study
-                cur.execute("DELETE FROM studies WHERE study_id = %s", (study_id,))
-                conn.commit()
+                study_name = existing_study['name']
                 
-                logger.info(f"Deleted study: {study_id}")
+                # Soft delete study (set deleted_at timestamp)
+                cur.execute("""
+                    UPDATE studies 
+                    SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+                    WHERE study_id = %s AND deleted_at IS NULL
+                """, (study_id,))
+                
+                if cur.rowcount == 0:
+                    return {"error": "Study not found or already deleted"}, 404
+                
+                conn.commit()
+                logger.info(f"Soft deleted study: {study_name} ({study_id})")
                 return '', 204
                 
         except Exception as e:
