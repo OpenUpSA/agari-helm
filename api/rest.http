@@ -199,3 +199,55 @@ Content-Type: application/json
   "test": "admin access"
 }
 
+### TEST FOLIO ADMIN FUNCTIONS - Resource Management
+
+### Test 1: Create a project resource
+POST http://folio.local/api/projects/malaria-study/resource
+Authorization: Bearer {{token}}
+
+### Test 2: Get the created project resource  
+GET http://folio.local/api/projects/malaria-study/resource
+Authorization: Bearer {{token}}
+
+### Test 3: Try to create another project resource
+POST http://folio.local/api/projects/tb-study/resource
+Authorization: Bearer {{token}}
+
+### Test 4: Get the second project resource
+GET http://folio.local/api/projects/tb-study/resource
+Authorization: Bearer {{token}}
+
+### TEST FOLIO GROUP MANAGEMENT
+
+### Test 5: Create a project group
+POST http://folio.local/api/projects/malaria-study/group
+Authorization: Bearer {{token}}
+
+### Test 6: Get the created project group
+GET http://folio.local/api/projects/malaria-study/group
+Authorization: Bearer {{token}}
+
+### Test 7: Add admin user to the malaria-study group
+POST http://folio.local/api/projects/malaria-study/group/members/admin
+Authorization: Bearer {{token}}
+
+### Test 8: Get group members for malaria-study
+GET http://folio.local/api/projects/malaria-study/group/members
+Authorization: Bearer {{token}}
+
+### Test 9: Create a group for tb-study project
+POST http://folio.local/api/projects/tb-study/group
+Authorization: Bearer {{token}}
+
+### Test 10: Add admin user to tb-study group
+POST http://folio.local/api/projects/tb-study/group/members/admin
+Authorization: Bearer {{token}}
+
+### Test 11: Get group members for tb-study
+GET http://folio.local/api/projects/tb-study/group/members
+Authorization: Bearer {{token}}
+
+### Test 12: Remove admin user from malaria-study group
+DELETE http://folio.local/api/projects/malaria-study/group/members/admin
+Authorization: Bearer {{token}}
+

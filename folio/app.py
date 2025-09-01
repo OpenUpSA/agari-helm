@@ -18,7 +18,430 @@ KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID", "dms")
 KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET", "")
 KEYCLOAK_PERMISSION_URI = f"{KEYCLOAK_HOST}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/token"
 
+# Keycloak Admin API endpoints - should use UMA Resource Server instead
+KEYCLOAK_ADMIN_TOKEN_URI = f"{KEYCLOAK_HOST}/realms/master/protocol/openid-connect/token"
+KEYCLOAK_ADMIN_BASE_URI = f"{KEYCLOAK_HOST}/admin/realms/{KEYCLOAK_REALM}"
+KEYCLOAK_ADMIN_CLIENT_ID = "admin-cli"
+
+# UMA Resource Server endpoints (proper way for DMS client)
+KEYCLOAK_UMA_RESOURCE_URI = f"{KEYCLOAK_HOST}/realms/{KEYCLOAK_REALM}/authz/protection/resource_set"
+
 app = Flask(__name__)
+
+
+def get_service_token():
+    """Get client credentials token for DMS client (service-to-service auth)"""
+    try:
+        logger.info("=== Getting DMS client credentials token for resource management ===")
+        data = {
+            'grant_type': 'client_credentials',
+            'client_id': KEYCLOAK_CLIENT_ID,  # Use DMS client
+            'client_secret': KEYCLOAK_CLIENT_SECRET,  # Use DMS client secret
+        }
+        
+        response = requests.post(KEYCLOAK_PERMISSION_URI, data=data, timeout=10)
+        response.raise_for_status()
+        
+        token_data = response.json()
+        logger.info(f"Got DMS client credentials token for resource management")
+        return token_data.get('access_token')
+        
+    except Exception as e:
+        logger.error(f"Failed to get DMS client credentials token: {e}")
+        return None
+
+
+def get_dms_client_id():
+    """Get the internal client ID for the DMS client
+    
+    For now, we'll try to fetch it, but if that fails due to permissions,
+    we'll need to find an alternative approach.
+    """
+    try:
+        service_token = get_service_token()
+        if not service_token:
+            return None
+            
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Try to get all clients and find DMS - this may fail due to permissions
+        response = requests.get(f"{KEYCLOAK_ADMIN_BASE_URI}/clients", headers=headers, timeout=10)
+        
+        if response.status_code == 403:
+            logger.warning("Service account doesn't have admin permissions to list clients")
+            logger.info("Need to grant realm-admin role to service-account-dms or use alternative approach")
+            return None
+            
+        response.raise_for_status()
+        
+        clients = response.json()
+        for client in clients:
+            if client.get('clientId') == KEYCLOAK_CLIENT_ID:
+                return client.get('id')
+        
+        logger.error(f"DMS client '{KEYCLOAK_CLIENT_ID}' not found")
+        return None
+        
+    except Exception as e:
+        logger.error(f"Failed to get DMS client ID: {e}")
+        return None
+
+
+def create_project_resource(project_slug):
+    """Create a Keycloak resource for a project using UMA Resource Registration API"""
+    try:
+        logger.info(f"=== CREATING UMA RESOURCE FOR PROJECT: {project_slug} ===")
+        
+        service_token = get_service_token()
+        if not service_token:
+            logger.error("Failed to get service token")
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Create the resource using UMA Resource Registration API
+        resource_data = {
+            'name': project_slug,
+            'displayName': f"Project: {project_slug}",
+            'type': 'urn:folio:resources:project',
+            'scopes': ['READ', 'WRITE'],  # Use existing scopes
+            'attributes': {
+                'project_slug': [project_slug],
+                'created_by': ['folio-service']
+            }
+        }
+        
+        # Use UMA Resource Registration endpoint instead of Admin API
+        response = requests.post(KEYCLOAK_UMA_RESOURCE_URI, headers=headers, json=resource_data, timeout=10)
+        
+        if response.status_code == 201:
+            resource = response.json()
+            logger.info(f"Successfully created UMA resource '{project_slug}' with ID: {resource.get('_id')}")
+            logger.info(f"Resource scopes: {resource.get('scopes', [])}")
+            return resource
+        elif response.status_code == 409:
+            logger.warning(f"UMA Resource '{project_slug}' already exists")
+            return None
+        else:
+            logger.error(f"Failed to create UMA resource: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to create project resource: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return False
+
+
+def get_project_resource(project_slug):
+    """Get an existing project resource from Keycloak using UMA Resource Registration API"""
+    try:
+        service_token = get_service_token()
+        if not service_token:
+            return None
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Get all resources and filter by name (UMA API doesn't support name filtering directly)
+        response = requests.get(KEYCLOAK_UMA_RESOURCE_URI, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        resource_ids = response.json()
+        
+        # Search through resources to find the one with matching name
+        for resource_id in resource_ids:
+            resource_response = requests.get(f"{KEYCLOAK_UMA_RESOURCE_URI}/{resource_id}", 
+                                           headers=headers, timeout=10)
+            if resource_response.status_code == 200:
+                resource = resource_response.json()
+                if resource.get('name') == project_slug:
+                    logger.info(f"Found existing UMA resource '{project_slug}': {resource.get('_id')}")
+                    return resource
+        
+        logger.info(f"UMA resource '{project_slug}' not found")
+        return None
+        
+    except Exception as e:
+        logger.error(f"Failed to get project resource: {e}")
+        return None
+
+
+def create_project_group(project_slug):
+    """Create a Keycloak group for a project"""
+    try:
+        logger.info(f"=== CREATING GROUP FOR PROJECT: {project_slug} ===")
+        
+        service_token = get_service_token()
+        if not service_token:
+            logger.error("Failed to get service token")
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Create the group data
+        group_data = {
+            'name': f"project-{project_slug}",
+            'path': f"/project-{project_slug}",
+            'attributes': {
+                'project_slug': [project_slug],
+                'created_by': ['folio-service'],
+                'group_type': ['project'],
+                'description': [f"Project group for {project_slug}"]
+            }
+        }
+        
+        # Create the group using Keycloak Admin API
+        response = requests.post(f"{KEYCLOAK_ADMIN_BASE_URI}/groups", 
+                               headers=headers, json=group_data, timeout=10)
+        
+        if response.status_code == 201:
+            # Get the created group ID from Location header
+            location = response.headers.get('Location')
+            group_id = location.split('/')[-1] if location else None
+            
+            if group_id:
+                # Get the full group details
+                group_response = requests.get(f"{KEYCLOAK_ADMIN_BASE_URI}/groups/{group_id}", 
+                                            headers=headers, timeout=10)
+                if group_response.status_code == 200:
+                    group = group_response.json()
+                    logger.info(f"Successfully created group '{group['name']}' with ID: {group['id']}")
+                    return group
+            
+            logger.info(f"Successfully created group for project '{project_slug}'")
+            return {"name": group_data["name"], "id": group_id}
+            
+        elif response.status_code == 409:
+            logger.warning(f"Group for project '{project_slug}' already exists")
+            return None
+        else:
+            logger.error(f"Failed to create group: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to create project group: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return False
+
+
+def get_project_group(project_slug):
+    """Get an existing project group from Keycloak"""
+    try:
+        service_token = get_service_token()
+        if not service_token:
+            return None
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Get all groups and search for the project group
+        response = requests.get(f"{KEYCLOAK_ADMIN_BASE_URI}/groups", headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        groups = response.json()
+        group_name = f"project-{project_slug}"
+        
+        # Search for the group by name
+        for group in groups:
+            if group.get('name') == group_name:
+                logger.info(f"Found existing group '{group_name}': {group.get('id')}")
+                return group
+        
+        logger.info(f"Group '{group_name}' not found")
+        return None
+        
+    except Exception as e:
+        logger.error(f"Failed to get project group: {e}")
+        return None
+
+
+def get_user_by_username(username):
+    """Get user details by username from Keycloak"""
+    try:
+        service_token = get_service_token()
+        if not service_token:
+            return None
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        # Search for user by username
+        response = requests.get(f"{KEYCLOAK_ADMIN_BASE_URI}/users", 
+                              headers=headers, 
+                              params={'username': username, 'exact': 'true'}, 
+                              timeout=10)
+        response.raise_for_status()
+        
+        users = response.json()
+        if users:
+            user = users[0]  # Get first (and should be only) exact match
+            logger.info(f"Found user '{username}' with ID: {user.get('id')}")
+            return user
+        else:
+            logger.warning(f"User '{username}' not found")
+            return None
+        
+    except Exception as e:
+        logger.error(f"Failed to get user by username: {e}")
+        return None
+
+
+def add_user_to_project_group(project_slug, username):
+    """Add a user to a project group"""
+    try:
+        logger.info(f"=== ADDING USER '{username}' TO PROJECT GROUP '{project_slug}' ===")
+        
+        # Get the project group
+        group = get_project_group(project_slug)
+        if not group:
+            logger.error(f"Project group for '{project_slug}' not found")
+            return False
+        
+        # Get the user
+        user = get_user_by_username(username)
+        if not user:
+            logger.error(f"User '{username}' not found")
+            return False
+        
+        service_token = get_service_token()
+        if not service_token:
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        group_id = group['id']
+        user_id = user['id']
+        
+        # Add user to group
+        response = requests.put(f"{KEYCLOAK_ADMIN_BASE_URI}/users/{user_id}/groups/{group_id}", 
+                              headers=headers, timeout=10)
+        
+        if response.status_code == 204:
+            logger.info(f"Successfully added user '{username}' to group '{group['name']}'")
+            return True
+        else:
+            logger.error(f"Failed to add user to group: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to add user to project group: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return False
+
+
+def remove_user_from_project_group(project_slug, username):
+    """Remove a user from a project group"""
+    try:
+        logger.info(f"=== REMOVING USER '{username}' FROM PROJECT GROUP '{project_slug}' ===")
+        
+        # Get the project group
+        group = get_project_group(project_slug)
+        if not group:
+            logger.error(f"Project group for '{project_slug}' not found")
+            return False
+        
+        # Get the user
+        user = get_user_by_username(username)
+        if not user:
+            logger.error(f"User '{username}' not found")
+            return False
+        
+        service_token = get_service_token()
+        if not service_token:
+            return False
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        group_id = group['id']
+        user_id = user['id']
+        
+        # Remove user from group
+        response = requests.delete(f"{KEYCLOAK_ADMIN_BASE_URI}/users/{user_id}/groups/{group_id}", 
+                                 headers=headers, timeout=10)
+        
+        if response.status_code == 204:
+            logger.info(f"Successfully removed user '{username}' from group '{group['name']}'")
+            return True
+        else:
+            logger.error(f"Failed to remove user from group: {response.status_code} - {response.text}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Failed to remove user from project group: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return False
+
+
+def get_project_group_members(project_slug):
+    """Get all members of a project group"""
+    try:
+        # Get the project group
+        group = get_project_group(project_slug)
+        if not group:
+            logger.error(f"Project group for '{project_slug}' not found")
+            return None
+        
+        service_token = get_service_token()
+        if not service_token:
+            return None
+        
+        headers = {
+            'Authorization': f'Bearer {service_token}',
+            'Content-Type': 'application/json'
+        }
+        
+        group_id = group['id']
+        
+        # Get group members
+        response = requests.get(f"{KEYCLOAK_ADMIN_BASE_URI}/groups/{group_id}/members", 
+                              headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        members = response.json()
+        logger.info(f"Found {len(members)} members in group '{group['name']}'")
+        
+        # Return simplified member info
+        member_list = []
+        for member in members:
+            member_list.append({
+                'id': member.get('id'),
+                'username': member.get('username'),
+                'email': member.get('email'),
+                'firstName': member.get('firstName'),
+                'lastName': member.get('lastName'),
+                'enabled': member.get('enabled')
+            })
+        
+        return member_list
+        
+    except Exception as e:
+        logger.error(f"Failed to get project group members: {e}")
+        return None
 
 
 def get_rpt_permissions(access_token):
@@ -143,7 +566,7 @@ def extract_user_info(payload):
         "client_id": payload.get("azp", payload.get("aud")),
     }
     
-    # Get RPT-based permissions (the new way!)
+    # Get RPT-based permissions
     granted_scopes = payload.get('granted_scopes', set())
     rpt_permissions = payload.get('rpt_permissions', [])
     
@@ -293,6 +716,202 @@ def test_admin_endpoint():
         "action": "admin",
         "status": "authorized"
     })
+
+
+@app.route('/api/projects/<project_slug>/resource', methods=['POST'])
+@require_permissions(["WRITE"])
+def create_project_resource_endpoint(project_slug):
+    """Create a Keycloak resource for a project"""
+    logger.info(f"Creating resource for project: {project_slug} by user: {g.user['username']}")
+    
+    # Validate project slug (basic validation)
+    if not project_slug or len(project_slug) < 2:
+        return jsonify({"error": "Invalid project slug"}), 400
+    
+    # Check if resource already exists
+    existing_resource = get_project_resource(project_slug)
+    if existing_resource:
+        return jsonify({
+            "message": f"Resource for project '{project_slug}' already exists",
+            "resource": existing_resource,
+            "status": "exists"
+        }), 200
+    
+    # Create the resource
+    result = create_project_resource(project_slug)
+    
+    if result is False:
+        return jsonify({"error": "Failed to create project resource"}), 500
+    elif result is None:
+        return jsonify({"error": "Resource already exists"}), 409
+    else:
+        return jsonify({
+            "message": f"Successfully created resource for project '{project_slug}'",
+            "resource": result,
+            "status": "created"
+        }), 201
+
+
+@app.route('/api/projects/<project_slug>/resource', methods=['GET'])
+@require_permissions(["READ"])
+def get_project_resource_endpoint(project_slug):
+    """Get a project resource from Keycloak"""
+    logger.info(f"Getting resource for project: {project_slug} by user: {g.user['username']}")
+    
+    resource = get_project_resource(project_slug)
+    
+    if resource:
+        return jsonify({
+            "message": f"Found resource for project '{project_slug}'",
+            "resource": resource,
+            "status": "found"
+        })
+    else:
+        return jsonify({
+            "message": f"Resource for project '{project_slug}' not found",
+            "status": "not_found"
+        }), 404
+
+
+@app.route('/api/projects/<project_slug>/group', methods=['POST'])
+@require_permissions(["WRITE"])
+def create_project_group_endpoint(project_slug):
+    """Create a Keycloak group for a project"""
+    logger.info(f"Creating group for project: {project_slug} by user: {g.user['username']}")
+    
+    # Validate project slug (basic validation)
+    if not project_slug or len(project_slug) < 2:
+        return jsonify({"error": "Invalid project slug"}), 400
+    
+    # Check if group already exists
+    existing_group = get_project_group(project_slug)
+    if existing_group:
+        return jsonify({
+            "message": f"Group for project '{project_slug}' already exists",
+            "group": existing_group,
+            "status": "exists"
+        }), 200
+    
+    # Create the group
+    result = create_project_group(project_slug)
+    
+    if result is False:
+        return jsonify({"error": "Failed to create project group"}), 500
+    elif result is None:
+        return jsonify({"error": "Group already exists"}), 409
+    else:
+        return jsonify({
+            "message": f"Successfully created group for project '{project_slug}'",
+            "group": result,
+            "status": "created"
+        }), 201
+
+
+@app.route('/api/projects/<project_slug>/group', methods=['GET'])
+@require_permissions(["READ"])
+def get_project_group_endpoint(project_slug):
+    """Get a project group from Keycloak"""
+    logger.info(f"Getting group for project: {project_slug} by user: {g.user['username']}")
+    
+    group = get_project_group(project_slug)
+    
+    if group:
+        return jsonify({
+            "message": f"Found group for project '{project_slug}'",
+            "group": group,
+            "status": "found"
+        })
+    else:
+        return jsonify({
+            "message": f"Group for project '{project_slug}' not found",
+            "status": "not_found"
+        }), 404
+
+
+@app.route('/api/projects/<project_slug>/group/members', methods=['GET'])
+@require_permissions(["READ"])
+def get_project_group_members_endpoint(project_slug):
+    """Get all members of a project group"""
+    logger.info(f"Getting group members for project: {project_slug} by user: {g.user['username']}")
+    
+    members = get_project_group_members(project_slug)
+    
+    if members is not None:
+        return jsonify({
+            "message": f"Found {len(members)} members in project group '{project_slug}'",
+            "members": members,
+            "count": len(members),
+            "status": "found"
+        })
+    else:
+        return jsonify({
+            "message": f"Group for project '{project_slug}' not found or error occurred",
+            "status": "error"
+        }), 404
+
+
+@app.route('/api/projects/<project_slug>/group/members/<username>', methods=['POST'])
+@require_permissions(["WRITE"])
+def add_user_to_project_group_endpoint(project_slug, username):
+    """Add a user to a project group"""
+    logger.info(f"Adding user '{username}' to project group '{project_slug}' by user: {g.user['username']}")
+    
+    # Validate inputs
+    if not project_slug or len(project_slug) < 2:
+        return jsonify({"error": "Invalid project slug"}), 400
+    
+    if not username or len(username) < 1:
+        return jsonify({"error": "Invalid username"}), 400
+    
+    # Add user to group
+    result = add_user_to_project_group(project_slug, username)
+    
+    if result:
+        return jsonify({
+            "message": f"Successfully added user '{username}' to project group '{project_slug}'",
+            "project": project_slug,
+            "username": username,
+            "status": "added"
+        }), 200
+    else:
+        return jsonify({
+            "error": f"Failed to add user '{username}' to project group '{project_slug}'",
+            "project": project_slug,
+            "username": username,
+            "status": "failed"
+        }), 500
+
+
+@app.route('/api/projects/<project_slug>/group/members/<username>', methods=['DELETE'])
+@require_permissions(["WRITE"])
+def remove_user_from_project_group_endpoint(project_slug, username):
+    """Remove a user from a project group"""
+    logger.info(f"Removing user '{username}' from project group '{project_slug}' by user: {g.user['username']}")
+    
+    # Validate inputs
+    if not project_slug or len(project_slug) < 2:
+        return jsonify({"error": "Invalid project slug"}), 400
+    
+    if not username or len(username) < 1:
+        return jsonify({"error": "Invalid username"}), 400
+    
+    # Remove user from group
+    result = remove_user_from_project_group(project_slug, username)
+    
+    if result:
+        return jsonify({
+            "message": f"Successfully removed user '{username}' from project group '{project_slug}'",
+            "project": project_slug,
+            "username": username,
+            "status": "removed"
+        }), 200
+    else:
+        return jsonify({
+            "error": f"Failed to remove user '{username}' from project group '{project_slug}'",
+            "project": project_slug,
+            "username": username,
+            "status": "failed"
+        }), 500
 
 
 if __name__ == '__main__':
