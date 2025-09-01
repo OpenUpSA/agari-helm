@@ -18,7 +18,7 @@ Complete Overture stack deployment on Kubernetes with authentication, file manag
 In dev you might want to use **k3d** for quick setup:
 
 ```bash
-k3d cluster create agari-dev --agentgroupss 2 --port "80:80@loadbalancer"
+k3d cluster create agari --agentgroupss 2 --port "80:80@loadbalancer"
 
 # Install nginx ingress
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.1/deploy/static/provider/cloud/deploy.yaml
@@ -30,31 +30,31 @@ kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.
 ### 2. Create Namespace
 
 ```bash
-kubectl create namespace agari-dev
+kubectl create namespace agari
 ```
 
 ### 3. Deploy Infrastructure
 
 ```bash
 # Object storage
-helm install minio ./helm/minio -n agari-dev
+helm install minio ./helm/minio -n agari
 
 # Minio might require prot-forwarding:
-kubectl port-forward -n agari-dev service/minio 9000:9000
+kubectl port-forward -n agari service/minio 9000:9000
 
 # Message queue
 helm repo add bitnami https://charts.bitnami.com/bitnami
-helm install kafka bitnami/kafka -f helm/kafka/values-bitnami.yaml -n agari-dev
+helm install kafka bitnami/kafka -f helm/kafka/values-bitnami.yaml -n agari
 ```
 
 ### 4. Setup Keycloak
 
 ```bash
 # Database
-helm install keycloak-db ./helm/keycloak-db -n agari-dev
+helm install keycloak-db ./helm/keycloak-db -n agari
 
 # Keycloak
-helm install keycloak ./helm/keycloak -n agari-dev
+helm install keycloak ./helm/keycloak -n agari
 ```
 
 Set up the **client** in Keycloak and copy the **secret** to **song**, **score** and **maestro** `values.yaml`
@@ -63,14 +63,14 @@ Set up the **client** in Keycloak and copy the **secret** to **song**, **score**
 
 ```bash
 # SONG  
-helm install song-db ./helm/song-db -n agari-dev
-helm install song ./helm/song -n agari-dev
+helm install song-db ./helm/song-db -n agari
+helm install song ./helm/song -n agari
 
 # SCORE
-helm install score ./helm/score -n agari-dev
+helm install score ./helm/score -n agari
 
 # ELASTICSEARCH
-helm install elasticsearch ./helm/elasticsearch -n agari-dev
+helm install elasticsearch ./helm/elasticsearch -n agari
 
 # Create agari-index with proper mapping
 curl -X PUT "http://elasticsearch.local/agari-index" \
@@ -78,13 +78,13 @@ curl -X PUT "http://elasticsearch.local/agari-index" \
     -d @helm/elasticsearch/configs/agari-index-mapping.json
 
 # MAESTRO
-helm install maestro ./helm/maestro -n agari-dev
+helm install maestro ./helm/maestro -n agari
 
 # ARRANGER
 # Set up Arranger configuration
-kubectl create configmap arranger-config --from-file=helm/arranger/configs/ -n agari-dev
+kubectl create configmap arranger-config --from-file=helm/arranger/configs/ -n agari
 
-helm install arranger ./helm/arranger -n agari-dev
+helm install arranger ./helm/arranger -n agari
 ```
 
 ## Ingress Configuration
@@ -130,6 +130,7 @@ Services are available at these URLs:
       - **Scopes**:
         - `READ`
         - `WRITE`
+        - `ADMIN`
       - **Resources**:
         - `song` - SONG API - with `READ` and `WRITE` scopes
         - `score` - Score API - with `READ` and `WRITE` scopes
@@ -197,13 +198,13 @@ query {
 
 ### Check service status
 ```bash
-kubectl get pods -n agari-dev
-kubectl get ingress -n agari-dev
+kubectl get pods -n agari
+kubectl get ingress -n agari
 ```
 
 ### View logs
 ```bash
-kubectl logs <pod-name> -n agari-dev
+kubectl logs <pod-name> -n agari
 ```
 
 

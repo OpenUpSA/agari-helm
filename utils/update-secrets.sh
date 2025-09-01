@@ -78,7 +78,7 @@ echo
 echo "Backup files created with timestamp suffix (.backup.YYYYMMDD_HHMMSS)"
 echo
 echo "To apply changes to your cluster, run:"
-echo "  helm upgrade song ./helm/song -n agari-dev"
-echo "  helm upgrade score ./helm/score -n agari-dev"
-echo "  helm upgrade maestro ./helm/maestro -n agari-dev"
-echo "  helm upgrade folio ./helm/folio -n agari-dev"
+echo "  helm upgrade song ./helm/song -n agari"
+echo "  helm upgrade score ./helm/score -n agari"
+echo "  helm upgrade maestro ./helm/maestro -n agari"
+echo "  helm upgrade folio ./helm/folio -n agari"
