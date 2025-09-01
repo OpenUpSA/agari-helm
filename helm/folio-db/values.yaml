@@ -46,7 +46,7 @@ probes:
       command:
         - /bin/sh
         - -c
-        - exec pg_isready -U "$(POSTGRES_USER)" -d "$(POSTGRES_DB)" -h 127.0.0.1 -p 5432
+        - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
     initialDelaySeconds: 30
     periodSeconds: 10
     timeoutSeconds: 5
@@ -61,8 +61,7 @@ probes:
         - -c
         - -e
         - |
-          exec pg_isready -U "$(POSTGRES_USER)" -d "$(POSTGRES_DB)" -h 127.0.0.1 -p 5432
-          [ -f /opt/bitnami/postgresql/tmp/.initialized ] || [ -f /bitnami/postgresql/.initialized ]
+          exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
     initialDelaySeconds: 5
     periodSeconds: 10
     timeoutSeconds: 5

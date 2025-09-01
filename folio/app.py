@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, g
+from flask_restx import Api, Resource, fields, Namespace
 import logging
 import requests
 import os
@@ -27,6 +28,68 @@ KEYCLOAK_ADMIN_CLIENT_ID = "admin-cli"
 KEYCLOAK_UMA_RESOURCE_URI = f"{KEYCLOAK_HOST}/realms/{KEYCLOAK_REALM}/authz/protection/resource_set"
 
 app = Flask(__name__)
+
+# Initialize Flask-RESTX for Swagger documentation
+api = Api(
+    app,
+    version='1.0',
+    title='Folio API',
+    description='JWT Authentication and Group Management API for AGARI Genomics Data Management',
+    doc='/docs/',  # Swagger UI will be available at /docs/
+    authorizations={
+        'Bearer': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization',
+            'description': 'JWT Bearer token. Format: Bearer <token>'
+        }
+    },
+    security='Bearer'
+)
+
+# Create API namespaces
+health_ns = api.namespace('health', description='Health check operations')
+auth_ns = api.namespace('auth', description='Authentication test operations') 
+projects_ns = api.namespace('projects', description='Project management operations')
+
+# Define data models for Swagger documentation
+user_model = api.model('User', {
+    'username': fields.String(description='Username'),
+    'email': fields.String(description='Email address'),
+    'sub': fields.String(description='User ID'),
+    'permissions': fields.List(fields.String, description='User permissions'),
+    'folio_permissions': fields.List(fields.String, description='Folio-specific permissions')
+})
+
+group_model = api.model('Group', {
+    'id': fields.String(description='Group ID'),
+    'name': fields.String(description='Group name'),
+    'path': fields.String(description='Group path'),
+    'attributes': fields.Raw(description='Group attributes')
+})
+
+member_model = api.model('Member', {
+    'id': fields.String(description='User ID'),
+    'username': fields.String(description='Username'),
+    'email': fields.String(description='Email address'),
+    'firstName': fields.String(description='First name'),
+    'lastName': fields.String(description='Last name'),
+    'enabled': fields.Boolean(description='Account enabled status')
+})
+
+resource_model = api.model('Resource', {
+    '_id': fields.String(description='Resource ID'),
+    'name': fields.String(description='Resource name'),
+    'displayName': fields.String(description='Resource display name'),
+    'type': fields.String(description='Resource type'),
+    'scopes': fields.List(fields.String, description='Available scopes')
+})
+
+error_model = api.model('Error', {
+    'error': fields.String(description='Error message'),
+    'user_permissions': fields.List(fields.String, description='Current user permissions'),
+    'rpt_permissions': fields.List(fields.Raw, description='Raw RPT permissions')
+})
 
 
 def get_service_token():
@@ -660,259 +723,393 @@ def require_permissions(required_scopes):
     return decorator
 
 
-# Routes
-@app.route('/health', methods=['GET'])
-def health():
-    """Health check endpoint"""
-    return jsonify({"status": "healthy", "service": "folio"})
+# Routes converted to Flask-RESTX Resources
+
+@health_ns.route('')
+class Health(Resource):
+    @health_ns.doc('health_check')
+    @health_ns.marshal_with(api.model('HealthResponse', {
+        'status': fields.String(description='Service status'),
+        'service': fields.String(description='Service name')
+    }))
+    def get(self):
+        """Health check endpoint"""
+        return {"status": "healthy", "service": "folio"}
 
 
-@app.route('/api/test', methods=['GET'])
-@authenticate_token
-def test_endpoint():
-    """Simple test endpoint that requires authentication"""
-    logger.info(f"Test endpoint called by user: {g.user['username']}")
-    return jsonify({
-        "message": "Hello from Folio!",
-        "user": g.user,
-        "status": "authenticated"
-    })
+@auth_ns.route('/test')
+class AuthTest(Resource):
+    @auth_ns.doc('test_authentication', security='Bearer')
+    @auth_ns.marshal_with(api.model('AuthTestResponse', {
+        'message': fields.String(description='Response message'),
+        'user': fields.Nested(user_model, description='User information'),
+        'status': fields.String(description='Authentication status')
+    }))
+    @auth_ns.response(401, 'Invalid or missing token')
+    @authenticate_token
+    def get(self):
+        """Test endpoint that requires JWT authentication"""
+        logger.info(f"Test endpoint called by user: {g.user['username']}")
+        return {
+            "message": "Hello from Folio!",
+            "user": g.user,
+            "status": "authenticated"
+        }
 
 
-@app.route('/api/test/read', methods=['GET'])
-@require_permissions(["READ"])
-def test_read_endpoint():
-    """Test endpoint that requires READ permission"""
-    logger.info(f"Read endpoint called by user: {g.user['username']}")
-    return jsonify({
-        "message": "You have READ access!",
-        "user": g.user,
-        "action": "read",
-        "status": "authorized"
-    })
+@auth_ns.route('/test/read')
+class AuthTestRead(Resource):
+    @auth_ns.doc('test_read_permission', security='Bearer')
+    @auth_ns.marshal_with(api.model('AuthReadResponse', {
+        'message': fields.String(description='Response message'),
+        'user': fields.Nested(user_model, description='User information'),
+        'action': fields.String(description='Action performed'),
+        'status': fields.String(description='Authorization status')
+    }))
+    @auth_ns.response(401, 'Invalid or missing token')
+    @auth_ns.response(403, 'Insufficient permissions', error_model)
+    @require_permissions(["READ"])
+    def get(self):
+        """Test endpoint that requires READ permission"""
+        logger.info(f"Read endpoint called by user: {g.user['username']}")
+        return {
+            "message": "You have READ access!",
+            "user": g.user,
+            "action": "read",
+            "status": "authorized"
+        }
 
 
-@app.route('/api/test/write', methods=['GET'])
-@require_permissions(["WRITE"])
-def test_write_endpoint():
-    """Test endpoint that requires WRITE permission"""
-    logger.info(f"Write endpoint called by user: {g.user['username']}")
-    return jsonify({
-        "message": "You have WRITE access!",
-        "user": g.user,
-        "action": "write",
-        "status": "authorized"
-    })
+@auth_ns.route('/test/write')
+class AuthTestWrite(Resource):
+    @auth_ns.doc('test_write_permission', security='Bearer')
+    @auth_ns.marshal_with(api.model('AuthWriteResponse', {
+        'message': fields.String(description='Response message'),
+        'user': fields.Nested(user_model, description='User information'),
+        'action': fields.String(description='Action performed'),
+        'status': fields.String(description='Authorization status')
+    }))
+    @auth_ns.response(401, 'Invalid or missing token')
+    @auth_ns.response(403, 'Insufficient permissions', error_model)
+    @require_permissions(["WRITE"])
+    def get(self):
+        """Test endpoint that requires WRITE permission"""
+        logger.info(f"Write endpoint called by user: {g.user['username']}")
+        return {
+            "message": "You have WRITE access!",
+            "user": g.user,
+            "action": "write",
+            "status": "authorized"
+        }
 
 
-@app.route('/api/test/admin', methods=['POST'])
-@require_permissions(["READ", "WRITE"])
-def test_admin_endpoint():
-    """Test endpoint that requires both read and write permissions"""
-    logger.info(f"Admin endpoint called by user: {g.user['username']}")
-    return jsonify({
-        "message": "You have full READ and WRITE access!",
-        "user": g.user,
-        "action": "admin",
-        "status": "authorized"
-    })
+@auth_ns.route('/test/admin')
+class AuthTestAdmin(Resource):
+    @auth_ns.doc('test_admin_permission', security='Bearer')
+    @auth_ns.marshal_with(api.model('AuthAdminResponse', {
+        'message': fields.String(description='Response message'),
+        'user': fields.Nested(user_model, description='User information'),
+        'action': fields.String(description='Action performed'),
+        'status': fields.String(description='Authorization status')
+    }))
+    @auth_ns.response(401, 'Invalid or missing token')
+    @auth_ns.response(403, 'Insufficient permissions', error_model)
+    @require_permissions(["READ", "WRITE"])
+    def post(self):
+        """Test endpoint that requires both READ and write permissions"""
+        logger.info(f"Admin endpoint called by user: {g.user['username']}")
+        return {
+            "message": "You have full READ and WRITE access!",
+            "user": g.user,
+            "action": "admin",
+            "status": "authorized"
+        }
 
 
-@app.route('/api/projects/<project_slug>/resource', methods=['POST'])
-@require_permissions(["WRITE"])
-def create_project_resource_endpoint(project_slug):
-    """Create a Keycloak resource for a project"""
-    logger.info(f"Creating resource for project: {project_slug} by user: {g.user['username']}")
-    
-    # Validate project slug (basic validation)
-    if not project_slug or len(project_slug) < 2:
-        return jsonify({"error": "Invalid project slug"}), 400
-    
-    # Check if resource already exists
-    existing_resource = get_project_resource(project_slug)
-    if existing_resource:
-        return jsonify({
-            "message": f"Resource for project '{project_slug}' already exists",
-            "resource": existing_resource,
-            "status": "exists"
-        }), 200
-    
-    # Create the resource
-    result = create_project_resource(project_slug)
-    
-    if result is False:
-        return jsonify({"error": "Failed to create project resource"}), 500
-    elif result is None:
-        return jsonify({"error": "Resource already exists"}), 409
-    else:
-        return jsonify({
-            "message": f"Successfully created resource for project '{project_slug}'",
-            "resource": result,
-            "status": "created"
-        }), 201
+@projects_ns.route('/<string:project_slug>/resource')
+@projects_ns.param('project_slug', 'The project identifier')
+class ProjectResource(Resource):
+    @projects_ns.doc('create_project_resource', security='Bearer')
+    @projects_ns.marshal_with(api.model('ProjectResourceResponse', {
+        'message': fields.String(description='Response message'),
+        'resource': fields.Nested(resource_model, description='Created resource'),
+        'status': fields.String(description='Operation status')
+    }))
+    @projects_ns.response(400, 'Invalid project slug')
+    @projects_ns.response(401, 'Invalid or missing token')
+    @projects_ns.response(403, 'Insufficient permissions', error_model)
+    @projects_ns.response(409, 'Resource already exists')
+    @projects_ns.response(500, 'Failed to create resource')
+    @require_permissions(["WRITE"])
+    def post(self, project_slug):
+        """Create a Keycloak resource for a project"""
+        logger.info(f"Creating resource for project: {project_slug} by user: {g.user['username']}")
+        
+        # Validate project slug (basic validation)
+        if not project_slug or len(project_slug) < 2:
+            return {"error": "Invalid project slug"}, 400
+        
+        # Check if resource already exists
+        existing_resource = get_project_resource(project_slug)
+        if existing_resource:
+            return {
+                "message": f"Resource for project '{project_slug}' already exists",
+                "resource": existing_resource,
+                "status": "exists"
+            }, 200
+        
+        # Create the resource
+        result = create_project_resource(project_slug)
+        
+        if result is False:
+            return {"error": "Failed to create project resource"}, 500
+        elif result is None:
+            return {"error": "Resource already exists"}, 409
+        else:
+            return {
+                "message": f"Successfully created resource for project '{project_slug}'",
+                "resource": result,
+                "status": "created"
+            }, 201
+
+    @projects_ns.doc('get_project_resource', security='Bearer')
+    @projects_ns.marshal_with(api.model('GetProjectResourceResponse', {
+        'message': fields.String(description='Response message'),
+        'resource': fields.Nested(resource_model, description='Found resource'),
+        'status': fields.String(description='Operation status')
+    }))
+    @projects_ns.response(401, 'Invalid or missing token')
+    @projects_ns.response(403, 'Insufficient permissions', error_model)
+    @projects_ns.response(404, 'Resource not found')
+    @require_permissions(["READ"])
+    def get(self, project_slug):
+        """Get a project resource from Keycloak"""
+        logger.info(f"Getting resource for project: {project_slug} by user: {g.user['username']}")
+        
+        resource = get_project_resource(project_slug)
+        
+        if resource:
+            return {
+                "message": f"Found resource for project '{project_slug}'",
+                "resource": resource,
+                "status": "found"
+            }
+        else:
+            return {
+                "message": f"Resource for project '{project_slug}' not found",
+                "status": "not_found"
+            }, 404
 
 
-@app.route('/api/projects/<project_slug>/resource', methods=['GET'])
-@require_permissions(["READ"])
-def get_project_resource_endpoint(project_slug):
-    """Get a project resource from Keycloak"""
-    logger.info(f"Getting resource for project: {project_slug} by user: {g.user['username']}")
-    
-    resource = get_project_resource(project_slug)
-    
-    if resource:
-        return jsonify({
-            "message": f"Found resource for project '{project_slug}'",
-            "resource": resource,
-            "status": "found"
+@projects_ns.route('/<string:project_slug>/group')
+@projects_ns.param('project_slug', 'The project identifier')
+class ProjectGroup(Resource):
+    @projects_ns.doc('create_project_group', security='Bearer')
+    @projects_ns.marshal_with(api.model('ProjectGroupResponse', {
+        'message': fields.String(description='Response message'),
+        'group': fields.Nested(group_model, description='Created group'),
+        'status': fields.String(description='Operation status')
+    }))
+    @projects_ns.response(400, 'Invalid project slug')
+    @projects_ns.response(401, 'Invalid or missing token')
+    @projects_ns.response(403, 'Insufficient permissions', error_model)
+    @projects_ns.response(409, 'Group already exists')
+    @projects_ns.response(500, 'Failed to create group')
+    @require_permissions(["WRITE"])
+    def post(self, project_slug):
+        """Create a Keycloak group for a project"""
+        logger.info(f"Creating group for project: {project_slug} by user: {g.user['username']}")
+        
+        # Validate project slug (basic validation)
+        if not project_slug or len(project_slug) < 2:
+            return {"error": "Invalid project slug"}, 400
+        
+        # Check if group already exists
+        existing_group = get_project_group(project_slug)
+        if existing_group:
+            return {
+                "message": f"Group for project '{project_slug}' already exists",
+                "group": existing_group,
+                "status": "exists"
+            }, 200
+        
+        # Create the group
+        result = create_project_group(project_slug)
+        
+        if result is False:
+            return {"error": "Failed to create project group"}, 500
+        elif result is None:
+            return {"error": "Group already exists"}, 409
+        else:
+            return {
+                "message": f"Successfully created group for project '{project_slug}'",
+                "group": result,
+                "status": "created"
+            }, 201
+
+    @projects_ns.doc('get_project_group', security='Bearer')
+    @projects_ns.marshal_with(api.model('GetProjectGroupResponse', {
+        'message': fields.String(description='Response message'),
+        'group': fields.Nested(group_model, description='Found group'),
+        'status': fields.String(description='Operation status')
+    }))
+    @projects_ns.response(401, 'Invalid or missing token')
+    @projects_ns.response(403, 'Insufficient permissions', error_model)
+    @projects_ns.response(404, 'Group not found')
+    @require_permissions(["READ"])
+    def get(self, project_slug):
+        """Get a project group from Keycloak"""
+        logger.info(f"Getting group for project: {project_slug} by user: {g.user['username']}")
+        
+        group = get_project_group(project_slug)
+        
+        if group:
+            return {
+                "message": f"Found group for project '{project_slug}'",
+                "group": group,
+                "status": "found"
+            }
+        else:
+            return {
+                "message": f"Group for project '{project_slug}' not found",
+                "status": "not_found"
+            }, 404
+
+
+@projects_ns.route('/<string:project_slug>/group/members')
+@projects_ns.param('project_slug', 'The project identifier')
+class ProjectGroupMembers(Resource):
+    @projects_ns.doc('get_project_group_members', security='Bearer')
+    @projects_ns.marshal_with(api.model('GroupMembersResponse', {
+        'message': fields.String(description='Response message'),
+        'project': fields.String(description='Project slug'),
+        'members': fields.List(fields.Nested(member_model), description='Group members'),
+        'count': fields.Integer(description='Number of members'),
+        'status': fields.String(description='Operation status')
+    }))
+    @projects_ns.response(401, 'Invalid or missing token')
+    @projects_ns.response(403, 'Insufficient permissions', error_model)
+    @projects_ns.response(404, 'Group not found')
+    @require_permissions(["READ"])
+    def get(self, project_slug):
+        """Get all members of a project group"""
+        logger.info(f"Getting group members for project: {project_slug} by user: {g.user['username']}")
+        
+        members = get_project_group_members(project_slug)
+        
+        if members is not None:
+            return {
+                "message": f"Found {len(members)} members in project group '{project_slug}'",
+                "project": project_slug,
+                "members": members,
+                "count": len(members),
+                "status": "found"
+            }
+        else:
+            return {
+                "message": f"Group for project '{project_slug}' not found or error occurred",
+                "status": "error"
+            }, 404
+
+
+@projects_ns.route('/<string:project_slug>/group/members/<string:username>')
+@projects_ns.param('project_slug', 'The project identifier')
+@projects_ns.param('username', 'The username to add/remove from the group')
+class ProjectGroupMember(Resource):
+    @projects_ns.doc('add_user_to_project_group', security='Bearer')
+    @projects_ns.marshal_with(api.model('GroupMemberResponse', {
+        'message': fields.String(description='Response message'),
+        'project': fields.String(description='Project slug'),
+        'username': fields.String(description='Username'),
+        'status': fields.String(description='Operation status')
+    }))
+    @projects_ns.response(400, 'Invalid project slug or username')
+    @projects_ns.response(401, 'Invalid or missing token')
+    @projects_ns.response(403, 'Insufficient permissions', error_model)
+    @projects_ns.response(500, 'Failed to add user to group')
+    @require_permissions(["WRITE"])
+    def post(self, project_slug, username):
+        """Add a user to a project group"""
+        logger.info(f"Adding user '{username}' to project group '{project_slug}' by user: {g.user['username']}")
+        
+        # Validate inputs
+        if not project_slug or len(project_slug) < 2:
+            return {"error": "Invalid project slug"}, 400
+        
+        if not username or len(username) < 1:
+            return {"error": "Invalid username"}, 400
+        
+        # Add user to group
+        result = add_user_to_project_group(project_slug, username)
+        
+        if result:
+            return {
+                "message": f"Successfully added user '{username}' to project group '{project_slug}'",
+                "project": project_slug,
+                "username": username,
+                "status": "added"
+            }, 200
+        else:
+            return {
+                "error": f"Failed to add user '{username}' to project group '{project_slug}'",
+                "project": project_slug,
+                "username": username,
+                "status": "failed"
+            }, 500
+
+    @projects_ns.doc('remove_user_from_project_group', security='Bearer')
+    @projects_ns.marshal_with(api.model('GroupMemberRemoveResponse', {
+        'message': fields.String(description='Response message'),
+        'project': fields.String(description='Project slug'),
+        'username': fields.String(description='Username'),
+        'status': fields.String(description='Operation status')
+    }))
+    @projects_ns.response(400, 'Invalid project slug or username')
+    @projects_ns.response(401, 'Invalid or missing token')
+    @projects_ns.response(403, 'Insufficient permissions', error_model)
+    @projects_ns.response(500, 'Failed to remove user from group')
+    @require_permissions(["WRITE"])
+    def delete(self, project_slug, username):
+        """Remove a user from a project group"""
+        logger.info(f"Removing user '{username}' from project group '{project_slug}' by user: {g.user['username']}")
+        
+        # Validate inputs
+        if not project_slug or len(project_slug) < 2:
+            return {"error": "Invalid project slug"}, 400
+        
+        if not username or len(username) < 1:
+            return {"error": "Invalid username"}, 400
+        
+        # Remove user from group
+        result = remove_user_from_project_group(project_slug, username)
+        
+        if result:
+            return {
+                "message": f"Successfully removed user '{username}' from project group '{project_slug}'",
+                "project": project_slug,
+                "username": username,
+                "status": "removed"
+            }, 200
+        else:
+            return {
+                "error": f"Failed to remove user '{username}' from project group '{project_slug}'",
+                "project": project_slug,
+                "username": username,
+                "status": "failed"
+            }, 500
+
+
+@app.route('/debug')
+def debug_routes():
+    """Debug endpoint to show all registered routes"""
+    routes = []
+    for rule in app.url_map.iter_rules():
+        routes.append({
+            'endpoint': rule.endpoint,
+            'methods': list(rule.methods),
+            'rule': rule.rule
         })
-    else:
-        return jsonify({
-            "message": f"Resource for project '{project_slug}' not found",
-            "status": "not_found"
-        }), 404
-
-
-@app.route('/api/projects/<project_slug>/group', methods=['POST'])
-@require_permissions(["WRITE"])
-def create_project_group_endpoint(project_slug):
-    """Create a Keycloak group for a project"""
-    logger.info(f"Creating group for project: {project_slug} by user: {g.user['username']}")
-    
-    # Validate project slug (basic validation)
-    if not project_slug or len(project_slug) < 2:
-        return jsonify({"error": "Invalid project slug"}), 400
-    
-    # Check if group already exists
-    existing_group = get_project_group(project_slug)
-    if existing_group:
-        return jsonify({
-            "message": f"Group for project '{project_slug}' already exists",
-            "group": existing_group,
-            "status": "exists"
-        }), 200
-    
-    # Create the group
-    result = create_project_group(project_slug)
-    
-    if result is False:
-        return jsonify({"error": "Failed to create project group"}), 500
-    elif result is None:
-        return jsonify({"error": "Group already exists"}), 409
-    else:
-        return jsonify({
-            "message": f"Successfully created group for project '{project_slug}'",
-            "group": result,
-            "status": "created"
-        }), 201
-
-
-@app.route('/api/projects/<project_slug>/group', methods=['GET'])
-@require_permissions(["READ"])
-def get_project_group_endpoint(project_slug):
-    """Get a project group from Keycloak"""
-    logger.info(f"Getting group for project: {project_slug} by user: {g.user['username']}")
-    
-    group = get_project_group(project_slug)
-    
-    if group:
-        return jsonify({
-            "message": f"Found group for project '{project_slug}'",
-            "group": group,
-            "status": "found"
-        })
-    else:
-        return jsonify({
-            "message": f"Group for project '{project_slug}' not found",
-            "status": "not_found"
-        }), 404
-
-
-@app.route('/api/projects/<project_slug>/group/members', methods=['GET'])
-@require_permissions(["READ"])
-def get_project_group_members_endpoint(project_slug):
-    """Get all members of a project group"""
-    logger.info(f"Getting group members for project: {project_slug} by user: {g.user['username']}")
-    
-    members = get_project_group_members(project_slug)
-    
-    if members is not None:
-        return jsonify({
-            "message": f"Found {len(members)} members in project group '{project_slug}'",
-            "members": members,
-            "count": len(members),
-            "status": "found"
-        })
-    else:
-        return jsonify({
-            "message": f"Group for project '{project_slug}' not found or error occurred",
-            "status": "error"
-        }), 404
-
-
-@app.route('/api/projects/<project_slug>/group/members/<username>', methods=['POST'])
-@require_permissions(["WRITE"])
-def add_user_to_project_group_endpoint(project_slug, username):
-    """Add a user to a project group"""
-    logger.info(f"Adding user '{username}' to project group '{project_slug}' by user: {g.user['username']}")
-    
-    # Validate inputs
-    if not project_slug or len(project_slug) < 2:
-        return jsonify({"error": "Invalid project slug"}), 400
-    
-    if not username or len(username) < 1:
-        return jsonify({"error": "Invalid username"}), 400
-    
-    # Add user to group
-    result = add_user_to_project_group(project_slug, username)
-    
-    if result:
-        return jsonify({
-            "message": f"Successfully added user '{username}' to project group '{project_slug}'",
-            "project": project_slug,
-            "username": username,
-            "status": "added"
-        }), 200
-    else:
-        return jsonify({
-            "error": f"Failed to add user '{username}' to project group '{project_slug}'",
-            "project": project_slug,
-            "username": username,
-            "status": "failed"
-        }), 500
-
-
-@app.route('/api/projects/<project_slug>/group/members/<username>', methods=['DELETE'])
-@require_permissions(["WRITE"])
-def remove_user_from_project_group_endpoint(project_slug, username):
-    """Remove a user from a project group"""
-    logger.info(f"Removing user '{username}' from project group '{project_slug}' by user: {g.user['username']}")
-    
-    # Validate inputs
-    if not project_slug or len(project_slug) < 2:
-        return jsonify({"error": "Invalid project slug"}), 400
-    
-    if not username or len(username) < 1:
-        return jsonify({"error": "Invalid username"}), 400
-    
-    # Remove user from group
-    result = remove_user_from_project_group(project_slug, username)
-    
-    if result:
-        return jsonify({
-            "message": f"Successfully removed user '{username}' from project group '{project_slug}'",
-            "project": project_slug,
-            "username": username,
-            "status": "removed"
-        }), 200
-    else:
-        return jsonify({
-            "error": f"Failed to remove user '{username}' from project group '{project_slug}'",
-            "project": project_slug,
-            "username": username,
-            "status": "failed"
-        }), 500
-
+    return {"routes": routes}
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, debug=True)

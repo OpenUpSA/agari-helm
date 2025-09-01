@@ -99,6 +99,9 @@ spec:
           volumeMounts:
             - name: postgresql-data
               mountPath: /var/lib/postgresql/data
+            - name: init-scripts
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
@@ -107,6 +110,9 @@ spec:
         - name: postgresql-data
           persistentVolumeClaim:
             claimName: {{ .Values.fullnameOverride | default (printf "%s-postgres" .Release.Name) }}-pvc
+        - name: init-scripts
+          configMap:
+            name: {{ .Values.fullnameOverride | default (printf "%s-postgres" .Release.Name) }}-init-scripts
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
