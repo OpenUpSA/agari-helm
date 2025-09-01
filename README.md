@@ -140,6 +140,8 @@ Services are available at these URLs:
       - **Permissions**:
         - `admin-permission` - resources `song`, `score` and `folio` with `admin-policy`
         - `client-permission` - resources `song`, `score` and `folio` with `client-policy`
+      - **Service account roles**:
+        - `realm-admin` - to allow service account (folio) to manage users and roles programmatically
 
 ### JWT Token Example
 ```bash
