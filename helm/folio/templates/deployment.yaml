@@ -34,15 +34,15 @@ spec:
               value: {{ .Values.folio.auth.keycloak.clientId | quote }}
             - name: KEYCLOAK_CLIENT_SECRET
               value: {{ .Values.folio.auth.keycloak.clientSecret | quote }}
-            - name: DB_HOST
+            - name: FOLIO_DB_HOST
               value: {{ .Values.folio.database.host | quote }}
-            - name: DB_PORT
+            - name: FOLIO_DB_PORT
               value: {{ .Values.folio.database.port | quote }}
-            - name: DB_NAME
+            - name: FOLIO_DB_NAME
               value: {{ .Values.folio.database.name | quote }}
-            - name: DB_USER
+            - name: FOLIO_DB_USER
               value: {{ .Values.folio.database.user | quote }}
-            - name: DB_PASSWORD
+            - name: FOLIO_DB_PASSWORD
               value: {{ .Values.folio.database.password | quote }}
           livenessProbe:
             httpGet:

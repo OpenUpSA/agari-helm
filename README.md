@@ -109,15 +109,15 @@ helm install arranger ./helm/arranger -n agari
 ```
 
 #### 5.6 FOLIO Projects Service
+
+**Find Folio repo at [https://github.com/OpenUpSA/agari-folio](https://github.com/OpenUpSA/agari-folio)**
+
 ```bash
 # Database
 helm install folio-db ./helm/folio-db -n agari
 
 # Folio
 helm install folio ./helm/folio -n agari
-
-# During the development we need to import the image
-k3d image import folio:latest -c agari
 
 ```
 
