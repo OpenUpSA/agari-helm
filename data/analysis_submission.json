@@ -1,5 +1,5 @@
 {
-  "studyId": "study1",
+  "studyId": "covid-001",
   "analysisId": "analysis001",
   "analysisType": {
     "name": "sequencingRead",
@@ -19,7 +19,7 @@
         "tumourNormalDesignation": "Normal"
       },
       "donor": {
-        "studyId": "study1",
+        "studyId": "covid-001",
         "donorId": "D001",
         "submitterDonorId": "D001",
         "gender": "Female"

@@ -1,0 +1,83 @@
+replicaCount: 1
+
+image:
+  repository: postgres
+  pullPolicy: IfNotPresent
+  tag: "14"
+
+nameOverride: ""
+fullnameOverride: "folio-db"
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext:
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  runAsNonRoot: false
+  runAsUser: 999
+
+service:
+  type: ClusterIP
+  port: 5432
+
+persistence:
+  enabled: true
+  # storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 2Gi
+  # existingClaim: ""
+
+postgresql:
+  postgresqlUsername: admin
+  postgresqlPassword: folio-db-pass-123
+  postgresqlDatabase: folio
+
+databaseKey: "folio"
+
+probes:
+  liveness:
+    enabled: true
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 6
+  
+  readiness:
+    enabled: true
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - -e
+        - |
+          exec pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" -h 127.0.0.1 -p 5432
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
