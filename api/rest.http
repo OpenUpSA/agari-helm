@@ -74,7 +74,7 @@ Content-Type: application/json
   "slug": "covid-genomics-2025",
   "name": "COVID-19 Genomics Study 2025",
   "description": "Large-scale genomic surveillance of SARS-CoV-2 variants",
-  "pathogen_id": "3c1ec846-ccec-4fc3-8906-701a00b7ff98"
+  "pathogen_id": "c57f76d1-859c-4bc9-91e2-8f6c17521609"
 }
 
 ### 2.3b: Get all projects
@@ -95,7 +95,7 @@ Content-Type: application/json
   "study_id": "covid-001",
   "name": "COVID-19 Variant Tracking Study",
   "description": "Analysis of SARS-CoV-2 genetic variants in South Africa",
-  "project_id": "facbf72f-48f5-4009-9a12-5e60318eabfb"
+  "project_id": "eaf4a8bf-1234-4cb7-84b3-3a90af4ae5e2"
 }
 
 ### 2.4b: Verify study was created in SONG
@@ -153,7 +153,8 @@ Content-Type: application/json
 
 ### 3.2b. GET ANALYSIS DETAILS
 # Extract analysis_id from step 4 response and get full analysis details
-@submitted_analysis_id = {{submitAnalysis.response.body.analysisId}}
+# @submitted_analysis_id = {{submitAnalysis.response.body.analysisId}}
+@submitted_analysis_id = 759d93b7-3615-436a-9d93-b73615e36a12
 # @name getAnalysis
 GET http://song.local/studies/{{study_id}}/analysis/{{submitted_analysis_id}}
 Authorization: Bearer {{token}}
@@ -208,7 +209,7 @@ POST http://score.local/upload/{{object_id}}?uploadId={{upload_id}}
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
-@analysis_id = {{submitAnalysis.response.body.analysisId}}
+@analysis_id = 759d93b7-3615-436a-9d93-b73615e36a12
 
 ### === SONG SERVICE ===
 
@@ -218,6 +219,12 @@ Authorization: Bearer {{token}}
 
 ### 5.1b. UNPUBLISH ANALYSIS
 PUT http://song.local/studies/{{study_id}}/analysis/unpublish/{{analysis_id}}
+Authorization: Bearer {{token}}
+
+### 5.2b. GET ANALYSIS DETAILS
+# Extract analysis_id from step 4 response and get full analysis details
+# @name getAnalysis
+GET http://song.local/studies/{{study_id}}/analysis/{{analysis_id}}
 Authorization: Bearer {{token}}
 
 ### === MAESTRO SERVICE ===
@@ -236,9 +243,7 @@ Content-Type: application/json
 
 {
   "query": {
-    "match": {
-      "studyId": "{{study_id}}"
-    }
+    "match_all": {}
   }
 }
 
