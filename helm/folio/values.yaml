@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/OpenupSa/agari-folio
+  repository: ghcr.io/openupsa/agari-folio
   pullPolicy: always
   tag: "latest"
 
