@@ -6,7 +6,7 @@
 @test_file_md5 = cc70b8e811b39c98a938edf87145e34d
 
 # Fixed IDs for Keycloak permissions
-@study_id = study1
+@study_id = covid-001
 @analysis_id = analysis001
 
 # Authentication config
@@ -14,7 +14,7 @@
 @password = pass123
 @realm = agari
 @client_id = dms
-@client_secret = ZawPwfuMXZq4BeWry8GAwPj9mmIywe4b
+@client_secret = VDyLEjGR3xDQvoQlrHq5AB6OwbW0Refc
 
 ### 1. LOGIN to get access token
 # @name login
@@ -30,7 +30,92 @@ username={{username}}
 ###
 @token = {{login.response.body.access_token}}
 
-### 2a. CREATE STUDY
+
+### === FOLIO PROJECTS SERVICE ===
+
+### 2.1. Folio Health Check
+GET http://folio.local/health
+
+### PATHOGENS
+
+### 2.2a: Create a pathogen
+POST http://folio.local/pathogens
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "SARS-CoV-2",
+  "scientific_name": "Severe acute respiratory syndrome coronavirus 2",
+  "description": "The virus that causes COVID-19"
+}
+
+### 2.2b: Get all pathogens
+GET http://folio.local/pathogens
+Authorization: Bearer {{token}}
+
+### 2.2c: Create another pathogen (Malaria)
+POST http://folio.local/pathogens
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Malaria",
+  "scientific_name": "Plasmodium falciparum",
+  "description": "Most severe form of malaria parasite"
+}
+
+### 2.3a: Create a project for SARS-CoV-2 (use pathogen ID from Test 13 response)
+# @name createProject
+POST http://folio.local/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "slug": "covid-genomics-2025",
+  "name": "COVID-19 Genomics Study 2025",
+  "description": "Large-scale genomic surveillance of SARS-CoV-2 variants",
+  "pathogen_id": "3c1ec846-ccec-4fc3-8906-701a00b7ff98"
+}
+
+### 2.3b: Get all projects
+GET http://folio.local/projects
+Authorization: Bearer {{token}}
+
+### 2.3c: Get specific project by slug
+GET http://folio.local/projects/covid-genomics-2025/summary
+Authorization: Bearer {{token}}
+
+### 2.4a: Create a study in Folio (which will also create it in SONG)
+# @name createStudy
+POST http://folio.local/studies
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "study_id": "covid-001",
+  "name": "COVID-19 Variant Tracking Study",
+  "description": "Analysis of SARS-CoV-2 genetic variants in South Africa",
+  "project_id": "facbf72f-48f5-4009-9a12-5e60318eabfb"
+}
+
+### 2.4b: Verify study was created in SONG
+GET http://song.local/studies/covid-001/
+Authorization: Bearer {{token}}
+
+### === FOLIO CONVENIENCE ENDPOINTS ===
+
+### Get all studies in a project (convenience endpoint)
+GET http://folio.local/projects/covid-genomics-2025/studies
+Authorization: Bearer {{token}}
+
+### Get complete project summary (project + studies + users)
+GET http://folio.local/projects/covid-genomics-2025/summary
+Authorization: Bearer {{token}}
+
+
+### === SONG SERVICE ===
+
+### 3.1a. CREATE STUDY
 POST http://song.local/studies/{{study_id}}/
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -46,19 +131,19 @@ Content-Type: application/json
   }
 }
 
-### 2b. GET STUDY DETAILS
+### 3.1b. GET STUDY DETAILS
 GET http://song.local/studies/{{study_id}}/
 Authorization: Bearer {{token}}
 
-### 2c. GET STUDY ANALYSES
+### 3.1c. GET STUDY ANALYSES
 GET http://song.local/studies/{{study_id}}/analysis
 Authorization: Bearer {{token}}
 
-### 2d. LIST STUDIES
+### 3.1d. LIST STUDIES
 GET http://song.local/studies/all
 Authorization: Bearer {{token}}
 
-### 3a. SUBMIT ANALYSIS
+### 3.2a. SUBMIT ANALYSIS
 # @name submitAnalysis
 POST http://song.local/submit/{{study_id}}/
 Authorization: Bearer {{token}}
@@ -66,14 +151,16 @@ Content-Type: application/json
 
 < ./data/analysis_submission.json
 
-### 3b. GET ANALYSIS DETAILS
+### 3.2b. GET ANALYSIS DETAILS
 # Extract analysis_id from step 4 response and get full analysis details
 @submitted_analysis_id = {{submitAnalysis.response.body.analysisId}}
 # @name getAnalysis
 GET http://song.local/studies/{{study_id}}/analysis/{{submitted_analysis_id}}
 Authorization: Bearer {{token}}
 
-### 4a. INITIALIZE SCORE UPLOAD
+### === SCORE SERVICE ===
+
+### 4.1a. INITIALIZE SCORE UPLOAD
 # Extract object_id from step 5 response
 @object_id = {{getAnalysis.response.body.files[0].objectId}}
 # @name initUpload
@@ -91,7 +178,7 @@ fileSize={{test_file_size}}
 
 @md5 = {{initUpload.response.body.objectMd5}}
 
-### 4b. UPLOAD FILE TO MINIO
+### 4.1b. UPLOAD FILE TO MINIO
 # Using hosts file entry: 127.0.0.1 minio (with port-forward to MinIO)
 # @name uploadFile
 PUT {{presigned_url}}
@@ -109,37 +196,40 @@ Content-Type: text/plain
 @debug_md5 = {{md5}}
 @debug_upload_id = {{upload_id}}
 
-### 4c. Finalise Part Upload
+### 4.1c. Finalise Part Upload
 # @name finalizePartUpload
 POST http://score.local/upload/{{object_id}}/parts?partNumber=1&etag={{etag}}&md5={{md5}}&uploadId={{upload_id}}
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
-### 4d. Finalize upload
+### 4.1d. Finalize upload
 # @name finalizeUpload
 POST http://score.local/upload/{{object_id}}?uploadId={{upload_id}}
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
-# @analysis_id = 359047cd-7a55-462f-9047-cd7a55b62fdd
 @analysis_id = {{submitAnalysis.response.body.analysisId}}
 
-# @analysis_id = 0f768dc5-d8b9-447d-b68d-c5d8b9c47d25
+### === SONG SERVICE ===
 
-### 5a. PUBLISH ANALYSIS 
+### 5.1a. PUBLISH ANALYSIS 
 PUT http://song.local/studies/{{study_id}}/analysis/publish/{{analysis_id}}
 Authorization: Bearer {{token}}
 
-### 5b. UNPUBLISH ANALYSIS
+### 5.1b. UNPUBLISH ANALYSIS
 PUT http://song.local/studies/{{study_id}}/analysis/unpublish/{{analysis_id}}
 Authorization: Bearer {{token}}
 
-### 6. TRIGGER MAESTRO INDEXING
+### === MAESTRO SERVICE ===
+
+### 6.1 TRIGGER MAESTRO INDEXING
 # @name maestroIndex
 POST http://maestro.local/index/repository/song.overture/study/{{study_id}}
 Authorization: Bearer {{token}}
 
-### 7. CHECK ELASTICSEARCH INDEX
+### === ELASTICSEARCH ===
+
+### 7.1 CHECK ELASTICSEARCH INDEX
 # @name checkElasticsearch
 GET http://elasticsearch.local/agari-index/_search
 Content-Type: application/json
@@ -152,7 +242,9 @@ Content-Type: application/json
   }
 }
 
-### 8. CHECK ARRANGER DATA ACCESS
+### === ARRANGER SERVICE ===
+
+### 8.1 CHECK ARRANGER DATA ACCESS
 # @name arrangerGraphQL
 POST http://arranger.local/graphql
 Authorization: Bearer {{token}}
@@ -161,193 +253,3 @@ Content-Type: application/json
 {
   "query": "query {file {hits {total}}}"
 }
-
-### === FOLIO PROJECTS SERVICE ===
-
-### 1. Folio Health Check
-GET http://folio.local/health
-
-
-### 2. Get Folio JWT Token (use same dms client as other services)
-# @name folio_login
-POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
-Content-Type: application/x-www-form-urlencoded
-
-username={{username}}
-&password={{password}}
-&grant_type=password
-&client_id={{client_id}}
-&client_secret={{client_secret}}
-
-###
-@folio_token = {{folio_login.response.body.access_token}}
-
-# ### 3. Test Basic Authentication
-# GET http://folio.local/api/test
-# Authorization: Bearer {{folio_token}}
-
-# ### 4. Test READ Permission
-# GET http://folio.local/api/test/read
-# Authorization: Bearer {{folio_token}}
-
-# ### 5. Test WRITE Permission  
-# GET http://folio.local/api/test/write
-# Authorization: Bearer {{folio_token}}
-
-# ### 6. Test Admin (READ + WRITE) Permission
-# POST http://folio.local/api/test/admin
-# Authorization: Bearer {{folio_token}}
-# Content-Type: application/json
-
-# {
-#   "test": "admin access"
-# }
-
-### TEST FOLIO ADMIN FUNCTIONS - Resource Management
-
-# ### Test 1: Create a project resource
-# POST http://folio.local/projects/malaria-study/resource
-# Authorization: Bearer {{token}}
-
-# ### Test 2: Get the created project resource  
-# GET http://folio.local/projects/malaria-study/resource
-# Authorization: Bearer {{token}}
-
-# ### Test 3: Try to create another project resource
-# POST http://folio.local/projects/tb-study/resource
-# Authorization: Bearer {{token}}
-
-# ### Test 4: Get the second project resource
-# GET http://folio.local/projects/tb-study/resource
-# Authorization: Bearer {{token}}
-
-# ### TEST FOLIO GROUP MANAGEMENT
-
-# ### Test 5: Create a project group
-# POST http://folio.local/projects/malaria-study/group
-# Authorization: Bearer {{token}}
-
-# ### Test 6: Get the created project group
-# GET http://folio.local/projects/malaria-study/group
-# Authorization: Bearer {{token}}
-
-# ### Test 7: Add admin user to the malaria-study group
-# POST http://folio.local/projects/malaria-study/group/members/admin
-# Authorization: Bearer {{token}}
-
-# ### Test 8: Get group members for malaria-study
-# GET http://folio.local/projects/malaria-study/group/members
-# Authorization: Bearer {{token}}
-
-# ### Test 9: Create a group for tb-study project
-# POST http://folio.local/projects/tb-study/group
-# Authorization: Bearer {{token}}
-
-# ### Test 10: Add admin user to tb-study group
-# POST http://folio.local/projects/tb-study/group/members/admin
-# Authorization: Bearer {{token}}
-
-# ### Test 11: Get group members for tb-study
-# GET http://folio.local/projects/tb-study/group/members
-# Authorization: Bearer {{token}}
-
-# ### Test 12: Remove admin user from malaria-study group
-# DELETE http://folio.local/projects/malaria-study/group/members/admin
-# Authorization: Bearer {{token}}
-
-### === FOLIO DATABASE CRUD OPERATIONS ===
-
-### Test 13: Create a pathogen
-POST http://folio.local/pathogens
-Authorization: Bearer {{folio_token}}
-Content-Type: application/json
-
-{
-  "name": "SARS-CoV-2",
-  "scientific_name": "Severe acute respiratory syndrome coronavirus 2",
-  "description": "The virus that causes COVID-19"
-}
-
-### Test 14: Get all pathogens
-GET http://folio.local/pathogens
-Authorization: Bearer {{folio_token}}
-
-### Test 15: Create another pathogen (Malaria)
-POST http://folio.local/pathogens
-Authorization: Bearer {{folio_token}}
-Content-Type: application/json
-
-{
-  "name": "Malaria",
-  "scientific_name": "Plasmodium falciparum",
-  "description": "Most severe form of malaria parasite"
-}
-
-### Test 16: Create a project for SARS-CoV-2 (use pathogen ID from Test 13 response)
-# @name createProject
-POST http://folio.local/projects
-Authorization: Bearer {{folio_token}}
-Content-Type: application/json
-
-{
-  "slug": "covid-genomics-2025",
-  "name": "COVID-19 Genomics Study 2025",
-  "description": "Large-scale genomic surveillance of SARS-CoV-2 variants",
-  "pathogen_id": "f788a2d4-98ae-458c-b97b-9391aa692adc"
-}
-
-### Test 17: Get all projects
-GET http://folio.local/projects
-Authorization: Bearer {{folio_token}}
-
-### Test 18: Get specific project by slug
-GET http://folio.local/projects/covid-genomics-2025/summary
-Authorization: Bearer {{folio_token}}
-
-### Test 19: Create a study in Folio (which will also create it in SONG)
-# @name createStudy
-POST http://folio.local/studies
-Authorization: Bearer {{folio_token}}
-Content-Type: application/json
-
-{
-  "study_id": "covid-001",
-  "name": "COVID-19 Variant Tracking Study",
-  "description": "Analysis of SARS-CoV-2 genetic variants in South Africa",
-  "project_id": "0a001280-5dce-487d-9770-3a6919f1aede"
-}
-
-### Test 20: Get all studies
-GET http://folio.local/studies
-Authorization: Bearer {{folio_token}}
-
-### Test 21: Get specific study by ID
-GET http://folio.local/studies/covid-001
-Authorization: Bearer {{folio_token}}
-
-### Test 22: Get studies for a specific project
-GET http://folio.local/studies/project/covid-genomics-2025
-Authorization: Bearer {{folio_token}}
-
-### Test 23: Verify study was created in SONG
-GET http://song.local/studies/covid-001/
-Authorization: Bearer {{folio_token}}
-
-### === FOLIO CONVENIENCE ENDPOINTS ===
-
-### Test 24: Get all users in a project (convenience endpoint)
-GET http://folio.local/projects/covid-genomics-2025/users
-Authorization: Bearer {{folio_token}}
-
-### Test 25: Get all studies in a project (convenience endpoint)
-GET http://folio.local/projects/covid-genomics-2025/studies
-Authorization: Bearer {{folio_token}}
-
-### Test 26: Get complete project summary (project + studies + users)
-GET http://folio.local/projects/covid-genomics-2025/summary
-Authorization: Bearer {{folio_token}}
-
-### Test 27: Get specific pathogen by ID
-GET http://folio.local/pathogens/{{PUT_PATHOGEN_ID_HERE}}
-Authorization: Bearer {{folio_token}}
-

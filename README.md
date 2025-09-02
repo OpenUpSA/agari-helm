@@ -2,7 +2,7 @@
 
 Complete Overture stack deployment on Kubernetes with authentication, file management, and data indexing.
 
-![Architecture Diagram](architecture.svg)
+![Architecture Diagram](architecture.png)
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ Complete Overture stack deployment on Kubernetes with authentication, file manag
 In dev you might want to use **k3d** for quick setup:
 
 ```bash
-k3d cluster create agari --agentgroupss 2 --port "80:80@loadbalancer"
+k3d cluster create agari --agents 2 --port "80:80@loadbalancer"
 
 # Install nginx ingress
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.8.1/deploy/static/provider/cloud/deploy.yaml
@@ -35,15 +35,21 @@ kubectl create namespace agari
 
 ### 3. Deploy Infrastructure
 
+#### 3.1 MINIO Object storage
+
+
 ```bash
-# Object storage
 helm install minio ./helm/minio -n agari
 
 # Minio might require prot-forwarding:
 kubectl port-forward -n agari service/minio 9000:9000
+```
 
-# Message queue
+### 3.2 Kafka Message Queue
+
+```bash
 helm repo add bitnami https://charts.bitnami.com/bitnami
+
 helm install kafka bitnami/kafka -f helm/kafka/values-bitnami.yaml -n agari
 ```
 
@@ -57,35 +63,65 @@ helm install keycloak-db ./helm/keycloak-db -n agari
 helm install keycloak ./helm/keycloak -n agari
 ```
 
-Set up the **client** in Keycloak and copy the **secret** to **song**, **score** and **maestro** `values.yaml`
+Set up the **client** in Keycloak and copy the **secret** to **song**, **score**, **maestro** and **folio** `values.yaml`
+
+use `utils/update-secrets.sh` script to update the secrets in all services
 
 ### 5. Deploy Overture Stack
 
+#### 5.1 SONG
+
 ```bash
-# SONG  
+# Database
 helm install song-db ./helm/song-db -n agari
+
+# Song
 helm install song ./helm/song -n agari
+```
 
-# SCORE
+#### 5.2 SCORE
+```bash
 helm install score ./helm/score -n agari
+```
 
-# ELASTICSEARCH
+#### 5.3 ELASTICSEARCH
+```bash
+# Elasticsearch
 helm install elasticsearch ./helm/elasticsearch -n agari
 
 # Create agari-index with proper mapping
 curl -X PUT "http://elasticsearch.local/agari-index" \
     -H "Content-Type: application/json" \
     -d @helm/elasticsearch/configs/agari-index-mapping.json
+```
 
-# MAESTRO
+#### 5.4 MAESTRO
+```bash
 helm install maestro ./helm/maestro -n agari
-
-# ARRANGER
+```
+#### 5.5 ARRANGER
+```bash
 # Set up Arranger configuration
 kubectl create configmap arranger-config --from-file=helm/arranger/configs/ -n agari
 
+# Arranger
 helm install arranger ./helm/arranger -n agari
 ```
+
+#### 5.6 FOLIO Projects Service
+```bash
+# Database
+helm install folio-db ./helm/folio-db -n agari
+
+# Folio
+helm install folio ./helm/folio -n agari
+
+# During the development we need to import the image
+k3d image import folio:latest -c agari
+
+```
+
+
 
 ## Ingress Configuration
 
@@ -98,7 +134,8 @@ echo "127.0.0.1 song.local
 127.0.0.1 arranger.local
 127.0.0.1 keycloak.local
 127.0.0.1 elasticsearch.local
-127.0.0.1 minio-console.local" | sudo tee -a /etc/hosts
+127.0.0.1 minio-console.local
+127.0.0.1 folio.local" | sudo tee -a /etc/hosts
 ```
 
 ## Service Access
@@ -111,6 +148,7 @@ Services are available at these URLs:
 - **Keycloak**: http://keycloak.local
 - **Elasticsearch**: http://elasticsearch.local
 - **MinIO Console**: http://minio-console.local
+- **Folio**: http://folio.local/docs
 
 ## Authentication and Authorization
 
@@ -192,6 +230,42 @@ query {
     }
   }
 }
+
+### 3. Big query
+```graphql
+query GetFilesWithAnalysis {
+  file {
+    hits {
+      total
+      edges {
+        node {
+          id
+          data_type
+          file_access
+          file_type
+          object_id
+          study_id
+          analysis {
+            analysis_id
+            analysis_type
+            analysis_state
+            analysis_version
+            experiment
+            first_published_at
+            published_at
+            updated_at
+          }
+          file {
+            name
+            size
+            md5sum
+          }
+        }
+      }
+    }
+  }
+}
+
 ```
 
 ## Troubleshooting
@@ -207,6 +281,14 @@ kubectl get ingress -n agari
 kubectl logs <pod-name> -n agari
 ```
 
+### Pause and unpause all pods in a namespace
+
+Great for freeing up some system resources when idle
+
+```bash
+kubectl scale --replicas=0 deployment --all -n agari
+kubectl scale --replicas=1 deployment --all -n agari
+```
 
 ## Configuration
 
