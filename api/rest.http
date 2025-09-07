@@ -74,7 +74,22 @@ Content-Type: application/json
   "slug": "covid-genomics-2025",
   "name": "COVID-19 Genomics Study 2025",
   "description": "Large-scale genomic surveillance of SARS-CoV-2 variants",
-  "pathogen_id": "bc860c60-d5a7-40f6-896a-2db048bcd79a"
+  "pathogen_id": "bc860c60-d5a7-40f6-896a-2db048bcd79a",
+  "privacy": "private"
+}
+
+### 2.3a2: Create a PUBLIC project for testing authorization
+# @name createPublicProject
+POST http://folio.local/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "slug": "public-research-2025",
+  "name": "Open Research Initiative 2025",
+  "description": "Public genomic research accessible to all authenticated users",
+  "pathogen_id": "bc860c60-d5a7-40f6-896a-2db048bcd79a",
+  "privacy": "public"
 }
 
 ### 2.3b: Get all projects
@@ -159,11 +174,11 @@ Content-Type: application/json
 ### === STUDY MEMBER MANAGEMENT ===
 
 ### Get study members
-GET http://folio.local/studies/STUDY_UUID_HERE/members
+GET http://folio.local/studies/5f92408e-7a33-44eb-88c1-317c25bd5d2f/members
 Authorization: Bearer {{token}}
 
 ### Add user to study read group
-POST http://folio.local/studies/STUDY_UUID_HERE/members
+POST http://folio.local/studies/5f92408e-7a33-44eb-88c1-317c25bd5d2f/members
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -173,7 +188,7 @@ Content-Type: application/json
 }
 
 ### Add user to study write group
-POST http://folio.local/studies/STUDY_UUID_HERE/members
+POST http://folio.local/studies/5f92408e-7a33-44eb-88c1-317c25bd5d2f/members
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -183,7 +198,7 @@ Content-Type: application/json
 }
 
 ### Remove user from study read group
-DELETE http://folio.local/studies/STUDY_UUID_HERE/members
+DELETE http://folio.local/studies/5f92408e-7a33-44eb-88c1-317c25bd5d2f/members
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
