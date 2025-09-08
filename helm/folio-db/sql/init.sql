@@ -22,9 +22,10 @@ CREATE TABLE IF NOT EXISTS projects (
     slug VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    organization_id VARCHAR(255) NOT NULL, -- Keycloak organization ID
+    organisation_id VARCHAR(255) NOT NULL DEFAULT 'default-org', -- Keycloak organisation ID
     user_id VARCHAR(255) NOT NULL, -- Keycloak user ID of creator
     pathogen_id UUID REFERENCES pathogens(id),
+    privacy VARCHAR(20) DEFAULT 'public' CHECK (privacy IN ('public', 'private')),
     status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'completed', 'archived')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -50,8 +51,9 @@ CREATE TABLE IF NOT EXISTS studies (
 CREATE INDEX IF NOT EXISTS idx_projects_slug ON projects(slug);
 CREATE INDEX IF NOT EXISTS idx_projects_pathogen ON projects(pathogen_id);
 CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
-CREATE INDEX IF NOT EXISTS idx_projects_organization ON projects(organization_id);
+CREATE INDEX IF NOT EXISTS idx_projects_organisation ON projects(organisation_id);
 CREATE INDEX IF NOT EXISTS idx_projects_user ON projects(user_id);
+CREATE INDEX IF NOT EXISTS idx_projects_privacy ON projects(privacy);
 CREATE INDEX IF NOT EXISTS idx_studies_project ON studies(project_id);
 CREATE INDEX IF NOT EXISTS idx_studies_study_id ON studies(study_id);
 CREATE INDEX IF NOT EXISTS idx_studies_status ON studies(status);
@@ -88,8 +90,9 @@ SELECT
     p.slug,
     p.name,
     p.description,
-    p.organization_id,
+    p.organisation_id,
     p.user_id,
+    p.privacy,
     p.status,
     p.created_at,
     p.updated_at,
@@ -101,8 +104,8 @@ FROM projects p
 LEFT JOIN pathogens pat ON p.pathogen_id = pat.id AND pat.deleted_at IS NULL
 LEFT JOIN studies s ON p.id = s.project_id AND s.deleted_at IS NULL
 WHERE p.deleted_at IS NULL
-GROUP BY p.id, p.slug, p.name, p.description, p.organization_id, 
-         p.user_id, p.status, p.created_at, p.updated_at, p.deleted_at,
+GROUP BY p.id, p.slug, p.name, p.description, p.organisation_id, 
+         p.user_id, p.privacy, p.status, p.created_at, p.updated_at, p.deleted_at,
          pat.name, pat.scientific_name;
 
 CREATE OR REPLACE VIEW study_details AS
@@ -124,10 +127,6 @@ FROM studies s
 JOIN projects p ON s.project_id = p.id AND p.deleted_at IS NULL
 LEFT JOIN pathogens pat ON p.pathogen_id = pat.id AND pat.deleted_at IS NULL
 WHERE s.deleted_at IS NULL;
-
--- Grant permissions to the folio application user (if needed)
--- Note: This assumes the folio app connects with the same user as the database owner
--- In production, you might want to create a separate application user with limited permissions
 
 COMMENT ON TABLE pathogens IS 'Reference table for pathogen information';
 COMMENT ON TABLE projects IS 'Main projects table containing project metadata';
