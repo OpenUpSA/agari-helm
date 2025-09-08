@@ -1,0 +1,53 @@
+{
+  "studyId": "covid-surveillance-002",
+  "analysisType": {
+    "name": "sequencing_read",
+    "version": 10
+  },
+  "samples": [
+    {
+      "submitterSampleId": "COVID_XBB_001",
+      "matchedNormalSubmitterSampleId": null,
+      "sampleType": "Total RNA",
+      "specimen": {
+        "submitterSpecimenId": "SPEC_COVID_XBB_001",
+        "specimenType": "Primary tumour", 
+        "specimenTissueSource": "Nasopharyngeal swab"
+      },
+      "donor": {
+        "submitterDonorId": "DONOR_COVID_002",
+        "studyId": "covid-surveillance-002",
+        "donorGender": "Female"
+      }
+    }
+  ],
+  "files": [
+    {
+      "fileName": "covid_xbb_sample.fastq",
+      "fileType": "FASTQ",
+      "fileSize": 719,
+      "fileMd5sum": "b2532c29e8749bc912988d392ca5ea8e",
+      "fileAccess": "controlled",
+      "info": {
+        "data_category": "Sequencing Reads",
+        "data_type": "Aligned Reads", 
+        "experimental_strategy": "RNA-Seq",
+        "variant_class": "XBB.1.5",
+        "collection_date": "2024-02-10",
+        "country": "South Africa"
+      }
+    }
+  ],
+  "experiment": {
+    "platform": "ILLUMINA",
+    "platform_model": "Illumina MiSeq",
+    "sequencing_center": "University of Cape Town",
+    "sequencing_date": "2024-02-15"
+  },
+  "workflow": {
+    "workflow_name": "SARS-CoV-2 Variant Detection",
+    "workflow_version": "v2.1",
+    "genome_build": "SARS-CoV-2-reference",
+    "run_id": "covid_xbb_run_001"
+  }
+}
