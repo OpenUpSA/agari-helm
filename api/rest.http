@@ -20,6 +20,13 @@
 @client_secret = VDyLEjGR3xDQvoQlrHq5AB6OwbW0Refc
 
 # === TEST USERS FOR RBAC ===
+# System Admin (global admin, only user in /admin group - can create pathogens)
+@sys_username = system.admin@agari.tech
+@sys_password = admin123
+
+@default_admin_username = admin
+@default_admin_password = pass123
+
 # Owner (has all permissions across all projects)
 @owner_username = owner@nicd.ac.za
 @owner_password = pass123
@@ -53,8 +60,37 @@
 @external_user_password = pass123
 
 # Current test user (change this to test different roles)
-@username = {{owner_username}}
-@password = {{owner_password}}
+@username = {{project_admin_username}}
+@password = {{project_admin_password}}
+
+# @username = {{sys_username}}
+# @password = {{sys_password}}
+
+
+### === DEBUG: TOKEN ANALYSIS ===
+
+### Decode JWT token to see claims
+@tokenPayload = {{token}}
+# Copy the token value above and paste it into https://jwt.io to decode and see what groups/roles the user has
+
+### Test UMA Token Introspection - Check what permissions this token has
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token/introspect
+Authorization: Bearer {{token}}
+Content-Type: application/x-www-form-urlencoded
+
+token={{token}}&client_id={{client_id}}&client_secret={{client_secret}}
+
+### SECURITY TEST: Check UMA permissions 
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
+Authorization: Bearer {{token}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=urn:ietf:params:oauth:grant-type:uma-ticket&audience={{client_id}}&response_mode=permissions
+
+
+
+
+
 
 ### 1. LOGIN to get access token
 # @name login
@@ -71,17 +107,6 @@ username={{username}}
 @token = {{login.response.body.access_token}}
 
 
-### === RBAC TESTING SCENARIOS ===
-
-### Test 1: Check current user info and organisation
-GET http://folio.local/auth/user-info
-Authorization: Bearer {{token}}
-
-### Test 2: Get user's organisation roles
-GET http://folio.local/auth/user-roles
-Authorization: Bearer {{token}}
-
-
 ### === FOLIO PROJECTS SERVICE - RBAC TESTS ===
 
 ### Health Check
@@ -89,7 +114,8 @@ GET http://folio.local/health
 
 ### === PATHOGENS MANAGEMENT ===
 
-### Create SARS-CoV-2 pathogen (requires Owner/Org Admin)
+### Create SARS-CoV-2 pathogen (requires System Admin only - /admin group)
+# @name createSarsPathogen
 POST http://folio.local/pathogens
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -100,7 +126,13 @@ Content-Type: application/json
   "description": "The virus that causes COVID-19"
 }
 
-### Create Malaria pathogen (requires Owner/Org Admin)
+###
+# @sars_pathogen_id = {{createSarsPathogen.response.body.id}}
+@sars_pathogen_id = 81d27b39-19f0-4a2c-a547-bb91361645ab
+
+
+### Create Malaria pathogen (requires System Admin only - /admin group)
+# @name createMalariaPathogen
 POST http://folio.local/pathogens
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -111,9 +143,14 @@ Content-Type: application/json
   "description": "Most severe form of malaria parasite"
 }
 
+###
+@malaria_pathogen_id = {{createMalariaPathogen.response.body.id}}
+
 ### Get all pathogens (all authenticated users)
 GET http://folio.local/pathogens
 Authorization: Bearer {{token}}
+
+
 
 
 ### === PROJECT MANAGEMENT TESTS ===
@@ -128,7 +165,7 @@ Content-Type: application/json
   "slug": "nicd-covid-private",
   "name": "NICD COVID-19 Private Study",
   "description": "Internal NICD genomic surveillance - private data",
-  "pathogen_id": "bc860c60-d5a7-40f6-896a-2db048bcd79a",
+  "pathogen_id": "{{sars_pathogen_id}}",
   "privacy": "private",
   "organisation_id": "{{default_org}}"
 }
@@ -143,7 +180,7 @@ Content-Type: application/json
   "slug": "nicd-covid-surveillance",
   "name": "NICD COVID-19 Surveillance Study",
   "description": "Regional surveillance data - metadata shared for dashboards",
-  "pathogen_id": "bc860c60-d5a7-40f6-896a-2db048bcd79a",
+  "pathogen_id": "{{sars_pathogen_id}}",
   "privacy": "semi-private",
   "organisation_id": "{{default_org}}"
 }
@@ -158,52 +195,34 @@ Content-Type: application/json
   "slug": "africa-covid-public",
   "name": "Africa COVID-19 Open Research",
   "description": "Public genomic research accessible to all authenticated users",
-  "pathogen_id": "bc860c60-d5a7-40f6-896a-2db048bcd79a",
+  "pathogen_id": "{{sars_pathogen_id}}",
   "privacy": "public",
   "organisation_id": "{{default_org}}"
 }
+
+@project_id = 9cf9946e-a231-4247-b9d5-cc200a543a49
 
 ### Get all projects (visibility depends on user role and project privacy)
 GET http://folio.local/projects
 Authorization: Bearer {{token}}
 
 ### Get specific project by ID (access depends on user role and project privacy)
-GET http://folio.local/projects/8bc2c6bc-94c9-4739-827e-0a5d1584afa6
+GET http://folio.local/projects/{{project_id}}
 Authorization: Bearer {{token}}
 
 ### Get project summary (access depends on user role)
-GET http://folio.local/projects/8bc2c6bc-94c9-4739-827e-0a5d1584afa6/summary
+GET http://folio.local/projects/{{project_id}}/summary
 Authorization: Bearer {{token}}
 
 ### Get project members (requires Owner/Admin of project)
-GET http://folio.local/projects/8bc2c6bc-94c9-4739-827e-0a5d1584afa6/members
+GET http://folio.local/projects/{{project_id}}/members
 Authorization: Bearer {{token}}
 
 
 ### === PROJECT MEMBER MANAGEMENT (Owner/Admin only) ===
 
-### Add user with viewer role to project
-POST http://folio.local/projects/8bc2c6bc-94c9-4739-827e-0a5d1584afa6/members
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "username": "viewer@research.org",
-  "permission": "viewer"
-}
-
-### Add user with contributor role to project
-POST http://folio.local/projects/8bc2c6bc-94c9-4739-827e-0a5d1584afa6/members
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "username": "contributor@lab.bio",
-  "permission": "contributor"
-}
-
 ### Add user with admin role to project
-POST http://folio.local/projects/8bc2c6bc-94c9-4739-827e-0a5d1584afa6/members
+POST http://folio.local/projects/{{project_id}}/members
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -213,7 +232,7 @@ Content-Type: application/json
 }
 
 ### Remove user from project (Owner/Admin only)
-DELETE http://folio.local/projects/8bc2c6bc-94c9-4739-827e-0a5d1584afa6/members
+DELETE http://folio.local/projects/{{project_id}}/members
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -223,6 +242,8 @@ Content-Type: application/json
 }
 
 ### === STUDY MANAGEMENT ===
+
+@study_id = ada0ddcd-7ef4-45a1-8d9b-996f1381c245
 
 ### Create a study (requires Owner/Admin/Contributor of project)
 # @name createStudy
@@ -234,7 +255,7 @@ Content-Type: application/json
   "study_id": "covid-001",
   "name": "COVID-19 Variant Tracking Study",
   "description": "Analysis of SARS-CoV-2 genetic variants in South Africa",
-  "project_id": "8bc2c6bc-94c9-4739-827e-0a5d1584afa6"
+  "project_id": "{{project_id}}"
 }
 
 ### Get all studies (user sees studies from projects they have access to)
@@ -242,11 +263,11 @@ GET http://folio.local/studies
 Authorization: Bearer {{token}}
 
 ### Get study members (requires Owner/Admin of parent project)
-GET http://folio.local/studies/5f92408e-7a33-44eb-88c1-317c25bd5d2f/members
+GET http://folio.local/studies/{{study_id}}/members
 Authorization: Bearer {{token}}
 
 ### Add user to study with read access (requires Owner/Admin of parent project)
-POST http://folio.local/studies/5f92408e-7a33-44eb-88c1-317c25bd5d2f/members
+POST http://folio.local/studies/{{study_id}}/members
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -256,48 +277,21 @@ Content-Type: application/json
 }
 
 ### Add user to study with write access (requires Owner/Admin of parent project)
-POST http://folio.local/studies/5f92408e-7a33-44eb-88c1-317c25bd5d2f/members
+POST http://folio.local/studies/{{study_id}}/members
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "username": "contributor@lab.bio",
+  "username": "org-contributor@nicd.ac.za",
   "permission": "write"
 }
 
 
 ### === DATA SUBMISSION TESTS (Owner/Admin/Contributor only) ===
 
-### Test uploading data (should fail for Viewers)
-POST http://folio.local/submissions
-Authorization: Bearer {{token}}
-Content-Type: application/json
 
-{
-  "project_id": "8bc2c6bc-94c9-4739-827e-0a5d1584afa6",
-  "title": "Test Submission",
-  "description": "Testing data upload permissions",
-  "metadata": [
-    {
-      "sample_id": "TEST001",
-      "collection_date": "2024-01-15",
-      "country": "South Africa",
-      "lineage_name": "BA.5.1"
-    }
-  ]
-}
 
-### View all submissions in project (Owner/Admin see all, Contributors see own, Viewers see none)
-GET http://folio.local/projects/8bc2c6bc-94c9-4739-827e-0a5d1584afa6/submissions
-Authorization: Bearer {{token}}
 
-### View own submissions (Contributors and above)
-GET http://folio.local/submissions/my-submissions
-Authorization: Bearer {{token}}
-
-### Publish a submission (Owner/Admin can publish any, Contributors can publish own)
-PUT http://folio.local/submissions/submission-id-here/publish
-Authorization: Bearer {{token}}
 
 
 ### === CROSS-ORGANISATION ACCESS TESTS ===
@@ -344,6 +338,8 @@ Content-Type: application/json
 
 ### === SONG SERVICE ===
 
+@study_id = covid-001
+
 ### 3.1a. CREATE STUDY
 POST http://song.local/studies/{{study_id}}/
 Authorization: Bearer {{token}}
@@ -382,8 +378,8 @@ Content-Type: application/json
 
 ### 3.2b. GET ANALYSIS DETAILS
 # Extract analysis_id from step 4 response and get full analysis details
-# @submitted_analysis_id = {{submitAnalysis.response.body.analysisId}}
-@submitted_analysis_id = 759d93b7-3615-436a-9d93-b73615e36a12
+@submitted_analysis_id = {{submitAnalysis.response.body.analysisId}}
+# @submitted_analysis_id = 759d93b7-3615-436a-9d93-b73615e36a12
 # @name getAnalysis
 GET http://song.local/studies/{{study_id}}/analysis/{{submitted_analysis_id}}
 Authorization: Bearer {{token}}
@@ -438,7 +434,7 @@ POST http://score.local/upload/{{object_id}}?uploadId={{upload_id}}
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
-@analysis_id = 759d93b7-3615-436a-9d93-b73615e36a12
+@analysis_id = adb67a21-c89c-49c5-b67a-21c89c29c511
 
 ### === SONG SERVICE ===
 

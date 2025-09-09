@@ -39,7 +39,7 @@ update_secrets_in_file() {
     echo "Updating $service_name secrets in $file"
     
     # Create backup
-    cp "$file" "$file.backup.$(date +%Y%m%d_%H%M%S)"
+    # cp "$file" "$file.backup.$(date +%Y%m%d_%H%M%S)"
     
     # Update the secrets using sed
     # This handles both 'secret:' and 'clientSecret:' patterns
