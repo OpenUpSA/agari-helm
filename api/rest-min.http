@@ -1,0 +1,205 @@
+# AGARI Overture Stack - RBAC Testing Workflow
+
+# Test file info
+@test_file_name = test_data.fasta
+@test_file_size = 298
+@test_file_md5 = cc70b8e811b39c98a938edf87145e34d
+
+# Fixed IDs for testing
+@study_id = covid-001
+@analysis_id = analysis001
+
+# Organisation setup
+@default_org = default-org
+@nicd_org = nicd-org
+@lab_org = lab-org
+
+# Authentication config - Test with different users
+@realm = agari
+@client_id = dms
+@client_secret = VDyLEjGR3xDQvoQlrHq5AB6OwbW0Refc
+
+# === TEST USERS FOR RBAC ===
+# System Admin (global admin, only user in /admin group - can create pathogens)
+@sys_username = system.admin@agari.tech
+@sys_password = admin123
+
+@default_admin_username = admin
+@default_admin_password = pass123
+
+# Owner (has all permissions across all projects)
+@owner_username = owner@nicd.ac.za
+@owner_password = pass123
+
+# Organisation Admin (can manage all org members and projects)
+@org_admin_username = org-admin@nicd.ac.za
+@org_admin_password = pass123
+
+# Organisation Contributor (has contributor access to all projects)
+@org_contributor_username = org-contributor@nicd.ac.za
+@org_contributor_password = pass123
+
+# Organisation Viewer (has viewer access to all projects)
+@org_viewer_username = org-viewer@nicd.ac.za
+@org_viewer_password = pass123
+
+# Project-specific Admin (admin on specific projects only)
+@project_admin_username = admin@nicd.ac.za
+@project_admin_password = pass123
+
+# Project-specific Contributor (contributor on specific projects only)
+@contributor_username = contributor@lab.bio
+@contributor_password = pass123
+
+# Project-specific Viewer (viewer on specific projects only)
+@viewer_username = viewer@research.org
+@viewer_password = pass123
+
+# External org user for cross-org testing
+@external_user_username = external@another-org.com
+@external_user_password = pass123
+
+# Current test user (change this to test different roles)
+@username = {{project_admin_username}}
+@password = {{project_admin_password}}
+
+
+
+
+
+
+
+
+
+### 1. LOGIN to get access token
+# @name login
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+username={{username}}
+&password={{password}}
+&grant_type=password
+&client_id={{client_id}}
+&client_secret={{client_secret}}
+
+###
+@token = {{login.response.body.access_token}}
+
+
+### === FOLIO PROJECTS SERVICE - RBAC TESTS ===
+
+### Health Check
+GET http://folio.local/health
+
+
+### Get all pathogens (all authenticated users)
+GET http://folio.local/pathogens
+Authorization: Bearer {{token}}
+
+
+
+
+### === PROJECT MANAGEMENT TESTS ===
+
+### Create PRIVATE project (requires Owner/Org Admin)
+# @name createProject
+POST http://folio.local/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "slug": "nicd-covid-private",
+  "name": "NICD COVID-19 Private Study",
+  "description": "Internal NICD genomic surveillance - private data",
+  "pathogen_id": "{{sars_pathogen_id}}",
+  "privacy": "private",
+  "organisation_id": "{{default_org}}"
+}
+
+
+@project_id = 9cf9946e-a231-4247-b9d5-cc200a543a49
+
+### Get all projects (visibility depends on user role and project privacy)
+GET http://folio.local/projects
+Authorization: Bearer {{token}}
+
+### Get specific project by ID (access depends on user role and project privacy)
+GET http://folio.local/projects/{{project_id}}
+Authorization: Bearer {{token}}
+
+### Get project summary (access depends on user role)
+GET http://folio.local/projects/{{project_id}}/summary
+Authorization: Bearer {{token}}
+
+### Get project members (requires Owner/Admin of project)
+GET http://folio.local/projects/{{project_id}}/members
+Authorization: Bearer {{token}}
+
+
+### === PROJECT MEMBER MANAGEMENT (Owner/Admin only) ===
+
+### Add user with admin role to project
+POST http://folio.local/projects/{{project_id}}/members
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "admin@nicd.ac.za",
+  "permission": "admin"
+}
+
+### Remove user from project (Owner/Admin only)
+DELETE http://folio.local/projects/{{project_id}}/members
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "viewer@research.org",
+  "permission": "viewer"
+}
+
+### === STUDY MANAGEMENT ===
+
+@study_id = ada0ddcd-7ef4-45a1-8d9b-996f1381c245
+
+### Create a study (requires Owner/Admin/Contributor of project)
+# @name createStudy
+POST http://folio.local/studies
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "study_id": "covid-001",
+  "name": "COVID-19 Variant Tracking Study",
+  "description": "Analysis of SARS-CoV-2 genetic variants in South Africa",
+  "project_id": "{{project_id}}"
+}
+
+### Get all studies (user sees studies from projects they have access to)
+GET http://folio.local/studies
+Authorization: Bearer {{token}}
+
+### Get study members (requires Owner/Admin of parent project)
+GET http://folio.local/studies/{{study_id}}/members
+Authorization: Bearer {{token}}
+
+### Add user to study with read access (requires Owner/Admin of parent project)
+POST http://folio.local/studies/{{study_id}}/members
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "contributor@lab.bio",
+  "permission": "read"
+}
+
+### Add user to study with write access (requires Owner/Admin of parent project)
+POST http://folio.local/studies/{{study_id}}/members
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "org-contributor@nicd.ac.za",
+  "permission": "write"
+}
+
