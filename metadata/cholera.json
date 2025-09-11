@@ -1,0 +1,625 @@
+{
+    "name": "cholera_schema",
+    "schema": {
+      "type": "object",
+      "required": [
+        "study_id",
+        "fasta_header_name",
+        "geo_loc_name_country",
+        "geo_loc_name_state_province_territory",
+        "specimen_collector_sample_id",
+        "sample_collection_date",
+        "specimen_source_material_category",
+        "biospecimen"
+      ],
+      "properties": {
+        "study_id": {
+          "type": "string"
+        },
+        "fasta_header_name": {
+          "type": "string"
+        },
+        "specimen_collector_sample_ID": {
+          "type": "string"
+        },
+        "sample_collection_date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "format": "date"
+        },
+        "geo_loc_name_country": {
+          "type": "string",
+          "enum": [
+              "Algeria",
+              "Angola",
+              "Benin",
+              "Botswana",
+              "Burkina_Faso",
+              "Burundi",
+              "Cameroon",
+              "Cape_Verde",
+              "Central_African_Republic",
+              "Chad",
+              "Comoros",
+              "Democratic_Republic_of_Congo",
+              "Republic of the Congo",
+              "Côte d'Ivoire",
+              "Djibouti",
+              "Egypt",
+              "Equatorial Guinea",
+              "Eritrea",
+              "Eswatini",
+              "Ethiopia",
+              "Gabon",
+              "Gambia",
+              "Ghana",
+              "Guinea",
+              "Guinea Bissau",
+              "Kenya",
+              "Lesotho",
+              "Liberia",
+              "Libya",
+              "Madagascar",
+              "Malawi",
+              "Mali",
+              "Mauritania",
+              "Mauritius",
+              "Morocco",
+              "Mozambique",
+              "Namibia",
+              "Niger",
+              "Nigeria",
+              "Rwanda",
+              "Sao Tome",
+              "Senegal",
+              "Seychelles",
+              "Sierra Leone",
+              "Somalia",
+              "South_Africa",
+              "South Sudan",
+              "Sudan",
+              "Tanzania",
+              "Togo",
+              "Tunisia",
+              "Uganda",
+              "Zambia",
+              "Zimbabwe"
+            ]
+        },
+        "geo_loc_name_state_province_territory": {
+          "type": "string",
+          "enum": [
+              "Adrar",
+              "Aïn Defla",
+              "Aïn Témouchent",
+              "Algiers",
+              "Annaba",
+              "Batna",
+              "Béchar",
+              "Béjaïa",
+              "Beni Abbes",
+              "Biskra",
+              "Blida",
+              "Bordj Badji Mokhtar",
+              "Bordj Bou Arréridj",
+              "Bouira",
+              "Boumerdès",
+              "Chlef",
+              "Constantine",
+              "Djanet",
+              "Djelfa",
+              "El Bayadh",
+              "El Meghaier",
+              "El Meniaa",
+              "El Oued",
+              "El Tarf",
+              "Ghardaïa",
+              "Guelma",
+              "Illizi",
+              "In Guezzam",
+              "In Salah",
+              "Jijel",
+              "Khenchela",
+              "Laghouat",
+              "Mascara",
+              "Médéa",
+              "Mila",
+              "Mostaganem",
+              "M'Sila",
+              "Naâma",
+              "Oran",
+              "Ouargla",
+              "Ouled Djellal",
+              "Oum el Bouaghi",
+              "Relizane",
+              "Saïda",
+              "Sétif",
+              "Sidi Bel Abbès",
+              "Skikda",
+              "Souk Ahras",
+              "Tamanghasset",
+              "Tébessa",
+              "Tiaret",
+              "Timimoun",
+              "Tindouf",
+              "Tipaza",
+              "Tissemsilt",
+              "Tizi Ouzou",
+              "Tlemcen",
+              "Touggourt",
+              "Bengo",
+              "Benguela",
+              "Bié",
+              "Cabinda",
+              "Cuando Cubango",
+              "Cuanza Norte",
+              "Cuanza Sul",
+              "Cunene",
+              "Huambo",
+              "Huíla",
+              "Luanda",
+              "Lunda Norte",
+              "Lunda Sul",
+              "Malanje",
+              "Moxico",
+              "Namibe",
+              "Uíge",
+              "Zaire",
+              "Alibori",
+              "Atakcora",
+              "Atlantique",
+              "Borgou",
+              "Collines",
+              "Donga",
+              "Couffo",
+              "Littoral",
+              "Mono",
+              "Ouémé",
+              "Plateau",
+              "Zou",
+              "Central",
+              "Chobe",
+              "Francistown",
+              "Gaborone",
+              "Ghanzi",
+              "Jwaneng",
+              "Kgalagadi",
+              "Kgatleng",
+              "Kweneng",
+              "Lobatse",
+              "North-East"
+            ]
+        },
+        "biosample_accession": {
+          "type": "string"
+        },
+        "sra_accession": {
+          "type": "string"
+        },
+        "case_identifier": {
+          "type": "string"
+        },
+        "isolate_id": {
+          "type": "string"
+        },
+        "subject_age_at_the_time_of_specimen_collection": {
+          "type": ["string", "number"]
+        },
+        "subject_age_unit": {
+          "type": "string",
+          "enum": [
+            "months",
+            "years"
+          ]
+        },
+        "subject_sex": {
+          "type": "string",
+          "enum": [
+            "Female",
+            "Male",
+            "Missing",
+            "Not collected",
+            "Missing",
+            "Not Provided",
+            "Not applicable",
+            "Restricted access"
+          ]
+        },
+        "subject_disease_outcome": {
+          "type": "string",
+          "enum": [
+            "Deceased",
+            "Deteriorating",
+            "Recovered",
+            "Referred",
+            "Lost to follow-up",
+            "Not collected",
+            "Missing",
+            "Not Provided",
+            "Not applicable",
+            "Restricted access"
+          ]
+        },
+        "vaccination_status": {
+          "type": "string",
+          "enum": [
+            "Fully Vaccinated",
+            "Partially Vaccinated",
+            "Not Vaccinated",
+            "Not collected",
+            "Missing",
+            "Not Provided",
+            "Not applicable",
+            "Restricted access"
+          ]
+        },
+        "number_of_vaccine_doses_received": {
+          "type": ["string", "number"]
+        },
+        "date_of_last_vaccine_dose": {
+          "type": ["string", "null"],
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "format": "date"
+        },
+        "geo_loc_name_city": {
+          "type": "string"
+        },
+        "geo_loc_latitude": {
+          "type": "string"
+        },
+        "geo_loc_longitude": {
+          "type": "string"
+        },
+        "destination_of_most_recent_travel_country": {
+          "type": "string"
+        },
+        "most_recent_departure_date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "format": "date"
+        },
+        "sample_collected_by": {
+          "type": "string"
+        },
+        "sample_receive_date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "format": "date"
+        },
+        "specimen_source_material_category": {
+          "type": "string",
+          "enum": [
+            "human clinical specimen",
+            "environmental specimen",
+            "Not collected"
+          ]
+        },
+        "biospecimen": {
+          "type": "string",
+          "enum": [
+            "Bacterial isolate",
+            "Stool",
+            "dry swab",
+            "direct stool",
+            "rectal swab",
+            "RDT",
+            "Not collected",
+            "Missing",
+            "Not Provided",
+            "Not applicable",
+            "Restricted access"
+          ]
+        },
+        "collection_device": {
+          "type": "string",
+          "enum": [
+            "Collection Container",
+            "Filter",
+            "Swab",
+            "Not collected",
+            "Missing",
+            "Not Provided",
+            "Not applicable",
+            "Restricted access"
+          ]
+        },
+        "purpose_of_sampling": {
+          "type": "string",
+          "enum": [
+            "Cluster/Outbreak Investigation",
+            "Diagnostic Testing",
+            "Research",
+            "Protocol Testing",
+            "Surveillance",
+            "Not collected",
+            "Missing",
+            "Not Provided",
+            "Not applicable",
+            "Restricted access"
+          ]
+        },
+        "purpose_of_sequencing": {
+          "type": "string",
+          "enum": [
+            "Baseline surveillance (random sampling)",
+            "Targeted surveillance (non-random sampling)",
+            "Priority surveillance project",
+            "Screening for Variants of Concern (VoC)",
+            "Longitudinal surveillance (repeat sampling of individuals)",
+            "Re-infection surveillance",
+            "Vaccine escape surveillance",
+            "Travel-associated surveillance",
+            "Cluster/Outbreak investigation",
+            "Research",
+            "Protocol testing experiment",
+            "Not collected",
+            "Missing",
+            "Not Provided",
+            "Not applicable",
+            "Restricted access"
+          ]
+        },
+        "sequencing_date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "format": "date"
+        },
+        "sequencing_instrument": {
+          "type": "string",
+          "enum": [
+            "Illumina Genome Analyzer",
+            "Illumina Genome Analyzer II",
+            "Illumina Genome Analyzer IIx",
+            "Illumina HiScanSQ",
+            "Illumina HiSeq",
+            "Illumina HiSeq X",
+            "Illumina HiSeq X Five",
+            "Illumina HiSeq X Ten",
+            "Illumina HiSeq 1000",
+            "Illumina HiSeq 1500",
+            "Illumina HiSeq 2000",
+            "Illumina HiSeq 2500",
+            "Illumina HiSeq 3000",
+            "Illumina HiSeq 4000",
+            "Illumina iSeq",
+            "Illumina iSeq 100",
+            "Illumina NovaSeq",
+            "Illumina NovaSeq 6000",
+            "Illumina MiniSeq",
+            "Illumina MiSeq",
+            "Illumina NextSeq",
+            "Illumina NextSeq 500",
+            "Illumina NextSeq 550",
+            "Illumina NextSeq 2000",
+            "Pacific Biosciences sequencing instrument",
+            "PacBio RS",
+            "PacBio RS II",
+            "PacBio Sequel",
+            "PacBio Sequel II",
+            "Ion Torrent sequencing instrument",
+            "Ion Torrent PGM",
+            "Ion Torrent Proton",
+            "Ion Torrent S5 XL",
+            "Ion Torrent S5",
+            "Oxford Nanopore sequencing instrument",
+            "Oxford Nanopore MinION",
+            "Oxford Nanopore GridION",
+            "Oxford Nanopore PromethION",
+            "BGI Genomics sequencing instrument",
+            "BGI SEQ-500",
+            "MGI sequencing instrument",
+            "MGI DNBSEQ-T7",
+            "MGI DNBSEQ-G400",
+            "MGI DNBSEQ-G400RS FAST",
+            "MGI DNBSEQ-G50",
+            "Not collected",
+            "Missing",
+            "Not Provided",
+            "Not applicable",
+            "Restricted access"
+          ]
+        },
+        "sequencing_depth": {
+          "type": ["string", "number"]
+        },
+        "phred_quality_score": {
+          "type": ["string", "number"]
+        },
+        "sequence_assembly_software_name": {
+          "type": "string"
+        },
+        "sequence_assembly_software_version": {
+          "type": ["string", "number"]
+        },
+        "reference_genome_accession": {
+          "type": "string"
+        },
+        "genome_coverage": {
+          "type": ["string", "number"]
+        },
+        "assembly_genome_size": {
+          "type": ["string", "number"]
+        },
+        "consensus_genome_length": {
+          "type": ["string", "number"]
+        },
+        "n50": {
+          "type": ["string", "number"]
+        },
+        "percentage_gc": {
+          "type": ["string", "number"]
+        },
+        "serogroup": {
+          "type": ["string", "null"],
+          "enum": [
+            "Vibrio cholerae non-O1/non-O139",
+            "Vibrio cholerae O1",
+            "Vibrio cholerae O139"
+          ]
+        },
+        "serotype": {
+          "type": ["string", "null"],
+          "enum": [
+            "Ogawa",
+            "Inaba",
+            "Hikojima"
+          ]
+        },
+        "lineage_name": {
+          "type": "string"
+        },
+        "azithromycin_resistance_phenotype": {
+          "type": ["string", "null"],
+          "enum": [
+            "intermediate antimicrobial phenotype",
+            "nonsusceptible antimicrobial phenotype",
+            "resistant antimicrobial phenotype",
+            "susceptible antimicrobial phenotype",
+            "susceptible dose dependent antimicrobial phenotype",
+            "Not collected",
+            "Missing",
+            "Not applicable",
+            "Not performed"
+          ]
+        },
+        "chloramphenicol_resistance_phenotype": {
+          "type": ["string", "null"],
+          "enum": [
+            "intermediate antimicrobial phenotype",
+            "nonsusceptible antimicrobial phenotype",
+            "resistant antimicrobial phenotype",
+            "susceptible antimicrobial phenotype",
+            "susceptible dose dependent antimicrobial phenotype",
+            "Not collected",
+            "Missing",
+            "Not applicable",
+            "Not performed"
+          ]
+        },
+        "trimethroprim_sulfamethoxazole_resistance_phenotype": {
+          "type": ["string", "null"],
+          "enum": [
+            "intermediate antimicrobial phenotype",
+            "nonsusceptible antimicrobial phenotype",
+            "resistant antimicrobial phenotype",
+            "susceptible antimicrobial phenotype",
+            "susceptible dose dependent antimicrobial phenotype",
+            "Not collected",
+            "Missing",
+            "Not applicable",
+            "Not performed"
+          ]
+        },
+        "sulfinamides_resistance_phenotype": {
+          "type": ["string", "null"],
+          "enum": [
+            "intermediate antimicrobial phenotype",
+            "nonsusceptible antimicrobial phenotype",
+            "resistant antimicrobial phenotype",
+            "susceptible antimicrobial phenotype",
+            "susceptible dose dependent antimicrobial phenotype",
+            "Not collected",
+            "Missing",
+            "Not applicable",
+            "Not performed"
+          ]
+        },
+        "ampicillin_resistance_phenotype": {
+          "type": ["string", "null"],
+          "enum": [
+            "intermediate antimicrobial phenotype",
+            "nonsusceptible antimicrobial phenotype",
+            "resistant antimicrobial phenotype",
+            "susceptible antimicrobial phenotype",
+            "susceptible dose dependent antimicrobial phenotype",
+            "Not collected",
+            "Missing",
+            "Not applicable",
+            "Not performed"
+          ]
+        },
+        "tretracycline_or_doxycycline_resistance_phenotype": {
+          "type": ["string", "null"],
+          "enum": [
+            "intermediate antimicrobial phenotype",
+            "nonsusceptible antimicrobial phenotype",
+            "resistant antimicrobial phenotype",
+            "susceptible antimicrobial phenotype",
+            "susceptible dose dependent antimicrobial phenotype",
+            "Not collected",
+            "Missing",
+            "Not applicable",
+            "Not performed"
+          ]
+        },
+        "ciprofloxacin_resistance_phenotype": {
+          "type": ["string", "null"],
+          "enum": [
+            "intermediate antimicrobial phenotype",
+            "nonsusceptible antimicrobial phenotype",
+            "resistant antimicrobial phenotype",
+            "susceptible antimicrobial phenotype",
+            "susceptible dose dependent antimicrobial phenotype",
+            "Not collected",
+            "Missing",
+            "Not applicable",
+            "Not performed",
+            "Restricted access"
+          ]
+        },
+        "gene_name": {
+          "type": "string"
+        },
+        "resistant_genes": {
+          "type": "string",
+          "enum": [
+            "aacA",
+            "blaCTX-M",
+            "blaNDM-1",
+            "blaNDM-1",
+            "blaTEM-1",
+            "strA",
+            "sul1",
+            "sul2",
+            "tetA",
+            "tetB",
+            "Not applicable"
+          ]
+        },
+        "virulence_factor_gene": {
+          "type": "string",
+          "enum": [
+            "ace",
+            "ctxA",
+            "ctxB",
+            "hlyA",
+            "tcpA",
+            "tcpB",
+            "zot",
+            "acfA",
+            "acfB",
+            "acfC",
+            "pSDH-1",
+            "pSDH-2",
+            "qnrVC",
+            "VPI",
+            "vrt",
+            "Not applicable"
+          ]
+        },
+        "plasmids_identified": {
+          "type": "string",
+          "enum": [
+            "Not collected",
+            "IncC1/C2",
+            "IncA",
+            "IncF",
+            "IncC",
+            "IncA/Comp",
+            "p3iANG",
+            "Restricted access"
+          ]
+        }
+      }
+    }
+  }
