@@ -230,6 +230,7 @@ query {
     }
   }
 }
+```
 
 ### 3. Big query
 ```graphql

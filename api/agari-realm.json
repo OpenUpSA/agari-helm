@@ -309,7 +309,9 @@
           "query-groups"
         ]
       },
-      "groups": []
+      "groups": [
+        "/admin"
+      ]
     }
   ],
   "groups": [
