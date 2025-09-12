@@ -152,7 +152,7 @@ if [ "$RESET_KEYCLOAK" = true ]; then
     # Import fresh agari realm
     echo "Importing fresh agari realm..."
     cd "$PROJECT_ROOT"
-    cat helm/keycloak/configs/agari-realm-simple.json | kubectl exec -n agari "$KEYCLOAK_POD" -i -- /opt/keycloak/bin/kcadm.sh create realms -f -
+    cat helm/keycloak/configs/agari-realm-rbac.json | kubectl exec -n agari "$KEYCLOAK_POD" -i -- /opt/keycloak/bin/kcadm.sh create realms -f -
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✅ Keycloak agari realm reset successfully${NC}"
     else

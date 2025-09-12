@@ -1,8 +1,8 @@
 {
   "realm": "agari",
   "enabled": true,
-  "displayName": "AGARI Platform",
-  "displayNameHtml": "<div class=\"kc-logo-text\"><span>AGARI Platform</span></div>",
+  "displayName": "AGARI",
+  "displayNameHtml": "AGARI",
   "notBefore": 0,
   "defaultSignatureAlgorithm": "RS256",
   "revokeRefreshToken": false,
@@ -47,17 +47,6 @@
   "roles": {
     "realm": [
       {
-        "name": "default-roles-agari",
-        "description": "${role_default-roles}",
-        "composite": true,
-        "composites": {
-          "realm": ["offline_access", "uma_authorization"],
-          "client": {
-            "account": ["view-profile", "manage-account"]
-          }
-        }
-      },
-      {
         "name": "offline_access",
         "description": "${role_offline-access}",
         "composite": false,
@@ -76,26 +65,32 @@
         "clientRole": false
       },
       {
-        "name": "owner",
+        "name": "agari-org-owner",
         "description": "Organisation owner role",
         "composite": false,
         "clientRole": false
       },
       {
-        "name": "admin", 
-        "description": "Organisation or project administrator role",
+        "name": "agari-org-admin", 
+        "description": "Organisation administrator role",
         "composite": false,
         "clientRole": false
       },
       {
-        "name": "contributor",
-        "description": "Organisation or project contributor role",
+        "name": "agari-project-admin", 
+        "description": "Project administrator role",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "agari-contributor",
+        "description": "Project or study contributor role",
         "composite": false,
         "clientRole": false
       },
       {
         "name": "viewer",
-        "description": "Organisation or project viewer role", 
+        "description": "Project or study viewer role", 
         "composite": false,
         "clientRole": false
       }
@@ -105,13 +100,14 @@
     {
       "username": "system.admin@agari.tech",
       "enabled": true,
+      "emailVerified": true,
       "email": "system.admin@agari.tech",
       "firstName": "System",
       "lastName": "Administrator",
       "credentials": [
         {
           "type": "password",
-          "value": "admin123",
+          "value": "pass123",
           "temporary": false
         }
       ],
@@ -122,10 +118,11 @@
       }
     },
     {
-      "username": "owner@nicd.ac.za", 
+      "username": "owner@org1.ac.za", 
       "enabled": true,
-      "email": "owner@nicd.ac.za",
-      "firstName": "Organisation",
+      "emailVerified": true,
+      "email": "owner@org1.ac.za",
+      "firstName": "Organisation-1",
       "lastName": "Owner",
       "credentials": [
         {
@@ -134,17 +131,38 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["owner"],
+      "realmRoles": ["agari-org-owner"],
       "attributes": {
-        "organisation_id": ["nicd"],
+        "organisation_id": ["org1"],
         "organisation_scope": ["organisation"]
       }
     },
     {
-      "username": "org-admin@nicd.ac.za",
+      "username": "owner@org2.ac.za", 
       "enabled": true,
-      "email": "org-admin@nicd.ac.za", 
-      "firstName": "Organisation",
+      "emailVerified": true,
+      "email": "owner@org2.ac.za",
+      "firstName": "Organisation-2",
+      "lastName": "Owner",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["agari-org-owner"],
+      "attributes": {
+        "organisation_id": ["org2"],
+        "organisation_scope": ["organisation"]
+      }
+    },
+    {
+      "username": "org-admin@org1.ac.za",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "org-admin@org1.ac.za", 
+      "firstName": "Organisation-1",
       "lastName": "Admin",
       "credentials": [
         {
@@ -153,17 +171,78 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["admin"],
+      "realmRoles": ["agari-org-admin"],
       "attributes": {
-        "organisation_id": ["nicd"],
+        "organisation_id": ["org1"],
         "organisation_scope": ["organisation"]
       }
     },
     {
-      "username": "org-contributor@nicd.ac.za",
+      "username": "org-admin@org2.ac.za",
       "enabled": true,
-      "email": "org-contributor@nicd.ac.za",
-      "firstName": "Organisation", 
+      "emailVerified": true,
+      "email": "org-admin@org2.ac.za", 
+      "firstName": "Organisation-2",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["agari-org-admin"],
+      "attributes": {
+        "organisation_id": ["org2"],
+        "organisation_scope": ["organisation"]
+      }
+    },
+    {
+      "username": "project-admin@org1.ac.za",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "project-admin@org1.ac.za", 
+      "firstName": "Organisation-1",
+      "lastName": "Project-Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["agari-project-admin"],
+      "attributes": {
+        "organisation_id": ["org1"],
+        "organisation_scope": ["organisation"]
+      }
+    },
+    {
+      "username": "project-admin@org2.ac.za",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "project-admin@org2.ac.za", 
+      "firstName": "Organisation-2",
+      "lastName": "Project-Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["agari-project-admin"],
+      "attributes": {
+        "organisation_id": ["org2"],
+        "organisation_scope": ["organisation"]
+      }
+    },
+    {
+      "username": "contributor@org1.ac.za",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "contributor@org1.ac.za",
+      "firstName": "Organisation-1", 
       "lastName": "Contributor",
       "credentials": [
         {
@@ -172,17 +251,38 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["contributor"],
+      "realmRoles": ["agari-contributor"],
       "attributes": {
-        "organisation_id": ["nicd"],
+        "organisation_id": ["org1"],
         "organisation_scope": ["organisation"]
       }
     },
     {
-      "username": "org-viewer@nicd.ac.za",
+      "username": "contributor@org2.ac.za",
       "enabled": true,
-      "email": "org-viewer@nicd.ac.za",
-      "firstName": "Organisation",
+      "emailVerified": true,
+      "email": "contributor@org2.ac.za",
+      "firstName": "Organisation-2", 
+      "lastName": "Contributor",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["agari-contributor"],
+      "attributes": {
+        "organisation_id": ["org2"],
+        "organisation_scope": ["organisation"]
+      }
+    },
+    {
+      "username": "viewer@org1.ac.za",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "viewer@org1.ac.za",
+      "firstName": "Organisation-1",
       "lastName": "Viewer", 
       "credentials": [
         {
@@ -193,56 +293,17 @@
       ],
       "realmRoles": ["viewer"],
       "attributes": {
-        "organisation_id": ["nicd"],
+        "organisation_id": ["org1"],
         "organisation_scope": ["organisation"]
       }
     },
     {
-      "username": "admin@nicd.ac.za",
+      "username": "viewer@org2.ac.za",
       "enabled": true,
-      "email": "admin@nicd.ac.za",
-      "firstName": "Project",
-      "lastName": "Admin",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "pass123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["admin"],
-      "attributes": {
-        "organisation_id": ["nicd"],
-        "organisation_scope": ["project"],
-        "project_ids": ["test-project-1"]
-      }
-    },
-    {
-      "username": "contributor@lab.bio",
-      "enabled": true,
-      "email": "contributor@lab.bio",
-      "firstName": "Project",
-      "lastName": "Contributor",
-      "credentials": [
-        {
-          "type": "password", 
-          "value": "pass123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["contributor"],
-      "attributes": {
-        "organisation_id": ["nicd"],
-        "organisation_scope": ["project"],
-        "project_ids": ["test-project-1"]
-      }
-    },
-    {
-      "username": "viewer@research.org",
-      "enabled": true,
-      "email": "viewer@research.org",
-      "firstName": "Project",
-      "lastName": "Viewer",
+      "emailVerified": true,
+      "email": "viewer@org2.ac.za",
+      "firstName": "Organisation-2",
+      "lastName": "Viewer", 
       "credentials": [
         {
           "type": "password",
@@ -252,29 +313,47 @@
       ],
       "realmRoles": ["viewer"],
       "attributes": {
-        "organisation_id": ["nicd"],
-        "organisation_scope": ["project"],
-        "project_ids": ["test-project-1"]
+        "organisation_id": ["org2"],
+        "organisation_scope": ["organisation"]
       }
     },
     {
-      "username": "external@another-org.com",
+      "id": "service-account-dms-id",
+      "username": "service-account-dms",
       "enabled": true,
-      "email": "external@another-org.com", 
-      "firstName": "External",
-      "lastName": "User",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "pass123",
-          "temporary": false
-        }
+      "totp": false,
+      "emailVerified": true,
+      "serviceAccountClientId": "dms",
+      "realmRoles": [
+        "realm-admin",
+        "uma_authorization",
+        "system-admin"
       ],
-      "realmRoles": ["viewer"],
-      "attributes": {
-        "organisation_id": ["external-org"],
-        "organisation_scope": ["project"],
-        "project_ids": ["some-shared-project"]
+      "clientRoles": {
+        "dms": [
+          "uma_protection"
+        ],
+        "realm-management": [
+          "view-identity-providers",
+          "view-realm",
+          "manage-identity-providers",
+          "impersonation",
+          "realm-admin",
+          "create-client",
+          "manage-users",
+          "query-realms",
+          "view-authorization",
+          "query-clients",
+          "query-users",
+          "manage-events",
+          "manage-realm",
+          "view-events",
+          "view-users",
+          "view-clients",
+          "manage-authorization",
+          "manage-clients",
+          "query-groups"
+        ]
       }
     }
   ],
@@ -331,44 +410,187 @@
         "policyEnforcementMode": "ENFORCING",
         "resources": [
           {
-            "name": "folio-api",
-            "type": "folio:api",
+            "name": "Default Resource",
+            "type": "urn:dms:resources:default",
             "ownerManagedAccess": false,
-            "displayName": "Folio API Resource",
             "attributes": {},
-            "uris": ["/api/*"],
+            "_id": "f500c3c5-866a-4656-9e40-648fb9fee37d",
+            "uris": [
+              "/*"
+            ]
+          },
+          {
+            "name": "song",
+            "ownerManagedAccess": false,
+            "displayName": "",
+            "attributes": {},
+            "_id": "aa9aaeff-84ed-4c69-ade1-19179bedafd1",
+            "uris": [],
             "scopes": [
               {
-                "name": "folio.READ"
+                "name": "READ"
               },
               {
-                "name": "folio.WRITE"
+                "name": "WRITE"
               }
-            ]
+            ],
+            "icon_uri": ""
+          },
+          {
+            "name": "score",
+            "ownerManagedAccess": false,
+            "displayName": "",
+            "attributes": {},
+            "_id": "6721cb6d-2ebe-4150-ba46-c7b0acc4c388",
+            "uris": [],
+            "scopes": [
+              {
+                "name": "READ"
+              },
+              {
+                "name": "WRITE"
+              }
+            ],
+            "icon_uri": ""
+          },
+          {
+            "name": "folio",
+            "ownerManagedAccess": false,
+            "displayName": "",
+            "attributes": {},
+            "_id": "6efa6721-a8b8-4194-be40-00fae83f1f1e",
+            "uris": [],
+            "scopes": [
+              {
+                "name": "READ"
+              },
+              {
+                "name": "WRITE"
+              }
+            ],
+            "icon_uri": ""
           }
         ],
         "policies": [
           {
-            "name": "Folio Write Access Policy",
-            "description": "Policy for write access to Folio API",
+            "id": "3df038a9-4c17-4b75-9ac1-24be4f1f1f58",
+            "name": "admin-policy",
+            "description": "Policy for admin role access",
             "type": "role",
             "logic": "POSITIVE",
-            "decisionStrategy": "AFFIRMATIVE",
+            "decisionStrategy": "UNANIMOUS",
             "config": {
-              "roles": "[{\"id\":\"contributor\",\"required\":false},{\"id\":\"admin\",\"required\":false},{\"id\":\"owner\",\"required\":false},{\"id\":\"system-admin\",\"required\":false}]"
+              "roles": "[{\"id\":\"system-admin\",\"required\":false}]"
             }
           },
           {
-            "name": "Folio Read Access Policy", 
-            "description": "Policy for read access to Folio API",
-            "type": "role",
+            "id": "586e3771-bb15-4c3d-ac21-ec2be3046d83",
+            "name": "client-policy",
+            "description": "Policy for DMS client access",
+            "type": "client",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "clients": "[\"dms\"]"
+            }
+          },
+          {
+            "id": "folio-write-permission-id",
+            "name": "folio-write-permission",
+            "description": "Write permission for Folio resource - Admin only",
+            "type": "scope",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "resources": "[\"folio\"]",
+              "scopes": "[\"WRITE\"]",
+              "applyPolicies": "[\"admin-policy\",\"client-policy\"]"
+            }
+          },
+          {
+            "id": "folio-read-permission-id",
+            "name": "folio-read-permission",
+            "description": "Read permission for Folio resource - All authenticated users",
+            "type": "scope",
             "logic": "POSITIVE",
             "decisionStrategy": "AFFIRMATIVE",
             "config": {
-              "roles": "[{\"id\":\"viewer\",\"required\":false},{\"id\":\"contributor\",\"required\":false},{\"id\":\"admin\",\"required\":false},{\"id\":\"owner\",\"required\":false},{\"id\":\"system-admin\",\"required\":false}]"
+              "resources": "[\"folio\"]",
+              "scopes": "[\"READ\"]",
+              "applyPolicies": "[\"client-policy\"]"
+            }
+          },
+          {
+            "id": "song-write-permission-id",
+            "name": "song-write-permission",
+            "description": "Write permission for SONG resource - Admin only",
+            "type": "scope",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "resources": "[\"song\"]",
+              "scopes": "[\"WRITE\"]",
+              "applyPolicies": "[\"admin-policy\",\"client-policy\"]"
+            }
+          },
+          {
+            "id": "song-read-permission-id",
+            "name": "song-read-permission",
+            "description": "Read permission for SONG resource - All authenticated users",
+            "type": "scope",
+            "logic": "POSITIVE",
+            "decisionStrategy": "AFFIRMATIVE",
+            "config": {
+              "resources": "[\"song\"]",
+              "scopes": "[\"READ\"]",
+              "applyPolicies": "[\"client-policy\"]"
+            }
+          },
+          {
+            "id": "score-write-permission-id",
+            "name": "score-write-permission",
+            "description": "Write permission for SCORE resource - Admin only",
+            "type": "scope",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "resources": "[\"score\"]",
+              "scopes": "[\"WRITE\"]",
+              "applyPolicies": "[\"admin-policy\",\"client-policy\"]"
+            }
+          },
+          {
+            "id": "score-read-permission-id",
+            "name": "score-read-permission",
+            "description": "Read permission for SCORE resource - All authenticated users",
+            "type": "scope",
+            "logic": "POSITIVE",
+            "decisionStrategy": "AFFIRMATIVE",
+            "config": {
+              "resources": "[\"score\"]",
+              "scopes": "[\"READ\"]",
+              "applyPolicies": "[\"client-policy\"]"
             }
           }
-        ]
+        ],
+        "scopes": [
+          {
+            "id": "81db4a16-a18b-4083-9629-085a024da550",
+            "name": "READ",
+            "iconUri": ""
+          },
+          {
+            "id": "67df031b-5d71-4a5c-9c03-3ab196bbf483",
+            "name": "WRITE",
+            "iconUri": ""
+          },
+          {
+            "id": "8eb9761a-8de5-4524-b365-819894aa3dce",
+            "name": "ADMIN",
+            "iconUri": ""
+          }
+        ],
+        "decisionStrategy": "UNANIMOUS"
       }
     }
   ],
@@ -853,138 +1075,7 @@
   "adminEventsDetailsEnabled": false,
   "identityProviders": [],
   "identityProviderMappers": [],
-  "components": {
-    "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy": [
-      {
-        "name": "Trusted Hosts",
-        "providerId": "trusted-hosts",
-        "subType": "anonymous",
-        "subComponents": {},
-        "config": {
-          "host-sending-registration-request-must-match": ["true"],
-          "client-uris-must-be-non-wildcard": ["true"]
-        }
-      },
-      {
-        "name": "Consent Required",
-        "providerId": "consent-required",
-        "subType": "anonymous",
-        "subComponents": {},
-        "config": {}
-      },
-      {
-        "name": "Full Scope Disabled",
-        "providerId": "scope",
-        "subType": "anonymous",
-        "subComponents": {},
-        "config": {}
-      },
-      {
-        "name": "Max Clients Limit",
-        "providerId": "max-clients",
-        "subType": "anonymous",
-        "subComponents": {},
-        "config": {
-          "max-clients": ["200"]
-        }
-      },
-      {
-        "name": "Allowed Protocol Mapper Types",
-        "providerId": "allowed-protocol-mappers",
-        "subType": "anonymous",
-        "subComponents": {},
-        "config": {
-          "allowed-protocol-mapper-types": [
-            "oidc-full-name-mapper",
-            "saml-user-attribute-mapper",
-            "oidc-address-mapper",
-            "oidc-usermodel-property-mapper",
-            "saml-role-list-mapper",
-            "saml-user-property-mapper",
-            "oidc-usermodel-attribute-mapper"
-          ]
-        }
-      },
-      {
-        "name": "Allowed Client Scopes",
-        "providerId": "allowed-client-templates",
-        "subType": "anonymous",
-        "subComponents": {},
-        "config": {
-          "allow-default-scopes": ["true"]
-        }
-      },
-      {
-        "name": "Allowed Protocol Mapper Types",
-        "providerId": "allowed-protocol-mappers",
-        "subType": "authenticated",
-        "subComponents": {},
-        "config": {
-          "allowed-protocol-mapper-types": [
-            "saml-user-property-mapper",
-            "oidc-usermodel-attribute-mapper",
-            "saml-user-attribute-mapper",
-            "saml-role-list-mapper",
-            "oidc-usermodel-property-mapper",
-            "oidc-full-name-mapper",
-            "oidc-address-mapper"
-          ]
-        }
-      },
-      {
-        "name": "Allowed Client Scopes", 
-        "providerId": "allowed-client-templates",
-        "subType": "authenticated",
-        "subComponents": {},
-        "config": {
-          "allow-default-scopes": ["true"]
-        }
-      },
-      {
-        "name": "Full Scope Disabled",
-        "providerId": "scope",
-        "subType": "authenticated",
-        "subComponents": {},
-        "config": {}
-      }
-    ],
-    "org.keycloak.keys.KeyProvider": [
-      {
-        "name": "rsa-generated",
-        "providerId": "rsa-generated",
-        "subComponents": {},
-        "config": {
-          "priority": ["100"]
-        }
-      },
-      {
-        "name": "rsa-enc-generated",
-        "providerId": "rsa-enc-generated",
-        "subComponents": {},
-        "config": {
-          "priority": ["100"],
-          "algorithm": ["RSA-OAEP"]
-        }
-      },
-      {
-        "name": "hmac-generated",
-        "providerId": "hmac-generated",
-        "subComponents": {},
-        "config": {
-          "priority": ["100"],
-          "algorithm": ["HS256"]
-        }
-      },
-      {
-        "name": "aes-generated",
-        "providerId": "aes-generated",
-        "subComponents": {},
-        "config": {
-          "priority": ["100"]
-        }
-      }
-    ]
-  },
+  "components": {},
   "internationalizationEnabled": false,
   "supportedLocales": [],
   "authenticationFlows": [
