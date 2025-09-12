@@ -10,7 +10,7 @@ console:
     hostname: "minio-console-ilifu.openup.org.za"
   ingress:
     enabled: true
-    className: "nginx"
+    className: "private"
     annotations:
       nginx.ingress.kubernetes.io/proxy-body-size: "1000m"
     tls: []
@@ -29,7 +29,7 @@ service:
 
 ingress:
   enabled: true
-  className: "nginx"
+  className: "private"
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "1000m"
     nginx.ingress.kubernetes.io/proxy-request-buffering: "off"

@@ -90,7 +90,7 @@ score:
 
 ingress:
   enabled: true
-  className: "nginx"
+  className: "private"
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
   hosts:
@@ -98,6 +98,8 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
+  tls: []
+
 resources:
   limits:
     cpu: 500m
@@ -106,16 +108,6 @@ resources:
     cpu: 200m
     memory: 512Mi
 
-ingress:
-  enabled: true
-  className: "nginx"
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
-  hosts:
-    - host: score-ilifu.openup.org.za
-      paths:
-        - path: /
-          pathType: Prefix
 
 nodeSelector: {}
 tolerations: []
