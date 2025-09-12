@@ -89,7 +89,7 @@
         "clientRole": false
       },
       {
-        "name": "viewer",
+        "name": "agari-viewer",
         "description": "Project or study viewer role", 
         "composite": false,
         "clientRole": false
@@ -291,7 +291,7 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["viewer"],
+      "realmRoles": ["agari-viewer"],
       "attributes": {
         "organisation_id": ["org1"],
         "organisation_scope": ["organisation"]
@@ -311,7 +311,7 @@
           "temporary": false
         }
       ],
-      "realmRoles": ["viewer"],
+      "realmRoles": ["agari-viewer"],
       "attributes": {
         "organisation_id": ["org2"],
         "organisation_scope": ["organisation"]
