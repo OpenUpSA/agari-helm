@@ -27,6 +27,10 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
+          service:
+            name: keycloak
+            port:
+              number: 8080 # <— explicitly tell ingress to target 8080
   tls: []
 
 extraEnv:
@@ -38,6 +42,12 @@ extraEnv:
     value: "false"
   - name: JAVA_OPTS_APPEND
     value: "-Djava.awt.headless=true -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.net.preferIPv4Stack=true -server -Xms512m -Xmx768m"
+  - name: KC_HOSTNAME
+    value: keycloak-ilifu.openup.org.za
+  - name: KC_PROXY
+    value: "edge"
+  - name: KC_CORS_ORIGINS
+    value: "*"
 
 probes:
   liveness:
@@ -46,7 +56,7 @@ probes:
     enabled: true
     tcpSocket:
       port: 8080
-    initialDelaySeconds: 120 
+    initialDelaySeconds: 120
     periodSeconds: 30
     timeoutSeconds: 15
     failureThreshold: 12
@@ -59,14 +69,13 @@ keycloak:
     database: keycloakDb
     username: admin
     password: keycloak-db-pass-123
-  
+
   # Admin user
   admin:
     username: admin
     password: admin123
-  
+
   # Keycloak settings
-  hostname: keycloak.local
   healthEnabled: true
   startupMode: start-dev
 
