@@ -106,6 +106,8 @@ SELECT
     s.name,
     s.description,
     s.status,
+    s.privacy,
+    s.project_id,
     s.created_at,
     s.updated_at,
     s.deleted_at,
