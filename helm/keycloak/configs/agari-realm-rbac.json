@@ -77,20 +77,14 @@
         "clientRole": false
       },
       {
-        "name": "agari-project-admin", 
-        "description": "Project administrator role",
+        "name": "agari-org-contributor",
+        "description": "Organisation-level contributor with access to all organisation projects",
         "composite": false,
         "clientRole": false
       },
       {
-        "name": "agari-contributor",
-        "description": "Project or study contributor role",
-        "composite": false,
-        "clientRole": false
-      },
-      {
-        "name": "agari-viewer",
-        "description": "Project or study viewer role", 
+        "name": "agari-org-viewer",
+        "description": "Organisation-level viewer with read access to all organisation projects", 
         "composite": false,
         "clientRole": false
       }
@@ -113,8 +107,7 @@
       ],
       "realmRoles": ["system-admin"],
       "attributes": {
-        "organisation_id": ["system"],
-        "user_type": ["system_admin"]
+        "organisation_id": ["system"]
       }
     },
     {
@@ -133,8 +126,7 @@
       ],
       "realmRoles": ["agari-org-owner"],
       "attributes": {
-        "organisation_id": ["org1"],
-        "organisation_scope": ["organisation"]
+        "organisation_id": ["org1"]
       }
     },
     {
@@ -153,8 +145,7 @@
       ],
       "realmRoles": ["agari-org-owner"],
       "attributes": {
-        "organisation_id": ["org2"],
-        "organisation_scope": ["organisation"]
+        "organisation_id": ["org2"]
       }
     },
     {
@@ -173,8 +164,7 @@
       ],
       "realmRoles": ["agari-org-admin"],
       "attributes": {
-        "organisation_id": ["org1"],
-        "organisation_scope": ["organisation"]
+        "organisation_id": ["org1"]
       }
     },
     {
@@ -193,137 +183,50 @@
       ],
       "realmRoles": ["agari-org-admin"],
       "attributes": {
-        "organisation_id": ["org2"],
-        "organisation_scope": ["organisation"]
+        "organisation_id": ["org2"]
       }
     },
     {
-      "username": "project-admin@org1.ac.za",
-      "enabled": true,
-      "emailVerified": true,
-      "email": "project-admin@org1.ac.za", 
-      "firstName": "Organisation-1",
-      "lastName": "Project-Admin",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "pass123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["agari-project-admin"],
-      "attributes": {
-        "organisation_id": ["org1"],
-        "organisation_scope": ["organisation"]
-      }
-    },
-    {
-      "username": "project-admin@org2.ac.za",
-      "enabled": true,
-      "emailVerified": true,
-      "email": "project-admin@org2.ac.za", 
-      "firstName": "Organisation-2",
-      "lastName": "Project-Admin",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "pass123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["agari-project-admin"],
-      "attributes": {
-        "organisation_id": ["org2"],
-        "organisation_scope": ["organisation"]
-      }
-    },
-    {
-      "username": "contributor@org1.ac.za",
-      "enabled": true,
-      "emailVerified": true,
-      "email": "contributor@org1.ac.za",
-      "firstName": "Organisation-1", 
-      "lastName": "Contributor",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "pass123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["agari-contributor"],
-      "attributes": {
-        "organisation_id": ["org1"],
-        "organisation_scope": ["organisation"]
-      }
-    },
-    {
-      "username": "contributor@org2.ac.za",
-      "enabled": true,
-      "emailVerified": true,
-      "email": "contributor@org2.ac.za",
-      "firstName": "Organisation-2", 
-      "lastName": "Contributor",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "pass123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["agari-contributor"],
-      "attributes": {
-        "organisation_id": ["org2"],
-        "organisation_scope": ["organisation"]
-      }
-    },
-    {
-      "username": "viewer@org1.ac.za",
-      "enabled": true,
-      "emailVerified": true,
-      "email": "viewer@org1.ac.za",
-      "firstName": "Organisation-1",
-      "lastName": "Viewer", 
-      "credentials": [
-        {
-          "type": "password",
-          "value": "pass123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["agari-viewer"],
-      "attributes": {
-        "organisation_id": ["org1"],
-        "organisation_scope": ["organisation"]
-      }
-    },
-    {
-      "username": "viewer@org2.ac.za",
-      "enabled": true,
-      "emailVerified": true,
-      "email": "viewer@org2.ac.za",
-      "firstName": "Organisation-2",
-      "lastName": "Viewer", 
-      "credentials": [
-        {
-          "type": "password",
-          "value": "pass123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": ["agari-viewer"],
-      "attributes": {
-        "organisation_id": ["org2"],
-        "organisation_scope": ["organisation"]
-      }
-    },
-    {
-      "username": "test-user@example.com",
+      "username": "test-user1@example.com",
       "enabled": true,
       "emailVerified": true,
       "email": "test-user@example.com",
       "firstName": "Test",
-      "lastName": "User",
+      "lastName": "User1",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [],
+      "attributes": {}
+    },
+    {
+      "username": "test-user2@example.com",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "test-user2@example.com",
+      "firstName": "Test",
+      "lastName": "User2",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pass123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [],
+      "attributes": {}
+    },
+    {
+      "username": "test-user3@example.com",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "test-user3@example.com",
+      "firstName": "Test",
+      "lastName": "User3",
       "credentials": [
         {
           "type": "password",
@@ -800,6 +703,104 @@
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "organisation_id",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "user_type",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "user_type",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "user_type",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "agari-project-admin",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "agari-project-admin",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "agari-project-admin",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "agari-project-contributor",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "agari-project-contributor",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "agari-project-contributor",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "agari-project-viewer",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "agari-project-viewer",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "agari-project-viewer",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "agari-study-admin",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "agari-study-admin",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "agari-study-admin",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "agari-study-contributor",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "agari-study-contributor",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "study-contributor",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "agari-study-viewer",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "agari-study-viewer",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "agari-study-viewer",
             "jsonType.label": "String"
           }
         }
