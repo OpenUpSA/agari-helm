@@ -368,23 +368,6 @@
               }
             ],
             "icon_uri": ""
-          },
-          {
-            "name": "folio",
-            "ownerManagedAccess": false,
-            "displayName": "",
-            "attributes": {},
-            "_id": "6efa6721-a8b8-4194-be40-00fae83f1f1e",
-            "uris": [],
-            "scopes": [
-              {
-                "name": "READ"
-              },
-              {
-                "name": "WRITE"
-              }
-            ],
-            "icon_uri": ""
           }
         ],
         "policies": [
@@ -408,32 +391,6 @@
             "decisionStrategy": "UNANIMOUS",
             "config": {
               "clients": "[\"dms\"]"
-            }
-          },
-          {
-            "id": "folio-write-permission-id",
-            "name": "folio-write-permission",
-            "description": "Write permission for Folio resource - Admin only",
-            "type": "scope",
-            "logic": "POSITIVE",
-            "decisionStrategy": "UNANIMOUS",
-            "config": {
-              "resources": "[\"folio\"]",
-              "scopes": "[\"WRITE\"]",
-              "applyPolicies": "[\"admin-policy\",\"client-policy\"]"
-            }
-          },
-          {
-            "id": "folio-read-permission-id",
-            "name": "folio-read-permission",
-            "description": "Read permission for Folio resource - All authenticated users",
-            "type": "scope",
-            "logic": "POSITIVE",
-            "decisionStrategy": "AFFIRMATIVE",
-            "config": {
-              "resources": "[\"folio\"]",
-              "scopes": "[\"READ\"]",
-              "applyPolicies": "[\"client-policy\"]"
             }
           },
           {
@@ -499,11 +456,6 @@
             "id": "67df031b-5d71-4a5c-9c03-3ab196bbf483",
             "name": "WRITE",
             "iconUri": ""
-          },
-          {
-            "id": "8eb9761a-8de5-4524-b365-819894aa3dce",
-            "name": "ADMIN",
-            "iconUri": ""
           }
         ],
         "decisionStrategy": "UNANIMOUS"
@@ -511,35 +463,6 @@
     }
   ],
   "clientScopes": [
-    {
-      "name": "address",
-      "description": "OpenID Connect built-in scope: address",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "true",
-        "consent.screen.text": "${addressScopeConsentText}"
-      },
-      "protocolMappers": [
-        {
-          "name": "address",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-address-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.attribute.formatted": "formatted",
-            "user.attribute.country": "country",
-            "user.attribute.postal_code": "postal_code",
-            "userinfo.token.claim": "true",
-            "user.attribute.street": "street",
-            "id.token.claim": "true",
-            "user.attribute.region": "region",
-            "access.token.claim": "true",
-            "user.attribute.locality": "locality"
-          }
-        }
-      ]
-    },
     {
       "name": "email",
       "description": "OpenID Connect built-in scope: email",
@@ -581,94 +504,6 @@
       ]
     },
     {
-      "name": "microprofile-jwt",
-      "description": "Microprofile - JWT built-in scope",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "false"
-      },
-      "protocolMappers": [
-        {
-          "name": "upn",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-property-mapper",
-          "consentRequired": false,
-          "config": {
-            "userinfo.token.claim": "true",
-            "user.attribute": "username",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "upn", 
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "name": "groups",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-realm-role-mapper",
-          "consentRequired": false,
-          "config": {
-            "multivalued": "true",
-            "userinfo.token.claim": "true",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "groups",
-            "jsonType.label": "String"
-          }
-        }
-      ]
-    },
-    {
-      "name": "offline_access",
-      "description": "OpenID Connect built-in scope: offline_access",
-      "protocol": "openid-connect",
-      "attributes": {
-        "consent.screen.text": "${offlineAccessScopeConsentText}",
-        "display.on.consent.screen": "true"
-      }
-    },
-    {
-      "name": "phone",
-      "description": "OpenID Connect built-in scope: phone",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "true",
-        "consent.screen.text": "${phoneScopeConsentText}"
-      },
-      "protocolMappers": [
-        {
-          "name": "phone number",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "consentRequired": false,
-          "config": {
-            "userinfo.token.claim": "true",
-            "user.attribute": "phoneNumber",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "phone_number",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "name": "phone number verified",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "consentRequired": false,
-          "config": {
-            "userinfo.token.claim": "true",
-            "user.attribute": "phoneNumberVerified",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "phone_number_verified",
-            "jsonType.label": "boolean"
-          }
-        }
-      ]
-    },
-    {
       "name": "profile",
       "description": "OpenID Connect built-in scope: profile",
       "protocol": "openid-connect",
@@ -703,127 +538,98 @@
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "organisation_id",
+            "multivalued": "true",
             "jsonType.label": "String"
           }
         },
         {
-          "name": "user_type",
+          "name": "project-admin",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-attribute-mapper",
           "consentRequired": false,
           "config": {
             "userinfo.token.claim": "true",
-            "user.attribute": "user_type",
+            "user.attribute": "project-admin",
             "id.token.claim": "true",
             "access.token.claim": "true",
-            "claim.name": "user_type",
+            "claim.name": "project-admin",
+            "multivalued": "true",
             "jsonType.label": "String"
           }
         },
         {
-          "name": "agari-project-admin",
+          "name": "project-contributor",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-attribute-mapper",
           "consentRequired": false,
           "config": {
             "userinfo.token.claim": "true",
-            "user.attribute": "agari-project-admin",
+            "user.attribute": "project-contributor",
             "id.token.claim": "true",
             "access.token.claim": "true",
-            "claim.name": "agari-project-admin",
+            "claim.name": "project-contributor",
+            "multivalued": "true",
             "jsonType.label": "String"
           }
         },
         {
-          "name": "agari-project-contributor",
+          "name": "project-viewer",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-attribute-mapper",
           "consentRequired": false,
           "config": {
             "userinfo.token.claim": "true",
-            "user.attribute": "agari-project-contributor",
+            "user.attribute": "project-viewer",
             "id.token.claim": "true",
             "access.token.claim": "true",
-            "claim.name": "agari-project-contributor",
+            "claim.name": "project-viewer",
+            "multivalued": "true",
             "jsonType.label": "String"
           }
         },
         {
-          "name": "agari-project-viewer",
+          "name": "study-admin",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-attribute-mapper",
           "consentRequired": false,
           "config": {
             "userinfo.token.claim": "true",
-            "user.attribute": "agari-project-viewer",
+            "user.attribute": "study-admin",
             "id.token.claim": "true",
             "access.token.claim": "true",
-            "claim.name": "agari-project-viewer",
+            "claim.name": "study-admin",
+            "multivalued": "true",
             "jsonType.label": "String"
           }
         },
         {
-          "name": "agari-study-admin",
+          "name": "study-contributor",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-attribute-mapper",
           "consentRequired": false,
           "config": {
             "userinfo.token.claim": "true",
-            "user.attribute": "agari-study-admin",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "agari-study-admin",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "name": "agari-study-contributor",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "consentRequired": false,
-          "config": {
-            "userinfo.token.claim": "true",
-            "user.attribute": "agari-study-contributor",
+            "user.attribute": "study-contributor",
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "study-contributor",
+            "multivalued": "true",
             "jsonType.label": "String"
           }
         },
         {
-          "name": "agari-study-viewer",
+          "name": "study-viewer",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-attribute-mapper",
           "consentRequired": false,
           "config": {
             "userinfo.token.claim": "true",
-            "user.attribute": "agari-study-viewer",
+            "user.attribute": "study-viewer",
             "id.token.claim": "true",
             "access.token.claim": "true",
-            "claim.name": "agari-study-viewer",
+            "claim.name": "study-viewer",
+            "multivalued": "true",
             "jsonType.label": "String"
-          }
-        }
-      ]
-    },
-    {
-      "name": "role_list",
-      "description": "SAML role list",
-      "protocol": "saml",
-      "attributes": {
-        "consent.screen.text": "${samlRoleListScopeConsentText}",
-        "display.on.consent.screen": "true"
-      },
-      "protocolMappers": [
-        {
-          "name": "role list",
-          "protocol": "saml",
-          "protocolMapper": "saml-role-list-mapper",
-          "consentRequired": false,
-          "config": {
-            "single": "false",
-            "attribute.nameformat": "Basic",
-            "attribute.name": "Role"
           }
         }
       ]
@@ -872,41 +678,15 @@
           "config": {}
         }
       ]
-    },
-    {
-      "name": "web-origins",
-      "description": "OpenID Connect scope for add allowed web origins to the access token",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "false",
-        "display.on.consent.screen": "false",
-        "consent.screen.text": ""
-      },
-      "protocolMappers": [
-        {
-          "name": "allowed web origins",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-allowed-origins-mapper",
-          "consentRequired": false,
-          "config": {}
-        }
-      ]
     }
   ],
   "groups": [],
   "defaultDefaultClientScopes": [
-    "role_list",
     "profile",
     "email",
-    "roles",
-    "web-origins"
+    "roles"
   ],
-  "defaultOptionalClientScopes": [
-    "offline_access",
-    "address", 
-    "phone",
-    "microprofile-jwt"
-  ],
+  "defaultOptionalClientScopes": [],
   "browserSecurityHeaders": {
     "contentSecurityPolicyReportOnly": "",
     "xContentTypeOptions": "nosniff",
