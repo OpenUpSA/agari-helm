@@ -44,6 +44,10 @@ spec:
               value: {{ .Values.folio.database.user | quote }}
             - name: FOLIO_DB_PASSWORD
               value: {{ .Values.folio.database.password | quote }}
+            - name: OVERTURE_SCORE
+              value: {{ .Values.folio.overture.score | quote }}
+            - name: OVERTURE_SONG
+              value: {{ .Values.folio.overture.song | quote }}
           livenessProbe:
             httpGet:
               path: /health

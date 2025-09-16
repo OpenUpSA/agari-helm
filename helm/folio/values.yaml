@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/openupsa/agari-folio
-  pullPolicy: "Always"
+  pullPolicy: "IfNotPresent"
   tag: "latest"
 
 service:
@@ -25,6 +25,10 @@ folio:
     name: "folio"
     user: "admin"
     password: "folio-db-pass-123"
+
+  overture:
+    score: "http://score:8087"
+    song: "http://song:8080"
 
 ingress:
   enabled: true
