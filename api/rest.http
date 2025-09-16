@@ -1,20 +1,96 @@
-# AGARI Overture Stack - Essential Workflow
+# AGARI Overture Stack - RBAC Testing Workflow
 
 # Test file info
 @test_file_name = test_data.fasta
 @test_file_size = 298
 @test_file_md5 = cc70b8e811b39c98a938edf87145e34d
 
-# Fixed IDs for Keycloak permissions
-@study_id = study1
+# Fixed IDs for testing
+@study_id = covid-001
 @analysis_id = analysis001
 
-# Authentication config
-@username = admin
-@password = pass123
+# Organisation setup
+@default_org = default-org
+@nicd_org = nicd-org
+@lab_org = lab-org
+
+# Authentication config - Test with different users
 @realm = agari
 @client_id = dms
-@client_secret = dms-secret
+@client_secret = VDyLEjGR3xDQvoQlrHq5AB6OwbW0Refc
+
+# === TEST USERS FOR RBAC ===
+# System Admin (global admin, only user in /admin group - can create pathogens)
+@sys_username = system.admin@agari.tech
+@sys_password = admin123
+
+@default_admin_username = admin
+@default_admin_password = pass123
+
+# Owner (has all permissions across all projects)
+@owner_username = owner@nicd.ac.za
+@owner_password = pass123
+
+# Organisation Admin (can manage all org members and projects)
+@org_admin_username = org-admin@nicd.ac.za
+@org_admin_password = pass123
+
+# Organisation Contributor (has contributor access to all projects)
+@org_contributor_username = org-contributor@nicd.ac.za
+@org_contributor_password = pass123
+
+# Organisation Viewer (has viewer access to all projects)
+@org_viewer_username = org-viewer@nicd.ac.za
+@org_viewer_password = pass123
+
+# Project-specific Admin (admin on specific projects only)
+@project_admin_username = admin@nicd.ac.za
+@project_admin_password = pass123
+
+# Project-specific Contributor (contributor on specific projects only)
+@contributor_username = contributor@lab.bio
+@contributor_password = pass123
+
+# Project-specific Viewer (viewer on specific projects only)
+@viewer_username = viewer@research.org
+@viewer_password = pass123
+
+# External org user for cross-org testing
+@external_user_username = external@another-org.com
+@external_user_password = pass123
+
+# Current test user (change this to test different roles)
+@username = {{project_admin_username}}
+@password = {{project_admin_password}}
+
+# @username = {{sys_username}}
+# @password = {{sys_password}}
+
+
+### === DEBUG: TOKEN ANALYSIS ===
+
+### Decode JWT token to see claims
+@tokenPayload = {{token}}
+# Copy the token value above and paste it into https://jwt.io to decode and see what groups/roles the user has
+
+### Test UMA Token Introspection - Check what permissions this token has
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token/introspect
+Authorization: Bearer {{token}}
+Content-Type: application/x-www-form-urlencoded
+
+token={{token}}&client_id={{client_id}}&client_secret={{client_secret}}
+
+### SECURITY TEST: Check UMA permissions 
+POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
+Authorization: Bearer {{token}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=urn:ietf:params:oauth:grant-type:uma-ticket&audience={{client_id}}&response_mode=permissions
+
+
+
+
+
 
 ### 1. LOGIN to get access token
 # @name login
@@ -30,7 +106,241 @@ username={{username}}
 ###
 @token = {{login.response.body.access_token}}
 
-### 2. CREATE STUDY
+
+### === FOLIO PROJECTS SERVICE - RBAC TESTS ===
+
+### Health Check
+GET http://folio.local/health
+
+### === PATHOGENS MANAGEMENT ===
+
+### Create SARS-CoV-2 pathogen (requires System Admin only - /admin group)
+# @name createSarsPathogen
+POST http://folio.local/pathogens
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "SARS-CoV-2",
+  "scientific_name": "Severe acute respiratory syndrome coronavirus 2",
+  "description": "The virus that causes COVID-19"
+}
+
+###
+# @sars_pathogen_id = {{createSarsPathogen.response.body.id}}
+@sars_pathogen_id = 81d27b39-19f0-4a2c-a547-bb91361645ab
+
+
+### Create Malaria pathogen (requires System Admin only - /admin group)
+# @name createMalariaPathogen
+POST http://folio.local/pathogens
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Malaria",
+  "scientific_name": "Plasmodium falciparum",
+  "description": "Most severe form of malaria parasite"
+}
+
+###
+@malaria_pathogen_id = {{createMalariaPathogen.response.body.id}}
+
+### Get all pathogens (all authenticated users)
+GET http://folio.local/pathogens
+Authorization: Bearer {{token}}
+
+
+
+
+### === PROJECT MANAGEMENT TESTS ===
+
+### Create PRIVATE project (requires Owner/Org Admin)
+# @name createPrivateProject
+POST http://folio.local/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "slug": "nicd-covid-private",
+  "name": "NICD COVID-19 Private Study",
+  "description": "Internal NICD genomic surveillance - private data",
+  "pathogen_id": "{{sars_pathogen_id}}",
+  "privacy": "private",
+  "organisation_id": "{{default_org}}"
+}
+
+### Create SEMI-PRIVATE project (requires Owner/Org Admin)  
+# @name createSemiPrivateProject
+POST http://folio.local/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "slug": "nicd-covid-surveillance",
+  "name": "NICD COVID-19 Surveillance Study",
+  "description": "Regional surveillance data - metadata shared for dashboards",
+  "pathogen_id": "{{sars_pathogen_id}}",
+  "privacy": "semi-private",
+  "organisation_id": "{{default_org}}"
+}
+
+### Create PUBLIC project (requires Owner/Org Admin)
+# @name createPublicProject
+POST http://folio.local/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "slug": "africa-covid-public",
+  "name": "Africa COVID-19 Open Research",
+  "description": "Public genomic research accessible to all authenticated users",
+  "pathogen_id": "{{sars_pathogen_id}}",
+  "privacy": "public",
+  "organisation_id": "{{default_org}}"
+}
+
+@project_id = 9cf9946e-a231-4247-b9d5-cc200a543a49
+
+### Get all projects (visibility depends on user role and project privacy)
+GET http://folio.local/projects
+Authorization: Bearer {{token}}
+
+### Get specific project by ID (access depends on user role and project privacy)
+GET http://folio.local/projects/{{project_id}}
+Authorization: Bearer {{token}}
+
+### Get project summary (access depends on user role)
+GET http://folio.local/projects/{{project_id}}/summary
+Authorization: Bearer {{token}}
+
+### Get project members (requires Owner/Admin of project)
+GET http://folio.local/projects/{{project_id}}/members
+Authorization: Bearer {{token}}
+
+
+### === PROJECT MEMBER MANAGEMENT (Owner/Admin only) ===
+
+### Add user with admin role to project
+POST http://folio.local/projects/{{project_id}}/members
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "admin@nicd.ac.za",
+  "permission": "admin"
+}
+
+### Remove user from project (Owner/Admin only)
+DELETE http://folio.local/projects/{{project_id}}/members
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "viewer@research.org",
+  "permission": "viewer"
+}
+
+### === STUDY MANAGEMENT ===
+
+@study_id = ada0ddcd-7ef4-45a1-8d9b-996f1381c245
+
+### Create a study (requires Owner/Admin/Contributor of project)
+# @name createStudy
+POST http://folio.local/studies
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "study_id": "covid-001",
+  "name": "COVID-19 Variant Tracking Study",
+  "description": "Analysis of SARS-CoV-2 genetic variants in South Africa",
+  "project_id": "{{project_id}}"
+}
+
+### Get all studies (user sees studies from projects they have access to)
+GET http://folio.local/studies
+Authorization: Bearer {{token}}
+
+### Get study members (requires Owner/Admin of parent project)
+GET http://folio.local/studies/{{study_id}}/members
+Authorization: Bearer {{token}}
+
+### Add user to study with read access (requires Owner/Admin of parent project)
+POST http://folio.local/studies/{{study_id}}/members
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "contributor@lab.bio",
+  "permission": "read"
+}
+
+### Add user to study with write access (requires Owner/Admin of parent project)
+POST http://folio.local/studies/{{study_id}}/members
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "org-contributor@nicd.ac.za",
+  "permission": "write"
+}
+
+
+### === DATA SUBMISSION TESTS (Owner/Admin/Contributor only) ===
+
+
+
+
+
+
+### === CROSS-ORGANISATION ACCESS TESTS ===
+
+### Try to access another organisation's private project (should fail)
+GET http://folio.local/projects/private-project-from-another-org
+Authorization: Bearer {{token}}
+
+### View public projects from other organisations (should work for all authenticated users)
+GET http://folio.local/projects?filter=public&organisation=all
+Authorization: Bearer {{token}}
+
+
+### === ORGANISATION MANAGEMENT (Owner/Org Admin only) ===
+
+### Get organisation members (Owner/Org Admin only)
+GET http://folio.local/organisations/{{default_org}}/members
+Authorization: Bearer {{token}}
+
+### Invite user to organisation (Owner/Org Admin only)
+POST http://folio.local/organisations/{{default_org}}/invitations
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "role": "organisation-contributor",
+  "scope": "all-projects"
+}
+
+### Disable user (Owner/Org Admin only)
+PUT http://folio.local/organisations/{{default_org}}/members/user-id-here/disable
+Authorization: Bearer {{token}}
+
+### Transfer ownership (Owner only)
+PUT http://folio.local/organisations/{{default_org}}/transfer-ownership
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "new_owner_email": "new-owner@nicd.ac.za"
+}
+
+
+### === SONG SERVICE ===
+
+@study_id = covid-001
+
+### 3.1a. CREATE STUDY
 POST http://song.local/studies/{{study_id}}/
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -46,7 +356,19 @@ Content-Type: application/json
   }
 }
 
-### 3a. SUBMIT ANALYSIS
+### 3.1b. GET STUDY DETAILS
+GET http://song.local/studies/{{study_id}}/
+Authorization: Bearer {{token}}
+
+### 3.1c. GET STUDY ANALYSES
+GET http://song.local/studies/{{study_id}}/analysis
+Authorization: Bearer {{token}}
+
+### 3.1d. LIST STUDIES
+GET http://song.local/studies/all
+Authorization: Bearer {{token}}
+
+### 3.2a. SUBMIT ANALYSIS
 # @name submitAnalysis
 POST http://song.local/submit/{{study_id}}/
 Authorization: Bearer {{token}}
@@ -54,14 +376,17 @@ Content-Type: application/json
 
 < ./data/analysis_submission.json
 
-### 3b. GET ANALYSIS DETAILS
+### 3.2b. GET ANALYSIS DETAILS
 # Extract analysis_id from step 4 response and get full analysis details
 @submitted_analysis_id = {{submitAnalysis.response.body.analysisId}}
+# @submitted_analysis_id = 759d93b7-3615-436a-9d93-b73615e36a12
 # @name getAnalysis
 GET http://song.local/studies/{{study_id}}/analysis/{{submitted_analysis_id}}
 Authorization: Bearer {{token}}
 
-### 4a. INITIALIZE SCORE UPLOAD
+### === SCORE SERVICE ===
+
+### 4.1a. INITIALIZE SCORE UPLOAD
 # Extract object_id from step 5 response
 @object_id = {{getAnalysis.response.body.files[0].objectId}}
 # @name initUpload
@@ -79,7 +404,7 @@ fileSize={{test_file_size}}
 
 @md5 = {{initUpload.response.body.objectMd5}}
 
-### 4b. UPLOAD FILE TO MINIO
+### 4.1b. UPLOAD FILE TO MINIO
 # Using hosts file entry: 127.0.0.1 minio (with port-forward to MinIO)
 # @name uploadFile
 PUT {{presigned_url}}
@@ -97,49 +422,64 @@ Content-Type: text/plain
 @debug_md5 = {{md5}}
 @debug_upload_id = {{upload_id}}
 
-### 4c. Finalise Part Upload
+### 4.1c. Finalise Part Upload
 # @name finalizePartUpload
 POST http://score.local/upload/{{object_id}}/parts?partNumber=1&etag={{etag}}&md5={{md5}}&uploadId={{upload_id}}
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
-### 4d. Finalize upload
+### 4.1d. Finalize upload
 # @name finalizeUpload
 POST http://score.local/upload/{{object_id}}?uploadId={{upload_id}}
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
-# @analysis_id = 359047cd-7a55-462f-9047-cd7a55b62fdd
-@analysis_id = {{submitAnalysis.response.body.analysisId}}
+@analysis_id = adb67a21-c89c-49c5-b67a-21c89c29c511
 
-### 5. PUBLISH ANALYSIS 
+### === SONG SERVICE ===
+
+### 5.1a. PUBLISH ANALYSIS 
 PUT http://song.local/studies/{{study_id}}/analysis/publish/{{analysis_id}}
 Authorization: Bearer {{token}}
 
-### 6. TRIGGER MAESTRO INDEXING
+### 5.1b. UNPUBLISH ANALYSIS
+PUT http://song.local/studies/{{study_id}}/analysis/unpublish/{{analysis_id}}
+Authorization: Bearer {{token}}
+
+### 5.2b. GET ANALYSIS DETAILS
+# Extract analysis_id from step 4 response and get full analysis details
+# @name getAnalysis
+GET http://song.local/studies/{{study_id}}/analysis/{{analysis_id}}
+Authorization: Bearer {{token}}
+
+### === MAESTRO SERVICE ===
+
+### 6.1 TRIGGER MAESTRO INDEXING
 # @name maestroIndex
 POST http://maestro.local/index/repository/song.overture/study/{{study_id}}
 Authorization: Bearer {{token}}
 
-### 7. CHECK ELASTICSEARCH INDEX
+### === ELASTICSEARCH ===
+
+### 7.1 CHECK ELASTICSEARCH INDEX
 # @name checkElasticsearch
 GET http://elasticsearch.local/agari-index/_search
 Content-Type: application/json
 
 {
   "query": {
-    "match": {
-      "studyId": "{{study_id}}"
-    }
+    "match_all": {}
   }
 }
 
-### 8. CHECK ARRANGER DATA ACCESS
+### === ARRANGER SERVICE ===
+
+### 8.1 CHECK ARRANGER DATA ACCESS
 # @name arrangerGraphQL
 POST http://arranger.local/graphql
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "query": "query { file { hits { total } edges { node { objectId fileName fileSize studyId } } } }"
+  "query": "query {file {hits {total}}}"
 }

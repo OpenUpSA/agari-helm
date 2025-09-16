@@ -1,0 +1,53 @@
+{
+  "studyId": "covid-surveillance-001",
+  "analysisType": {
+    "name": "sequencing_read",
+    "version": 10
+  },
+  "samples": [
+    {
+      "submitterSampleId": "COVID_BA5_001",
+      "matchedNormalSubmitterSampleId": null,
+      "sampleType": "Total RNA",
+      "specimen": {
+        "submitterSpecimenId": "SPEC_COVID_BA5_001", 
+        "specimenType": "Primary tumour",
+        "specimenTissueSource": "Nasopharyngeal swab"
+      },
+      "donor": {
+        "submitterDonorId": "DONOR_COVID_001",
+        "studyId": "covid-surveillance-001",
+        "donorGender": "Other"
+      }
+    }
+  ],
+  "files": [
+    {
+      "fileName": "covid_ba5_sample.fastq",
+      "fileType": "FASTQ",
+      "fileSize": 853,
+      "fileMd5sum": "a1421b18d7859ad811877b981fedca4f",
+      "fileAccess": "controlled",
+      "info": {
+        "data_category": "Sequencing Reads",
+        "data_type": "Aligned Reads",
+        "experimental_strategy": "RNA-Seq",
+        "variant_class": "BA.5.1",
+        "collection_date": "2024-01-15",
+        "country": "South Africa"
+      }
+    }
+  ],
+  "experiment": {
+    "platform": "ILLUMINA",
+    "platform_model": "Illumina NovaSeq 6000",
+    "sequencing_center": "NICD",
+    "sequencing_date": "2024-01-20"
+  },
+  "workflow": {
+    "workflow_name": "SARS-CoV-2 Genome Assembly",
+    "workflow_version": "v1.0",
+    "genome_build": "SARS-CoV-2-reference",
+    "run_id": "covid_ba5_run_001"
+  }
+}

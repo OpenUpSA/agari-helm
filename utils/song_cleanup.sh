@@ -2,7 +2,7 @@
 # Enhanced Song Database Cleanup Script
 # Provides robust operations for managing Song database studies
 
-NAMESPACE="agari-dev"
+NAMESPACE="agari"
 POD_NAME=$(kubectl get pod -n $NAMESPACE -l app.kubernetes.io/name=song-db -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
 
 if [ -z "$POD_NAME" ]; then

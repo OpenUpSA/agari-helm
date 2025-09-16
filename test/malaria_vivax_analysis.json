@@ -1,0 +1,53 @@
+{
+  "studyId": "malaria-surveillance-002",
+  "analysisType": {
+    "name": "sequencing_read",
+    "version": 10
+  },
+  "samples": [
+    {
+      "submitterSampleId": "MALARIA_VIVAX_001",
+      "matchedNormalSubmitterSampleId": null,
+      "sampleType": "Total DNA",
+      "specimen": {
+        "submitterSpecimenId": "SPEC_MALARIA_VIVAX_001",
+        "specimenType": "Primary tumour",
+        "specimenTissueSource": "Blood"
+      },
+      "donor": {
+        "submitterDonorId": "DONOR_MALARIA_002",
+        "studyId": "malaria-surveillance-002",
+        "donorGender": "Female"
+      }
+    }
+  ],
+  "files": [
+    {
+      "fileName": "malaria_vivax_sample.fastq",
+      "fileType": "FASTQ",
+      "fileSize": 612,
+      "fileMd5sum": "d4754f5ae0963bc823a99d46fc8fb84d",
+      "fileAccess": "controlled",
+      "info": {
+        "data_category": "Sequencing Reads",
+        "data_type": "Aligned Reads",
+        "experimental_strategy": "WGS", 
+        "strain": "PvP01",
+        "collection_date": "2024-04-20",
+        "country": "Kenya"
+      }
+    }
+  ],
+  "experiment": {
+    "platform": "ILLUMINA",
+    "platform_model": "Illumina NextSeq 500",
+    "sequencing_center": "KEMRI-Wellcome Trust",
+    "sequencing_date": "2024-04-25"
+  },
+  "workflow": {
+    "workflow_name": "Plasmodium vivax Genome Assembly",
+    "workflow_version": "v2.5",
+    "genome_build": "PlasmoDB-58_Pvivax",
+    "run_id": "malaria_vivax_run_001"
+  }
+}

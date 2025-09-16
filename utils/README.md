@@ -45,9 +45,9 @@ Updates OAuth2 client secrets across Song, Score, and Maestro services.
 **After running the script:**
 ```bash
 # Apply changes to your cluster
-helm upgrade song ./helm/song -n agari-dev
-helm upgrade score ./helm/score -n agari-dev
-helm upgrade maestro ./helm/maestro -n agari-dev
+helm upgrade song ./helm/song -n agari
+helm upgrade score ./helm/score -n agari
+helm upgrade maestro ./helm/maestro -n agari
 ```
 
 **Delete backup files if everything works fine:**

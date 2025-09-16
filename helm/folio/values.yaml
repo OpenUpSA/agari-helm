@@ -1,0 +1,50 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/openupsa/agari-folio
+  pullPolicy: "Always"
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+# Folio application configuration
+folio:
+  auth:
+    keycloak:
+      host: "http://keycloak:8080"
+      realm: "agari"
+      issuer: "http://keycloak.local/realms/agari"
+      clientId: "dms"
+      clientSecret: "dms-secret"
+  database:
+    host: "folio-db"
+    port: "5432"
+    name: "folio"
+    user: "admin"
+    password: "folio-db-pass-123"
+
+  overture:
+    score: "http://score:8087"
+    song: "http://song:8080"
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: folio.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

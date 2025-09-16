@@ -39,7 +39,7 @@ update_secrets_in_file() {
     echo "Updating $service_name secrets in $file"
     
     # Create backup
-    cp "$file" "$file.backup.$(date +%Y%m%d_%H%M%S)"
+    # cp "$file" "$file.backup.$(date +%Y%m%d_%H%M%S)"
     
     # Update the secrets using sed
     # This handles both 'secret:' and 'clientSecret:' patterns
@@ -65,6 +65,7 @@ update_secrets_in_file() {
 update_secrets_in_file "$HELM_DIR/song/values.yaml" "Song"
 update_secrets_in_file "$HELM_DIR/score/values.yaml" "Score"  
 update_secrets_in_file "$HELM_DIR/maestro/values.yaml" "Maestro"
+update_secrets_in_file "$HELM_DIR/folio/values.yaml" "Folio"
 
 echo "Secret update completed!"
 echo
@@ -72,10 +73,12 @@ echo "Modified files:"
 echo "- $HELM_DIR/song/values.yaml"
 echo "- $HELM_DIR/score/values.yaml"
 echo "- $HELM_DIR/maestro/values.yaml"
+echo "- $HELM_DIR/folio/values.yaml"
 echo
 echo "Backup files created with timestamp suffix (.backup.YYYYMMDD_HHMMSS)"
 echo
 echo "To apply changes to your cluster, run:"
-echo "  helm upgrade song ./helm/song -n agari-dev"
-echo "  helm upgrade score ./helm/score -n agari-dev"
-echo "  helm upgrade maestro ./helm/maestro -n agari-dev"
+echo "  helm upgrade song ./helm/song -n agari"
+echo "  helm upgrade score ./helm/score -n agari"
+echo "  helm upgrade maestro ./helm/maestro -n agari"
+echo "  helm upgrade folio ./helm/folio -n agari"

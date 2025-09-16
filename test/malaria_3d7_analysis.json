@@ -1,0 +1,53 @@
+{
+  "studyId": "malaria-surveillance-001",
+  "analysisType": {
+    "name": "sequencing_read",
+    "version": 10
+  },
+  "samples": [
+    {
+      "submitterSampleId": "MALARIA_3D7_001",
+      "matchedNormalSubmitterSampleId": null,
+      "sampleType": "Total DNA",
+      "specimen": {
+        "submitterSpecimenId": "SPEC_MALARIA_3D7_001",
+        "specimenType": "Primary tumour",
+        "specimenTissueSource": "Blood"
+      },
+      "donor": {
+        "submitterDonorId": "DONOR_MALARIA_001", 
+        "studyId": "malaria-surveillance-001",
+        "donorGender": "Male"
+      }
+    }
+  ],
+  "files": [
+    {
+      "fileName": "malaria_3d7_sample.fastq",
+      "fileType": "FASTQ",
+      "fileSize": 945,
+      "fileMd5sum": "c3643e4fe9852ab9ad989c45eb7ea93f",
+      "fileAccess": "controlled",
+      "info": {
+        "data_category": "Sequencing Reads",
+        "data_type": "Aligned Reads",
+        "experimental_strategy": "WGS",
+        "strain": "3D7",
+        "collection_date": "2024-03-05",
+        "country": "Ghana"
+      }
+    }
+  ],
+  "experiment": {
+    "platform": "ILLUMINA",
+    "platform_model": "Illumina HiSeq 2500",
+    "sequencing_center": "Noguchi Memorial Institute",
+    "sequencing_date": "2024-03-10"
+  },
+  "workflow": {
+    "workflow_name": "Plasmodium falciparum Genome Assembly",
+    "workflow_version": "v3.0",
+    "genome_build": "PlasmoDB-58_Pfalciparum3D7",
+    "run_id": "malaria_3d7_run_001"
+  }
+}
