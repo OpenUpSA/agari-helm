@@ -50,13 +50,13 @@ spec:
               value: {{ .Values.folio.overture.song | quote }}
           livenessProbe:
             httpGet:
-              path: /health
+              path: /info/health
               port: http
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /health
+              path: /info/health
               port: http
             initialDelaySeconds: 5
             periodSeconds: 5
