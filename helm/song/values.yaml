@@ -28,6 +28,12 @@ song:
           jwt:
             jwkSetUri: "http://keycloak:8080/realms/agari/protocol/openid-connect/certs"
             issuerUri: "http://keycloak-ilifu.openup.org.za/realms/agari"
+  cors:
+    allowedOrigins: "*"
+    allowedMethods: "*"
+    allowedHeaders: "*"
+    allowCredentials: false
+    maxAge: 3600
   client:
     study:
       maxUploadFileSize: 10737418240
@@ -124,9 +130,11 @@ resources:
   limits:
     cpu: 500m
     memory: 1.5Gi
+    ephemeral-storage: 2Gi
   requests:
     cpu: 150m
     memory: 768Mi
+    ephemeral-storage: 1Gi
 
 # Node selection
 nodeSelector: {}

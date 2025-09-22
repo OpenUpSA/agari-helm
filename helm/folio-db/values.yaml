@@ -10,8 +10,8 @@ fullnameOverride: "folio-db"
 
 podAnnotations: {}
 
-podSecurityContext:
-  fsGroup: 999
+podSecurityContext: {}
+  # fsGroup: 2000
 
 securityContext:
   # capabilities:

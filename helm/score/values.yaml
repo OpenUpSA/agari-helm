@@ -85,8 +85,8 @@ score:
     oauth2:
       resourceserver:
         jwt:
-          jwkSetUri: "http://keycloak:8080/realms/agari/protocol/openid-connect/certs"
-          issuerUri: "http://keycloak-ilifu.openup.org.za/realms/agari"
+          jwkSetUri: "https://keycloak-ilifu.openup.org.za/realms/agari/protocol/openid-connect/certs"
+          issuerUri: "https://keycloak-ilifu.openup.org.za/realms/agari"
 
 ingress:
   enabled: true
@@ -104,10 +104,11 @@ resources:
   limits:
     cpu: 500m
     memory: 1Gi
+    ephemeral-storage: 2Gi
   requests:
     cpu: 200m
     memory: 512Mi
-
+    ephemeral-storage: 1Gi
 
 nodeSelector: {}
 tolerations: []
