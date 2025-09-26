@@ -24,28 +24,35 @@
         "type": "string"
       },
       "biosample_accession": {
+        "description": "describes the identifier assigned to a BioSample in International Nucleotide Sequence Database Collaboration (INSDC) archives",
         "type": "string"
       },
       "sra_accession": {
+        "description": "describes the Sequence Read Archive (SRA), European Nucleotide Archive (ENA) or DDBJ Sequence Read Archive (DRA) identifier linking raw read data, methodological metadata and quality control metrics submitted to the International Nucleotide Sequence Database Collaboration (INSDC)",
         "type": "string"
       },
       "specimen_collector_sample_id": {
+        "description": "The user-defined name for the sample",
         "type": "string"
       },
       "sample_collected_by": {
+        "description": "the name of the organization with which the sample collector is affiliated",
         "type": "string"
       },
       "sample_collection_date": {
+        "description": "the date on which the sample was collected.",
         "type": "string",
         "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
         "format": "date"
       },
       "sample_receive_date": {
+        "description": "A data field which describes the date on which the sample was received at the laboratory",
         "type": "string",
         "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
         "format": "date"
       },
       "specimen_source_material_category": {
+        "description": "The type of material from which the specimen was obtained",
         "type": "string",
         "enum": [
           "Animal",
@@ -67,9 +74,11 @@
         ]
       },
       "specimen_source_context": {
+        "description": "Describes the physical, environmental and/or local geographical source of the biological sample from which the sample was derived.",
         "type": "string"
       },
       "biospecimen": {
+        "description": "Any material sample taken from a biological entity for testing, diagnostic, propagation, treatment or research purposes",
         "type": "string",
         "enum": [
           "Swabbed Material",
@@ -115,6 +124,7 @@
         "type": "string"
       },
       "purpose_of_sampling": {
+        "description": "describes the reason that the sample was collected",
         "type": "string",
         "enum": [
           "Targeted: Vaccine Escape Surveillance",
@@ -135,6 +145,7 @@
         ]
       },
       "geo_loc_name_country": {
+        "description": "country of origin of the sample",
         "type": "string",
         "enum": [
           "Algeria",
@@ -194,6 +205,7 @@
         ]
       },
       "geo_loc_name_state_province_territory": {
+        "description": "describes the state, province, or territory of origin of the sample",
         "type": "string",
         "enum": [
           "Adrar",
@@ -1163,15 +1175,19 @@
         ]
       },
       "geo_loc_name_city": {
+        "description": "the name of the organization with which the sample collector is affiliated",
         "type": "string"
       },
       "geo_loc_latitude": {
+        "description": "latitude coordinates of the geographical location of sample collection",
         "type": "string"
       },
       "geo_loc_longitude": {
+        "description": "longitude coordinates of the geographical location of sample collection",
         "type": "string"
       },
       "host_scientific_name": {
+        "description": "A subject age at time of specimen extraction is the age (since birth) of the organism at the time a given specimen was extracted",
         "type": "string",
         "enum": [
           "Homo Sapiens",
@@ -1197,6 +1213,7 @@
         "type": "string"
       },
       "host_age_bin": {
+        "description": "Age unit of the age measurement of a subject",
         "type": "string",
         "enum": [
           "0 - 9",
@@ -1217,9 +1234,11 @@
         ]
       },
       "host_age": {
-        "type": "string"
+        "description": "A host data field which describes the age of the host at the time of sampling",
+        "type": ["string", "number"]
       },
       "host_age_unit": {
+        "description": "Age unit of the age measurement of a subject (individual organism)",
         "type": "string",
         "enum": [
           "Day",
@@ -1232,6 +1251,7 @@
         ]
       },
       "subject_sex": {
+        "description": "A subject sex is the phenotypic sex of given subject (human or animal) related to a given investigation, study, and/or specimen",
         "type": "string",
         "enum": [
           "Female",
@@ -1243,6 +1263,7 @@
         ]
       },
       "infection_acquisition": {
+        "description": "a dataset that is about infectious disease acquisitions at particular times and particular places",
         "type": "string",
         "enum": [
           "Community-Acquired Infections",
@@ -1265,6 +1286,7 @@
         ]
       },
       "host_disease": {
+        "description": "A host data field which describes the name of the disease experienced by the host.",
         "type": "string",
         "enum": [
           "Urinary Tract Infection",
@@ -1292,6 +1314,7 @@
         "type": "string"
       },
       "host_disease_outcome": {
+        "description": "A host data field which describes the disease outcome in the host.",
         "type": "string",
         "enum": [
           "Deceased",
@@ -1306,6 +1329,7 @@
         ]
       },
       "host_health_state": {
+        "description": "A host field which describes the health status of the host at the time of sample collection",
         "type": "string",
         "enum": [
           "Asymptomatic",
@@ -1320,6 +1344,7 @@
         ]
       },
       "purpose_of_sequencing": {
+        "description": "describes the reason that the sample was sequenced",
         "type": "string",
         "enum": [
           "Cluster/Outbreak Investigation",
@@ -1338,11 +1363,13 @@
         ]
       },
       "sequencing_date": {
+        "description": "describes the date the sample was sequenced.",
         "type": "string",
         "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
         "format": "date"
       },
       "sequencing_instrument": {
+        "description": "describes the model of the sequencing instrument used",
         "type": "string",
         "enum": [
           "Illumina Genome Analyzer",
@@ -1397,6 +1424,7 @@
         ]
       },
       "assembly_method": {
+        "description": "Assembly method refers to how the reads were assembled into contigs for which either a de novo or mapping (reference based) strategy is used.",
         "type": "string",
         "enum": [
           "De-Novo Assembly",
@@ -1408,9 +1436,11 @@
         ]
       },
       "sequencing_depth": {
+        "description": "The number of times a particular locus (site, nucleotide, amplicon, region) was sequenced",
         "type": "string"
       },
       "reference_genome_accession": {
+        "description": "the accession number of the reference genome",
         "type": "string"
       },
       "sequence_assembly_software_name": {
@@ -1423,15 +1453,19 @@
         "type": "string"
       },
       "assembly_genome_size": {
+        "description": "The assembly genome size is the sum of all lengths of a sequence assembly's contigs.",
         "type": "string"
       },
       "n50": {
+        "description": "The length of the shortest read that together with other reads, represents at least 50% of the nucleotides in a set of",
         "type": "string"
       },
       "number_of_contigs": {
+        "description": "A contig count is the count of contigs that belong to a sequence assembly.",
         "type": "string"
       },
       "%_gc": {
+        "description": "The percent of a nucleotide sequence comprised of guanine and cytosine",
         "type": "string"
       },
       "K_type": {
@@ -1580,6 +1614,7 @@
         "type": "string"
       },
       "virulence_factor_gene": {
+        "description": "Gene encoding products that assist the bacterium colonize the host at the cellular level and are either secretory, membrane associated or cytosolic in nature.",
         "type": "string",
         "enum": [
           "allS",
