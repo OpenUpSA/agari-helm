@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "agari-frontend.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "agari-frontend.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "agari-frontend.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "agari-frontend.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: frontend
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+          - containerPort: 3000
+            name: http
+          readinessProbe: {{ toYaml .Values.readinessProbe | nindent 10 }}
+          livenessProbe: {{ toYaml .Values.livenessProbe | nindent 10 }}
+          resources: {{ toYaml .Values.resources | nindent 10 }}
+          nodeSelector: {{ toYaml .Values.nodeSelector | nindent 6 }}
+          tolerations: {{ toYaml .Values.tolerations | nindent 6 }}
+          affinity: {{ toYaml .Values.affinity | nindent 6 }}
