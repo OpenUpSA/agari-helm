@@ -58,17 +58,17 @@ spec:
             - name: KEYCLOAK_ADMIN_PASSWORD
               value: {{ .Values.keycloak.admin.password }}
             # Keycloak settings
-            - name: KC_HOSTNAME
-              value: {{ .Values.url.hostname }}
+            #- name: KC_HOSTNAME
+            #  value: {{ .Values.url.hostname }}
             - name: KC_HEALTH_ENABLED
               value: "{{ .Values.keycloak.healthEnabled }}"
             # Proxy settings for Kubernetes
-            - name: KC_PROXY
-              value: "edge"
-            - name: KC_HOSTNAME_STRICT
-              value: "false"
-            - name: KC_HOSTNAME_STRICT_HTTPS
-              value: "false"
+            #- name: KC_PROXY
+            #  value: "edge"
+            #- name: KC_HOSTNAME_STRICT
+            #  value: "false"
+            #- name: KC_HOSTNAME_STRICT_HTTPS
+            #  value: "false"
             {{- if .Values.extraEnv }}
             {{- range .Values.extraEnv }}
             - name: {{ .name }}

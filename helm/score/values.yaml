@@ -42,7 +42,7 @@ score:
     systemScope: "song.READ"
   
   s3:
-    endpoint: "http://minio:9000"
+    endpoint: "https://minio-ilifu.openup.org.za"
     accesskey: "admin"
     secretkey: "admin123"
     sigv4enabled: true
@@ -93,6 +93,10 @@ ingress:
   className: "private"
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
   hosts:
     - host: score-ilifu.openup.org.za
       paths:
@@ -113,3 +117,5 @@ resources:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+
