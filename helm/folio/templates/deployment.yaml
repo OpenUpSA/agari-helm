@@ -48,6 +48,8 @@ spec:
               value: {{ .Values.folio.overture.score | quote }}
             - name: OVERTURE_SONG
               value: {{ .Values.folio.overture.song | quote }}
+            - name: KEYCLOAK_URL
+              value: {{ .Values.folio.auth.keycloak.host | quote }}
           livenessProbe:
             httpGet:
               path: /info/health
