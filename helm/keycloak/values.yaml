@@ -4,7 +4,7 @@ url:
   hostname: "keycloak-ilifu.openup.org.za"
 
 image:
-  repository: quay.io/keycloak/keycloak
+  repository: quay.io/phasetwo/phasetwo-keycloak
   pullPolicy: IfNotPresent
   tag: "26.2.5"
 
