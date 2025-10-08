@@ -44,16 +44,8 @@ extraEnv:
     value: "edge"
   - name: KC_CORS_ORIGINS
     value: "*"
-  - name: KC_HOSTNAME_URL
-    value: "https://keycloak-ilifu.openup.org.za"
-  - name: KC_HOSTNAME_ADMIN_URL
-    value: "https://keycloak-ilifu.openup.org.za"
-  - name: KC_HTTP_ENABLED
-    value: "true"
-  - name: KC_HTTPS_CERTIFICATE_FILE
-    value: ""
-  - name: KC_HTTPS_CERTIFICATE_KEY_FILE
-    value: ""
+  - name: KC_SPI_EMAIL_TEMPLATE_PROVIDER
+    value: freemarker
 
 probes:
   liveness:
