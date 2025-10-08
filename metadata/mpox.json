@@ -2027,17 +2027,7 @@
       },
       "prior_antiviral_treatment_during_prior_Mpox_infection": {
         "description": "Antiviral treatment for any infection during the prior Mpox infection period.",
-        "type": "string",
-        "enum": [
-          "Prior antiviral treatment",
-          "No prior antiviral treatment",
-          "Not Applicable",
-          "Missing",
-          "Not Collected",
-          "Not Provided",
-          "Restricted Access",
-          "Other"
-        ]
+        "type": "string"
       },
       "prior_Mpox_treatment_agent": {
         "description": "A data field which describes the name of the antiviral agent administered during the prior mpox infection.",
