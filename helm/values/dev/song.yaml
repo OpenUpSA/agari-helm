@@ -1,0 +1,23 @@
+url:
+  hostname: "song.local"
+
+song:
+  spring:
+    security:
+      oauth2:
+        resourceserver:
+          jwt:
+            issuerUri: "http://keycloak.local/realms/agari"
+  auth:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuerUri: "http://keycloak.local/realms/agari"
+
+ingress:
+  className: "nginx"
+  hosts:
+    - host: song.local
+      paths:
+        - path: /
+          pathType: Prefix

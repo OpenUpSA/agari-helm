@@ -13,6 +13,18 @@ Complete Overture stack deployment on Kubernetes with authentication, file manag
 
 ## Quick Deploy
 
+In non-dev environments, you can copy the local values template to a new file that allows you to add secrets, e.g.
+
+```bash
+cp helm/values/prod/keycloak.yaml.template helm/values/prod/keycloak.yaml
+```
+
+helm/values is .gitignore'd to prevent adding secrets to git. `git add -f` to add changes.
+
+Remember: you check that your local copy is up to date with any changes to the template before upgrading.
+
+Remember: In config overlays added with -f, arrays must be replaced in full. You can't override a single element.
+
 ### 1. Setup Cluster
 
 In dev you might want to use **k3d** for quick setup:
@@ -39,7 +51,7 @@ kubectl create namespace agari
 
 
 ```bash
-helm install minio ./helm/minio -n agari
+helm install minio ./helm/minio -n agari -f ./helm/dev/minio.yml
 
 # Minio might require prot-forwarding:
 kubectl port-forward -n agari service/minio 9000:9000
@@ -60,10 +72,13 @@ helm install kafka bitnami/kafka -f helm/kafka/values-bitnami.yaml -n agari
 helm install keycloak-db ./helm/keycloak-db -n agari
 
 # Keycloak
-helm install keycloak ./helm/keycloak -n agari
+helm install keycloak ./helm/keycloak -n agari -f ./helm/dev/keycloak.yml
 ```
 
 Set up the **client** in Keycloak and copy the **secret** to **song**, **score**, **maestro** and **folio** `values.yaml`
+
+1. login to the keycloak hostname, e.g. http://keycloak.local with the bootstrap username and password configured in its values.yaml.
+2. Load the template realm export in helm/keycloak/config
 
 use `utils/update-secrets.sh` script to update the secrets in all services
 
@@ -76,7 +91,7 @@ use `utils/update-secrets.sh` script to update the secrets in all services
 helm install song-db ./helm/song-db -n agari
 
 # Song
-helm install song ./helm/song -n agari
+helm install song ./helm/song -n agari -f ./helm/dev/song.yml
 ```
 
 #### 5.2 SCORE
