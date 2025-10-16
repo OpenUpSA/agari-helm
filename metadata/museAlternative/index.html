@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TSV to JSON Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .file-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        pre {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        .input-group {
+            margin: 10px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>TSV to JSON Converter with File Metadata</h1>
+
+    <div class="file-section">
+        <h2>1. Upload TSV Metadata File</h2>
+        <input type="file" id="tsvInput" accept=".tsv" />
+    </div>
+
+    <div class="file-section">
+        <h2>2. Upload Genome Files (FASTA, GenBank, etc.)</h2>
+        <input type="file" id="genomeFiles" multiple accept=".fasta,.fa,.gb,.genbank,.fastq" />
+        <p><small>You can select multiple files</small></p>
+    </div>
+
+    <div class="file-section">
+        <h2>3. Study Information</h2>
+        <div class="input-group">
+            <label for="studyId">Study ID:</label>
+            <input type="text" id="studyId" placeholder="e.g., STUDY001" />
+        </div>
+        <div class="input-group">
+            <label for="analysisName">Analysis Type Name:</label>
+            <input type="text" id="analysisName" placeholder="e.g., Genome Assembly" />
+        </div>
+        <div class="input-group">
+            <label for="analysisVersion">Analysis Version:</label>
+            <input type="text" id="analysisVersion" placeholder="e.g., 1.0" />
+        </div>
+    </div>
+
+    <button id="processBtn" disabled>Process Files</button>
+
+    <div class="file-section">
+        <h2>Output:</h2>
+        <pre id="output">Upload files and click "Process Files" to see the result...</pre>
+    </div>
+
+    <!-- Include crypto-js library for MD5 hashing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <!-- Link your JS file -->
+    <script src="tsvtojson.js"></script>
+</body>
+
+</html>
