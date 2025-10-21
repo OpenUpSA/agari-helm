@@ -543,6 +543,90 @@
           }
         },
         {
+          "name": "title", 
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "title",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "title",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "name", 
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "name",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "name",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "surname", 
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "surname",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "surname",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "bio", 
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "bio",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "bio",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "preferences", 
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "preferences",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "preferences",
+            "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "accepted_terms", 
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "accepted_terms",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "accepted_terms",
+            "jsonType.label": "String"
+          }
+        },
+        {
           "name": "project-admin",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-attribute-mapper",
@@ -583,51 +667,6 @@
             "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "project-viewer",
-            "multivalued": "true",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "name": "study-admin",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "consentRequired": false,
-          "config": {
-            "userinfo.token.claim": "true",
-            "user.attribute": "study-admin",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "study-admin",
-            "multivalued": "true",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "name": "study-contributor",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "consentRequired": false,
-          "config": {
-            "userinfo.token.claim": "true",
-            "user.attribute": "study-contributor",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "study-contributor",
-            "multivalued": "true",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "name": "study-viewer",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "consentRequired": false,
-          "config": {
-            "userinfo.token.claim": "true",
-            "user.attribute": "study-viewer",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "claim.name": "study-viewer",
             "multivalued": "true",
             "jsonType.label": "String"
           }
