@@ -48,9 +48,14 @@ kubectl port-forward -n agari service/minio 9000:9000
 ### 3.2 Kafka Message Queue
 
 ```bash
-helm repo add bitnami https://charts.bitnami.com/bitnami
+# Add Strimzi repository for Kafka operator
+helm repo add strimzi https://strimzi.io/charts/
 
-helm install kafka bitnami/kafka -f helm/kafka/values-bitnami.yaml -n agari
+# Build chart dependencies (required for first-time deployment)
+cd helm/kafka && helm dependency build && cd ../..
+
+# Install Kafka using Strimzi operator
+helm install kafka ./helm/kafka -n agari
 ```
 
 ### 4. Setup Keycloak
