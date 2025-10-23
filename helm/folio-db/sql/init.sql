@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS organisations (
     abbreviation VARCHAR(50),
     url VARCHAR(255),
     about TEXT,
+    sharing_policy VARCHAR(20) DEFAULT 'private' CHECK (sharing_policy IN ('public', 'private', 'semi-private')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE NULL
