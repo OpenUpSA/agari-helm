@@ -56,6 +56,28 @@ CREATE TABLE IF NOT EXISTS studies (
     deleted_at TIMESTAMP WITH TIME ZONE NULL
 );
 
+
+-- Create log table
+CREATE TABLE IF NOT EXISTS logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    log_type VARCHAR(50) NOT NULL,
+    resource_id UUID,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    log_entry TEXT
+);
+
+-- Create submissions table
+CREATE TABLE IF NOT EXISTS submissions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    analysis_id UUID,
+    user_id UUID,
+    status VARCHAR(50) DEFAULT '',
+    message jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+);
+
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_projects_pathogen ON projects(pathogen_id);
 CREATE INDEX IF NOT EXISTS idx_projects_organisation ON projects(organisation_id);
@@ -65,6 +87,9 @@ CREATE INDEX IF NOT EXISTS idx_studies_project ON studies(project_id);
 CREATE INDEX IF NOT EXISTS idx_studies_study_id ON studies(study_id);
 CREATE INDEX IF NOT EXISTS idx_pathogens_name ON pathogens(name);
 CREATE INDEX IF NOT EXISTS idx_organisations_name ON organisations(name);
+CREATE INDEX IF NOT EXISTS idx_logs_log_type ON logs(log_type);
+CREATE INDEX IF NOT EXISTS idx_submissions_project ON submissions(project_id);
+
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -150,3 +175,5 @@ COMMENT ON TABLE studies IS 'Studies table containing study information linked t
 COMMENT ON VIEW project_details IS 'Denormalized view of projects with pathogen and study count information';
 COMMENT ON VIEW study_details IS 'Denormalized view of studies with project and pathogen information';
 COMMENT ON TABLE organisations IS 'Table containing organisation information';
+COMMENT ON TABLE logs IS 'Log table for tracking user actions';
+COMMENT ON TABLE submissions IS 'Table for tracking data submissions related to projects';
