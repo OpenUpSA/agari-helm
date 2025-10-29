@@ -169,15 +169,17 @@ JOIN projects p ON s.project_id = p.id AND p.deleted_at IS NULL
 LEFT JOIN pathogens pat ON p.pathogen_id = pat.id AND pat.deleted_at IS NULL
 WHERE s.deleted_at IS NULL;
 
+DROP VIEW IF EXISTS organisation_projects;
+
 CREATE OR REPLACE VIEW organisation_projects AS
 SELECT 
     o.id as organisation_id,
     o.name as organisation_name,
     COUNT(p.id) as project_count
 FROM organisations o
-LEFT JOIN projects p ON o.id = p.organisation_id AND p.deleted_at IS NULL
+LEFT JOIN projects p ON o.id::varchar = p.organisation_id AND p.deleted_at IS NULL
 WHERE o.deleted_at IS NULL
-GROUP BY o.id, o.name;  
+GROUP BY o.id, o.name;
 
 COMMENT ON TABLE pathogens IS 'Reference table for pathogen information';
 COMMENT ON TABLE projects IS 'Main projects table containing project metadata';
