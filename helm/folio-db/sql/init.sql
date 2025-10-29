@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS submissions (
     user_id UUID,
     status VARCHAR(50) DEFAULT '',
     message jsonb,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 
