@@ -70,7 +70,17 @@ CREATE TABLE IF NOT EXISTS logs (
 CREATE TABLE IF NOT EXISTS submissions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    study_id VARCHAR(255),
     analysis_id UUID,
+    submission_name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create submissions log table
+CREATE TABLE IF NOT EXISTS submissions_log (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    submission_id UUID NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
     user_id UUID,
     status VARCHAR(50) DEFAULT '',
     message jsonb,
@@ -177,3 +187,4 @@ COMMENT ON VIEW study_details IS 'Denormalized view of studies with project and 
 COMMENT ON TABLE organisations IS 'Table containing organisation information';
 COMMENT ON TABLE logs IS 'Log table for tracking user actions';
 COMMENT ON TABLE submissions IS 'Table for tracking data submissions related to projects';
+COMMENT ON TABLE submissions_log IS 'Log table for tracking submission actions';
