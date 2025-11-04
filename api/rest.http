@@ -6,19 +6,19 @@
 @test_file_md5 = cc70b8e811b39c98a938edf87145e34d
 
 # Fixed IDs for Keycloak permissions
-@study_id = study1
-@analysis_id = analysis001
+@study_id = cholera-267
+@analysis_id = analysis003
 
 # Authentication config
-@username = admin
+@username = system.admin@agari.tech
 @password = pass123
 @realm = agari
 @client_id = dms
-@client_secret = dms-secret
+@client_secret = VDyLEjGR3xDQvoQlrHq5AB6OwbW0Refc
 
 ### 1. LOGIN to get access token
 # @name login
-POST http://keycloak.local/realms/{{realm}}/protocol/openid-connect/token
+POST https://keycloak-ilifu.openup.org.za/realms/{{realm}}/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
 username={{username}}
@@ -31,7 +31,7 @@ username={{username}}
 @token = {{login.response.body.access_token}}
 
 ### 2. CREATE STUDY
-POST http://song.local/studies/{{study_id}}/
+POST https://song-staging.openup.org.za/studies/{{study_id}}/
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -46,20 +46,38 @@ Content-Type: application/json
   }
 }
 
+
+### 2.b GET STUDIES
+
+GET https://song-ilifu.openup.org.za/studies/all
+
+
 ### 3a. SUBMIT ANALYSIS
 # @name submitAnalysis
-POST http://song.local/submit/{{study_id}}/
+POST https://song-staging.openup.org.za/submit/{{study_id}}/
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
-< ./data/analysis_submission.json
+< ./metadata/sample/cholera/choleraOneToMany.json
 
 ### 3b. GET ANALYSIS DETAILS
 # Extract analysis_id from step 4 response and get full analysis details
 @submitted_analysis_id = {{submitAnalysis.response.body.analysisId}}
 # @name getAnalysis
-GET http://song.local/studies/{{study_id}}/analysis/{{submitted_analysis_id}}
+GET https://song-staging.openup.org.za/studies/{{study_id}}/analysis/{{submitted_analysis_id}}
 Authorization: Bearer {{token}}
+
+
+### 3c. GET SCHEMAS REGISTRATION
+GET https://song-ilifu.openup.org.za/schemas/malaria_vector_schema
+
+### 3d. POST SCHEMAS
+###POST https://song-ilifu.openup.org.za/schemas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+< ./metadata/schemas/malariaVector/malariaVector-v3.json
+
 
 ### 4a. INITIALIZE SCORE UPLOAD
 # Extract object_id from step 5 response
