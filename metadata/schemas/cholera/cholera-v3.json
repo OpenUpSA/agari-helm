@@ -60,7 +60,7 @@
                 "Burkina_Faso",
                 "Burundi",
                 "Cameroon",
-                "Cape_Verde",
+                "Cape Verde",
                 "Central African Republic",
                 "Chad",
                 "Comoros",
@@ -1907,7 +1907,7 @@
               "description": "A plasmid is an extrachromosomal, usually circular DNA molecule found in bacteria that can carry genes conferring traits such as antimicrobial resistance or virulence. This field records the presence and, if known, the specific identity or type of plasmid detected in a sample. Multiple plasmids may be present in a single isolate.",
               "type": "string"
             },
-            "multiple_select_plasmids_identified": {
+            "other_plasmids_identified": {
               "name": "Other Plasmids Identified",
               "description": "A plasmid is an extrachromosomal, usually circular DNA molecule found in bacteria that can carry genes conferring traits such as antimicrobial resistance or virulence. This field records the presence and, if known, the specific identity or type of plasmid detected in a sample. Multiple plasmids may be present in a single isolate.",
               "type": "string"

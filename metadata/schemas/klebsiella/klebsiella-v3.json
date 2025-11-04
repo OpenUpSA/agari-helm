@@ -147,7 +147,7 @@
                 "Other"
               ]
             },
-            "other_specify_biospecimen": {
+            "other_biospecimen": {
               "name": "Other Biospecimen",
               "description": "specifies the biospecimen type when 'Other' is selected in the biospecimen field",
               "type": "string"
@@ -183,10 +183,10 @@
                 "Angola",
                 "Benin",
                 "Botswana",
-                "Burkina_Faso",
+                "Burkina Faso",
                 "Burundi",
                 "Cameroon",
-                "Cape_Verde",
+                "Cape Verde",
                 "Central African Republic",
                 "Chad",
                 "Comoros",
@@ -1235,7 +1235,7 @@
                 "Restricted Access"
               ]
             },
-            "other_specify_host_scientific_name": {
+            "other_host_scientific_name": {
               "name": "Other Scientific Name",
               "description": "A subject age at time of specimen extraction is the age (since birth) of the organism at the time a given specimen was extracted",
               "type": "string"
@@ -1346,7 +1346,7 @@
                 "Restricted Access"
               ]
             },
-            "other_specify_host_disease": {
+            "other_host_disease": {
               "name": "Other Disease",
               "description": "A host data field which describes the name of the disease experienced by the host.",
               "type": "string"

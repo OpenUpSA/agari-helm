@@ -156,8 +156,7 @@
                 "Missing",
                 "Not Provided",
                 "Not Applicable",
-                "Restricted Access",
-                "Other"
+                "Restricted Access"
               ]
             },
             "other_biospecimen": {
