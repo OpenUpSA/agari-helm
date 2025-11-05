@@ -48,6 +48,17 @@ spec:
               value: {{ .Values.folio.overture.score | quote }}
             - name: OVERTURE_SONG
               value: {{ .Values.folio.overture.song | quote }}
+            # MinIO configuration
+            - name: MINIO_ENDPOINT
+              value: {{ .Values.folio.minio.endpoint | quote }}
+            - name: MINIO_ACCESS_KEY
+              value: {{ .Values.folio.minio.accessKey | quote }}
+            - name: MINIO_SECRET_KEY
+              value: {{ .Values.folio.minio.secretKey | quote }}
+            - name: MINIO_SECURED
+              value: {{ .Values.folio.minio.secured | quote }}
+            - name: MINIO_BUCKET
+              value: {{ .Values.folio.minio.bucket | quote }}
           livenessProbe:
             httpGet:
               path: /health
