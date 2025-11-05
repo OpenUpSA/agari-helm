@@ -3,7 +3,7 @@ replicaCount: 1
 fullnameOverride: "song"
 
 url:
-  hostname: "song-ilifu.openup.org.za"
+  hostname: "song-staging.openup.org.za" #ilifu/staging
 
 image:
   repository: ghcr.io/overture-stack/song-server
@@ -27,7 +27,7 @@ song:
         resourceserver:
           jwt:
             jwkSetUri: "http://keycloak:8080/realms/agari/protocol/openid-connect/certs"
-            issuerUri: "http://keycloak-ilifu.openup.org.za/realms/agari"
+            issuerUri: "http://keycloak-staging.openup.org.za/realms/agari" #ilifu/staging
 
   client:
     study:
@@ -60,7 +60,7 @@ song:
     server:
       provider: "keycloak"
       clientId: "dms"
-      clientSecret: "dms-secret" 
+      clientSecret: "dms-secret"
       tokenName: "apiKey"
       keycloak:
         host: "http://keycloak:8080"
@@ -74,14 +74,14 @@ song:
       resourceserver:
         jwt:
           jwkSetUri: "http://keycloak:8080/realms/agari/protocol/openid-connect/certs"
-          issuerUri: "http://keycloak-ilifu.openup.org.za/realms/agari"
+          issuerUri: "http://keycloak-staging.openup.org.za/realms/agari" #ilifu/staging
       introspectionUri: "http://keycloak:8080/realms/agari/apikey/check_api_key/"
   
   # Kafka Variables (enabled)
   kafka:
-    bootstrapServers: "kafka:9092"
+    bootstrapServers: "kafka-kafka-bootstrap.agari-kafka.svc:9092"
     template:
-      defaultTopic: "song-analysis"
+      defaultTopic: "song-analysis-staging" #prod/staging
   
   # Swagger Variable
   swagger:
@@ -118,7 +118,7 @@ ingress:
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
   hosts:
-    - host: song-ilifu.openup.org.za
+    - host: song-staging.openup.org.za #ilifu/staging
       paths:
         - path: /
           pathType: Prefix

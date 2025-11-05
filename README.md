@@ -55,7 +55,7 @@ helm repo add strimzi https://strimzi.io/charts/
 cd helm/kafka && helm dependency build && cd ../..
 
 # Install Kafka using Strimzi operator
-helm install kafka ./helm/kafka -n agari
+helm install kafka ./helm/kafka -n agari-kafka
 ```
 
 ### 4. Setup Keycloak

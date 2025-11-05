@@ -3,7 +3,7 @@ replicaCount: 1
 fullnameOverride: "maestro"
 
 url:
-  hostname: "maestro-ilifu.openup.org.za"
+  hostname: "maestro-ilifu.openup.org.za" # ilifu/staging
 
 image:
   repository: ghcr.io/overture-stack/maestro
@@ -67,10 +67,10 @@ maestro:
       stream:
         kafka:
           binder:
-            brokers: "kafka:9092"
+            brokers: "kafka-kafka-bootstrap.agari-kafka.svc:9092"
         bindings:
           songInput:
-            destination: "song-analysis"
+            destination: "song-analysis-prod" # prod/staging
 
   # Swagger Configuration
   springdoc:
@@ -119,7 +119,7 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "100m"
   hosts:
-    - host: maestro-ilifu.openup.org.za
+    - host: maestro-ilifu.openup.org.za # ilifu/staging
       paths:
         - path: /
           pathType: Prefix
