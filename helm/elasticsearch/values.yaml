@@ -32,6 +32,12 @@ elasticsearch:
   network:
     host: "0.0.0.0"
 
+persistence:
+  enabled: true
+  storageClass: ""
+  size: 10Gi
+  accessMode: ReadWriteOnce
+
 resources:
   limits:
     cpu: 300m
@@ -40,7 +46,6 @@ resources:
     cpu: 100m
     memory: 300Mi
 
-# Probe configuration
 probes:
   liveness:
     enabled: false 
@@ -63,66 +68,6 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
-
-persistence:
-  enabled: false
-  
-  discovery:
-    type: "single-node"
-  
-  security:
-    enabled: false 
-  
-  java:
-    opts: "-Xms256m -Xmx512m"
-  
-  network:
-    host: "0.0.0.0"
-  
-  compatibility:
-    override_main_response_version: true
-
-resources:
-  limits:
-    cpu: 500m
-    memory: 768Mi
-  requests:
-    cpu: 200m
-    memory: 512Mi
-
-ingress:
-  enabled: true
-  className: "nginx"
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
-  hosts:
-    - host: elasticsearch.local
-      paths:
-        - path: /
-          pathType: Prefix
-
-persistence:
-  enabled: false
-
-probes:
-  liveness:
-    enabled: false  
-    httpGet:
-      path: /_cluster/health
-      port: http
-    initialDelaySeconds: 300
-    periodSeconds: 60
-    timeoutSeconds: 10
-    failureThreshold: 5
-  
-  readiness:
-    enabled: true
-    tcpSocket:
-      port: 9200
-    initialDelaySeconds: 60
-    periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 3
 
 nodeSelector: {}
 tolerations: []

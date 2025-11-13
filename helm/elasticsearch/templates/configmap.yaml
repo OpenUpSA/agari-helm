@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.fullnameOverride | default (printf "%s-elasticsearch" .Release.Name) }}-mapping
+  labels:
+    app.kubernetes.io/name: {{ .Values.nameOverride | default "elasticsearch" }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  agari-index-mapping.json: |
+{{ .Files.Get "configs/agari-index-mapping.json" | indent 4 }}
