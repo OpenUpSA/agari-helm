@@ -1,0 +1,16 @@
+url:
+  hostname: "minio.local"
+
+console:
+  url:
+    hostname: "minio-console.local"
+  ingress:
+    className: "nginx"
+
+ingress:
+  className: "nginx"
+  hosts:
+    - host: minio.local
+      paths:
+        - path: /
+          pathType: Prefix

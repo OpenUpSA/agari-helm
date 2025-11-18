@@ -1,0 +1,22 @@
+
+
+url:
+  hostname: "keycloak.local"
+
+ingress:
+  className: "nginx"
+  hosts:
+    - host: keycloak.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+keycloak:
+  hostname: keycloak.local
+  frontendUrl: "http://keycloak.local"
+  adminUrl: "http://keycloak.local"
+
+  # Admin user
+  admin:
+    username: admin
+    password: admin123

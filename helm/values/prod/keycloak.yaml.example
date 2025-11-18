@@ -1,0 +1,40 @@
+
+
+url:
+  hostname: "keycloak-ilifu.openup.org.za"
+
+ingress:
+  className: "nginx"
+  hosts:
+    - host: keycloak-ilifu.openup.org.za
+      paths:
+        - path: /
+          pathType: Prefix
+
+keycloak:
+  hostname: keycloak-ilifu.openup.org.za
+  frontendUrl: "https://keycloak-ilifu.openup.org.za"
+  adminUrl: "https://keycloak-ilifu.openup.org.za"
+
+  # Admin user
+  admin:
+    username:
+    password:
+
+extraEnv:
+  - name: KC_FEATURES
+    value: "preview"
+  - name: KC_HOSTNAME_STRICT
+    value: "false"
+  - name: KC_HOSTNAME_STRICT_HTTPS
+    value: "false"
+  - name: JAVA_OPTS_APPEND
+    value: "-Djava.awt.headless=true -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.net.preferIPv4Stack=true -server -Xms512m -Xmx768m"
+  - name: KC_HOSTNAME
+    value: keycloak-ilifu.openup.org.za
+  - name: KC_PROXY
+    value: "edge"
+  - name: KC_CORS_ORIGINS
+    value: "*"
+  - name: KC_SPI_EMAIL_TEMPLATE_PROVIDER
+    value: freemarker
