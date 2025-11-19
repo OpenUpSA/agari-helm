@@ -38,6 +38,15 @@ persistence:
   size: 10Gi
   accessMode: ReadWriteOnce
 
+# Add security context to fix permissions
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  runAsNonRoot: true
+
 resources:
   limits:
     cpu: 300m
