@@ -58,14 +58,6 @@ spec:
             # MinIO configuration
             - name: MINIO_ENDPOINT
               value: {{ .Values.folio.minio.endpoint | quote }}
-            - name: MINIO_ACCESS_KEY
-              value: {{ .Values.folio.minio.accessKey | quote }}
-            - name: MINIO_SECRET_KEY
-              value: {{ .Values.folio.minio.secretKey | quote }}
-            - name: MINIO_BUCKET
-              value: {{ .Values.folio.minio.bucket | quote }}
-            - name: MINIO_SECURE
-              value: {{ .Values.folio.minio.secure | quote }}
             
             # Elasticsearch configuration
             - name: ELASTICSEARCH_URL

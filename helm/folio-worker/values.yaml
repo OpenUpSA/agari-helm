@@ -38,10 +38,6 @@ folio:
 
   minio:
     endpoint: "minio:9000"
-    accessKey: "minioadmin"
-    secretKey: "minioadmin"
-    bucket: "agari-data"
-    secure: false
 
   elasticsearch:
     url: "http://elasticsearch:9200"
