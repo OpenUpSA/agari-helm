@@ -1,6 +1,6 @@
 apiVersion: v2
-name: folio-worker
-description: A Helm chart for Folio Worker - AGARI Background Job Processor
+name: folio
+description: A Helm chart for Folio - AGARI Projects Service
 type: application
 version: 0.1.0
 appVersion: "0.1.0"

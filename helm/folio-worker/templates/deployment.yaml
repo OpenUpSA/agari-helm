@@ -1,39 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "folio-worker.fullname" . }}
+  name: {{ include "folio.fullname" . }}
   labels:
-    {{- include "folio-worker.labels" . | nindent 4 }}
+    {{- include "folio.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "folio-worker.selectorLabels" . | nindent 6 }}
+      {{- include "folio.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "folio-worker.selectorLabels" . | nindent 8 }}
+        {{- include "folio.selectorLabels" . | nindent 8 }}
     spec:
-      restartPolicy: {{ .Values.restartPolicy }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          
-          # Override the default command to run worker instead of web app
-          command: {{ .Values.worker.command | toJson }}
-          
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
           env:
-            # Worker-specific environment variables
-            {{- if .Values.worker.env.POLL_INTERVAL }}
-            - name: POLL_INTERVAL
-              value: {{ .Values.worker.env.POLL_INTERVAL | quote }}
-            {{- end }}
-            {{- if .Values.worker.env.JOB_TIMEOUT }}
-            - name: JOB_TIMEOUT
-              value: {{ .Values.worker.env.JOB_TIMEOUT | quote }}
-            {{- end }}
-            
             # Keycloak authentication configuration
             - name: KEYCLOAK_HOST
               value: {{ .Values.folio.auth.keycloak.host | quote }}
@@ -45,50 +34,33 @@ spec:
               value: {{ .Values.folio.auth.keycloak.clientId | quote }}
             - name: KEYCLOAK_CLIENT_SECRET
               value: {{ .Values.folio.auth.keycloak.clientSecret | quote }}
-              
-            # Database configuration
-            - name: FOLIO_DB_HOST
+            - name: DB_HOST
               value: {{ .Values.folio.database.host | quote }}
-            - name: FOLIO_DB_PORT
+            - name: DB_PORT
               value: {{ .Values.folio.database.port | quote }}
-            - name: FOLIO_DB_NAME
+            - name: DB_NAME
               value: {{ .Values.folio.database.name | quote }}
-            - name: FOLIO_DB_USER
+            - name: DB_USER
               value: {{ .Values.folio.database.user | quote }}
-            - name: FOLIO_DB_PASSWORD
+            - name: DB_PASSWORD
               value: {{ .Values.folio.database.password | quote }}
-              
-            # MinIO configuration
-            - name: MINIO_ENDPOINT
-              value: {{ .Values.folio.minio.endpoint | quote }}
-            - name: MINIO_ACCESS_KEY
-              value: {{ .Values.folio.minio.accessKey | quote }}
-            - name: MINIO_SECRET_KEY
-              value: {{ .Values.folio.minio.secretKey | quote }}
-            - name: MINIO_BUCKET
-              value: {{ .Values.folio.minio.bucket | quote }}
-            - name: MINIO_SECURE
-              value: {{ .Values.folio.minio.secure | quote }}
-              
-            # Elasticsearch configuration
-            - name: ELASTICSEARCH_URL
-              value: {{ .Values.folio.elasticsearch.url | quote }}
-            - name: ELASTICSEARCH_INDEX
-              value: {{ .Values.folio.elasticsearch.index | quote }}
-              
-          
+            - name: OVERTURE_SCORE
+              value: {{ .Values.folio.overture.score | quote }}
+            - name: OVERTURE_SONG
+              value: {{ .Values.folio.overture.song | quote }}
+            - name: KEYCLOAK_URL
+              value: {{ .Values.folio.auth.keycloak.host | quote }}
+          livenessProbe:
+            httpGet:
+              path: /info/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /info/health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-            
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}

@@ -3,14 +3,12 @@ replicaCount: 1
 image:
   repository: ghcr.io/openupsa/agari-folio
   pullPolicy: "Always"
-  tag: "staging"
+  tag: "latest"
 
 worker:
   command: ["python", "worker.py"]
-  
   env:
     POLL_INTERVAL: "1"
-    
     JOB_TIMEOUT: "300"
 
 folio:
@@ -22,29 +20,46 @@ folio:
       clientId: "dms"
       clientSecret: "dms-secret"
   database:
+    vendor: postgres
     host: "folio-db"
     port: "5432"
     name: "folio"
     user: "admin"
     password: "folio-db-pass-123"
-  
-  minio:
-    endpoint: "minio:9000"
-    accessKey: "minioadmin"
-    secretKey: "minioadmin"
-    bucket: "agari-data"
-    secure: false
-    
-  elasticsearch:
-    url: "http://elasticsearch:9200"
-    index: "agari-samples"
+    pool:
+      size: 10
+      maxOverflow: 20
+      recycle: 3600
+      preping: true
+      timeout: 30
+    options: "?connect_timeout=10&application_name=folio"
+
+  overture:
+    score: "http://score:8087"
+    song: "http://song:8080"
+
+ingress:
+  enabled: true
+  className: private
+  annotations:
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+  hosts:
+    - host: folio-ilifu.openup.org.za
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
 
 resources:
   limits:
     cpu: 500m
     memory: 512Mi
   requests:
-    cpu: 100m
+    cpu: 200m
     memory: 256Mi
 
 nodeSelector: {}
@@ -52,6 +67,3 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
-
-# Restart policy for worker pods
-restartPolicy: Always
