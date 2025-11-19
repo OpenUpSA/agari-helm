@@ -76,11 +76,6 @@ spec:
             - name: ELASTICSEARCH_INDEX
               value: {{ .Values.folio.elasticsearch.index | quote }}
               
-            # Overture configuration
-            - name: OVERTURE_SCORE
-              value: {{ .Values.folio.overture.score | quote }}
-            - name: OVERTURE_SONG
-              value: {{ .Values.folio.overture.song | quote }}
           
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
