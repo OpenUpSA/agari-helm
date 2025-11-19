@@ -48,6 +48,29 @@ spec:
             # Bootstrap settings
             - name: bootstrap.memory_lock
               value: "false"
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/bash
+                  - -c
+                  - |
+                    # Wait for Elasticsearch to be ready
+                    until curl -s http://localhost:9200/_cluster/health | grep -q '"status":"yellow"\|"status":"green"'; do
+                      echo "Waiting for Elasticsearch to be ready..."
+                      sleep 10
+                    done
+                    
+                    # Check if agari-samples index exists
+                    if curl -s -f -o /dev/null http://localhost:9200/agari-samples; then
+                      echo "Index agari-samples already exists"
+                    else
+                      echo "Creating agari-samples index with mapping..."
+                      curl -X PUT "http://localhost:9200/agari-samples" \
+                        -H 'Content-Type: application/json' \
+                        -d @/config/agari-index-mapping.json
+                      echo "Index created successfully"
+                    fi
           {{- if .Values.probes.liveness.enabled }}
           livenessProbe:
             {{- if .Values.probes.liveness.httpGet }}
@@ -81,13 +104,18 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
-            - name: opensearch-data
-              mountPath: /usr/share/opensearch/data
+            - name: elasticsearch-data
+              mountPath: /usr/share/elasticsearch/data
+            - name: index-mapping
+              mountPath: /config
       volumes:
-        - name: opensearch-data
+        - name: elasticsearch-data
           {{- if .Values.persistence.enabled }}
           persistentVolumeClaim:
             claimName: {{ .Values.fullnameOverride | default (printf "%s-elasticsearch" .Release.Name) }}-data
           {{- else }}
           emptyDir: {}
           {{- end }}
+        - name: index-mapping
+          configMap:
+            name: {{ .Values.fullnameOverride | default (printf "%s-elasticsearch" .Release.Name) }}-mapping
