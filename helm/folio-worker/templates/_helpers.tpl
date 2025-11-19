@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "folio.name" -}}
+{{- define "folio-worker.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "folio.fullname" -}}
+{{- define "folio-worker.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "folio.chart" -}}
+{{- define "folio-worker.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "folio.labels" -}}
-helm.sh/chart: {{ include "folio.chart" . }}
-{{ include "folio.selectorLabels" . }}
+{{- define "folio-worker.labels" -}}
+helm.sh/chart: {{ include "folio-worker.chart" . }}
+{{ include "folio-worker.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,7 +45,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "folio.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "folio.name" . }}
+{{- define "folio-worker.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "folio-worker.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}

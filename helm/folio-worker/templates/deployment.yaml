@@ -1,23 +1,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "folio.fullname" . }}
+  name: {{ include "folio-worker.fullname" . }}
   labels:
-    {{- include "folio.labels" . | nindent 4 }}
+    {{- include "folio-worker.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "folio.selectorLabels" . | nindent 6 }}
+      {{- include "folio-worker.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "folio.selectorLabels" . | nindent 8 }}
+        {{- include "folio-worker.selectorLabels" . | nindent 8 }}
     spec:
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          
+          # Override the default command to run worker instead of web app
+          command: {{ .Values.worker.command | toJson }}
           
           env:
             # Keycloak authentication configuration
@@ -31,6 +34,8 @@ spec:
               value: {{ .Values.folio.auth.keycloak.clientId | quote }}
             - name: KEYCLOAK_CLIENT_SECRET
               value: {{ .Values.folio.auth.keycloak.clientSecret | quote }}
+            
+            # Database configuration (using same env vars as main folio service)
             - name: DB_HOST
               value: {{ .Values.folio.database.host | quote }}
             - name: DB_PORT
@@ -41,19 +46,27 @@ spec:
               value: {{ .Values.folio.database.user | quote }}
             - name: DB_PASSWORD
               value: {{ .Values.folio.database.password | quote }}
+            
+            # Overture configuration
+            - name: OVERTURE_SCORE
+              value: {{ .Values.folio.overture.score | quote }}
+            - name: OVERTURE_SONG
+              value: {{ .Values.folio.overture.song | quote }}
             - name: KEYCLOAK_URL
               value: {{ .Values.folio.auth.keycloak.host | quote }}
-          livenessProbe:
-            httpGet:
-              path: /info/health
-              port: http
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /info/health
-              port: http
-            initialDelaySeconds: 5
-            periodSeconds: 5
+          
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+            
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

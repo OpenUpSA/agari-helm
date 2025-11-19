@@ -7,10 +7,8 @@ image:
 
 worker:
   command: ["python", "worker.py"]
-  env:
-    POLL_INTERVAL: "1"
-    JOB_TIMEOUT: "300"
 
+# Folio application configuration (same as main folio service)
 folio:
   auth:
     keycloak:
@@ -32,10 +30,11 @@ folio:
       recycle: 3600
       preping: true
       timeout: 30
-    options: "?connect_timeout=10&application_name=folio"
+    options: "?connect_timeout=10&application_name=folio-worker"
 
-
-
+  overture:
+    score: "http://score:8087"
+    song: "http://song:8080"
 
 resources:
   limits:
