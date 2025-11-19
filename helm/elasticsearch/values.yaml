@@ -34,7 +34,7 @@ elasticsearch:
 
 persistence:
   enabled: true
-  storageClass: ""
+  storageClass: "cinder-csi"
   size: 10Gi
   accessMode: ReadWriteOnce
 
