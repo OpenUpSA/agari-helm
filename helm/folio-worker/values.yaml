@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: ghcr.io/openupsa/agari-folio
   pullPolicy: "Always"
-  tag: "latest"
+  tag: "staging"
 
 worker:
   command: ["python", "worker.py"]
