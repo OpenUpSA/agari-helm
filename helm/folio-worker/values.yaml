@@ -36,6 +36,17 @@ folio:
     score: "http://score:8087"
     song: "http://song:8080"
 
+  minio:
+    endpoint: "minio:9000"
+    accessKey: "minioadmin"
+    secretKey: "minioadmin"
+    bucket: "agari-data"
+    secure: false
+
+  elasticsearch:
+    url: "http://elasticsearch:9200"
+    index: "agari-samples"
+
 resources:
   limits:
     cpu: 500m
