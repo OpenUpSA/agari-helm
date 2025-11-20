@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/methodlab/agari-frontend
-  tag: v0.0.1
+  tag: v0.0.24
   pullPolicy: Always
 
 service:

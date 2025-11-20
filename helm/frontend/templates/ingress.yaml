@@ -6,6 +6,7 @@ metadata:
   annotations: {{ toYaml .Values.ingress.annotations | nindent 4 }}
 spec:
   rules:
+    {{- $root := . }}
     {{- range .Values.ingress.hosts }}
     - host: {{ .host }}
       http:

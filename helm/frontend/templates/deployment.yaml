@@ -27,6 +27,6 @@ spec:
           readinessProbe: {{ toYaml .Values.readinessProbe | nindent 10 }}
           livenessProbe: {{ toYaml .Values.livenessProbe | nindent 10 }}
           resources: {{ toYaml .Values.resources | nindent 10 }}
-          nodeSelector: {{ toYaml .Values.nodeSelector | nindent 6 }}
-          tolerations: {{ toYaml .Values.tolerations | nindent 6 }}
-          affinity: {{ toYaml .Values.affinity | nindent 6 }}
+      nodeSelector: {{ toYaml .Values.nodeSelector | nindent 6 }}
+      tolerations: {{ toYaml .Values.tolerations | nindent 6 }}
+      affinity: {{ toYaml .Values.affinity | nindent 6 }}
