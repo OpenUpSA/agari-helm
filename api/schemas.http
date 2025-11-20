@@ -1,0 +1,101 @@
+# @folio = http://localhost:8000
+@folio = https://folio-staging.openup.org.za
+# @folio = https://folio-ilifu.openup.org.za
+
+# @keycloak = http://keycloak.local
+@keycloak = https://keycloak-staging.openup.org.za
+# @keycloak = https://keycloak-ilifu.openup.org.za
+
+@realm = agari
+@client_id = dms
+@client_secret = VDyLEjGR3xDQvoQlrHq5AB6OwbW0Refc
+
+@username = system.admin@agari.tech
+
+@password = pass123
+
+
+### 1. LOGIN to get access token
+# @name login
+# POST {{keycloak}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+username={{username}}
+&password={{password}}
+&grant_type=password
+&client_id={{client_id}}
+&client_secret={{client_secret}}
+
+###
+@token = {{login.response.body.access_token}}
+
+
+##########################
+### PATHOGENS
+##########################
+
+# @name list_pathogens
+GET {{folio}}/pathogens
+
+###
+
+@pathogen_id = bfebf404-e1cf-434d-8146-d68944118b9c
+
+# @name get_pathogen
+GET {{folio}}/pathogens/{{pathogen_id}}
+
+###
+
+# @update_pathogen
+PUT {{folio}}/pathogens/{{pathogen_id}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "schema_id": "8f3fc228-df4f-4994-a20f-38ebfa4d61f2"
+}
+
+
+##########################
+### SCHEMAS
+##########################
+
+# @name list_schemas
+GET {{folio}}/schemas
+Authorization: Bearer {{token}} 
+
+###
+
+# @name register_schema
+POST {{folio}}/schemas/
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary456
+
+------WebKitFormBoundary456
+Content-Disposition: form-data; name="metadata"
+
+{
+    "pathogen_id": "{{pathogen_id}}",
+    "name": "mpox_schema",
+    "description": "Schema for mpox pathogen"
+}
+
+------WebKitFormBoundary456
+Content-Disposition: form-data; name="file"; filename="cholera-v5.json"
+Content-Type: application/json
+
+< ./metadata/schemas/mpox/custom-mpox-v5.json
+
+------WebKitFormBoundary456--
+
+
+
+###
+
+@schema_id = 33a99e10-0e47-4e70-9584-0e6e5dd1d126
+
+# @name get_schema
+GET {{folio}}/schemas/{{schema_id}}
+Authorization: Bearer {{token}} 
+
+###

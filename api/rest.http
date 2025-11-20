@@ -18,7 +18,7 @@
 
 ### 1. LOGIN to get access token
 # @name login
-POST https://keycloak-ilifu.openup.org.za/realms/{{realm}}/protocol/openid-connect/token
+POST https://keycloak-staging.openup.org.za/realms/{{realm}}/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
 username={{username}}
@@ -58,7 +58,7 @@ POST https://song-staging.openup.org.za/submit/{{study_id}}/
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
-< ./metadata/sample/cholera/choleraOneToMany.json
+< ./metadata/sample/test_data.json
 
 ### 3b. GET ANALYSIS DETAILS
 # Extract analysis_id from step 4 response and get full analysis details
@@ -69,14 +69,14 @@ Authorization: Bearer {{token}}
 
 
 ### 3c. GET SCHEMAS REGISTRATION
-GET https://song-ilifu.openup.org.za/schemas/malaria_vector_schema
+GET https://song-staging.openup.org.za/schemas/
 
 ### 3d. POST SCHEMAS
-###POST https://song-ilifu.openup.org.za/schemas
+POST https://song-staging.openup.org.za/schemas
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
-< ./metadata/schemas/malariaVector/malariaVector-v3.json
+< ./metadata/sample/test-schema.json
 
 
 ### 4a. INITIALIZE SCORE UPLOAD
