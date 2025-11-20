@@ -1749,7 +1749,7 @@
                 "Anopheles Quadrimaculatus"
               ]
             },
-            "other_host_scientific_name": {
+            "other_second_host_scientific_name": {
               "name": "Other Scientific Name",
               "x-hint": "Enter a text value.",
               "description": "The taxonomic, or scientific name of the host.",
@@ -2313,59 +2313,6 @@
               "name": "Bioinformatics Protocol",
               "x-hint": "Enter a text value.",
               "description": "The name and version number of the bioinformatics protocol used.",
-              "type": "string"
-            },
-            "virulence_factor_gene": {
-              "name": "Virulence Factor",
-              "x-hint": "Enter a text value.",
-              "description": "A persistent, unique identifier of a genome database entry.",
-              "type": "string"
-            },
-            "resistance_gene_name": {
-              "name": "Resistance Name",
-              "x-hint": "Select one or more value from the template list.",
-              "x-split-regex": ",\\s*",
-              "description": "A persistent, unique identifier of a genome database entry.",
-              "type": "array",
-              "items": {
-                "type": "string",
-                "enum": [
-                  "Histidine-Rich Protein 2 (Diagnostic Resistance)",
-                  "Histidine-Rich Protein 3 (Diagnostic Resistance)",
-                  "Parasite Lactate Dehydrogenase (pLDH) (Diagnostic Resistance)",
-                  "Aldolase (Diagnostic Resistance)",
-                  "Apicoplast Ribosomal Protein S10 (Drug Resistance)",
-                  "Amino Acid Transporter 1 (Drug Resistance)",
-                  "Chloroquine Resistance Transporter (Drug Resistance)",
-                  "Dihydrofolate Reductase (Drug Resistance)",
-                  "Dihydropteroate Synthase (Drug Resistance)",
-                  "Exonuclease (Drug Resistance)",
-                  "Ferredoxin (Drug Resistance)",
-                  "Kelch 13 Propeller Domain Protein (Pfkelch13 Or Pfk13) (Drug Resistance)",
-                  "Multidrug Resistance Protein 1 (Drug Resistance)",
-                  "Multidrug Resistance Protein 2 (Drug Resistance)",
-                  "Plasmepsin 2 And 3(Drug Resistance)",
-                  "Voltage-Gated Sodium Channel (Insecticide Resistance)",
-                  "Acetylcholinesterase-1(Insecticide Resistance)",
-                  "Resistance To Dieldrin (Insecticide Resistance)",
-                  "Cytochrome P450 Monooxygenases (CYP) Gene Family (Insecticide Resistance)",
-                  "Glutathione S-Transferases (GSTs) (Insecticide Resistance)",
-                  "Carboxylesterases (COEs) (Insecticide Resistance)",
-                  "Chemosensory Proteins (CSPs) (Insecticide Resistance)",
-                  "Cuticular Protein Genes (Insecticide Resistance)",
-                  "Not Applicable",
-                  "Missing",
-                  "Not Provided",
-                  "Restricted Access"
-                ]
-              },
-              "uniqueItems": true,
-              "minItems": 1
-            },
-            "other_resistance_gene_name": {
-              "name": "Other Resistance Name",
-              "x-hint": "Enter a text value.",
-              "description": "A persistent, unique identifier of a genome database entry.",
               "type": "string"
             },
             "resistance_gene_symbol": {

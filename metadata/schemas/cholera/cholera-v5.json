@@ -1114,7 +1114,9 @@
               "name": "Age",
               "x-hint": "Numeric values only.",
               "description": "A subject age at time of specimen extraction is the age (since birth) of the organism at the time a given specimen was extracted",
-              "type": "number"
+              "type": "number",
+              "minimum": 0,
+              "maximum": 120
             },
             "subject_age_unit": {
               "name": "Age Unit",

@@ -1516,7 +1516,9 @@
               "name": "Age",
               "x-hint": "Numeric values only.",
               "description": "Age of host at the time of sampling.",
-              "type": "number"
+              "type": "number",
+              "minimun": 0,
+              "maximum": 120
             },
             "host_age_unit": {
               "name": "Age Unit",
@@ -2564,7 +2566,9 @@
               "name": "PCR Ct",
               "x-hint": "Enter a text value.",
               "description": "The Ct value result from a diagnostic SARS-CoV-2 RT-PCR test.",
-              "type": "string"
+              "type": "number",
+              "minimun": 0,
+              "maximum": 45
             }
           }
         }
