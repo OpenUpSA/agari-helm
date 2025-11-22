@@ -1,0 +1,404 @@
+{
+  "mappings": {
+    "dynamic": "true",
+    "dynamic_templates": [
+      {
+        "ids_as_keywords": {
+          "match_mapping_type": "string",
+          "match": "*Id|*_id|*accession*|case_id|isolate_id|study_id|specimen_collector_sample_id",
+          "mapping": {
+            "type": "keyword",
+            "copy_to": ["all_ids"]
+          }
+        }
+      },
+      {
+        "genomic_coordinates": {
+          "match_mapping_type": "string",
+          "match": "geo_loc_latitude|geo_loc_longitude|altitude|depth",
+          "mapping": {
+            "type": "float",
+            "ignore_malformed": true
+          }
+        }
+      },
+      {
+        "genomic_percentages": {
+          "match_mapping_type": "string",
+          "match": "*_gc|*gc*|percentage*|breadth_of_coverage*|*coverage*",
+          "mapping": {
+            "type": "float",
+            "ignore_malformed": true
+          }
+        }
+      },
+      {
+        "genomic_sizes": {
+          "match_mapping_type": "string",
+          "match": "n50|*genome_size|*length|*_bp|assembly_genome_size|consensus_genome_length",
+          "mapping": {
+            "type": "long",
+            "ignore_malformed": true
+          }
+        }
+      },
+      {
+        "sequencing_depth": {
+          "match_mapping_type": "string",
+          "match": "*depth*|*coverage*|median_read_depth",
+          "mapping": {
+            "type": "float",
+            "ignore_malformed": true
+          }
+        }
+      },
+      {
+        "age_fields": {
+          "match_mapping_type": "string",
+          "match": "*age*|subject_age*|host_age*",
+          "mapping": {
+            "type": "integer",
+            "ignore_malformed": true
+          }
+        }
+      },
+      {
+        "timestamps": {
+          "match_mapping_type": "string",
+          "match": "*At|createdAt|updatedAt",
+          "mapping": {
+            "type": "date",
+            "format": "strict_date_optional_time||epoch_millis||yyyy-MM-dd HH:mm:ss||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+          }
+        }
+      },
+      {
+        "sample_dates": {
+          "match_mapping_type": "string",
+          "match": "*date*|*Date*|sample_collection_date|sequencing_date|symptom_onset_date|date_of_last_vaccine_dose|most_recent_departure_date",
+          "mapping": {
+            "type": "date",
+            "format": "strict_date_optional_time||epoch_millis||yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||dd/MM/yyyy||MM/dd/yyyy",
+            "ignore_malformed": true
+          }
+        }
+      },
+      {
+        "geographic_countries": {
+          "match_mapping_type": "string", 
+          "match": "*country*|geo_loc_name_country|destination_of_most_recent_travel*",
+          "mapping": {
+            "type": "keyword",
+            "fields": {
+              "text": {
+                "type": "text",
+                "analyzer": "standard"
+              }
+            }
+          }
+        }
+      },
+      {
+        "geographic_locations": {
+          "match_mapping_type": "string",
+          "match": "*province*|*territory*|*state*|*city*|geo_loc_name*|*location*",
+          "mapping": {
+            "type": "keyword", 
+            "fields": {
+              "text": {
+                "type": "text",
+                "analyzer": "standard"
+              }
+            }
+          }
+        }
+      },
+      {
+        "organism_taxonomy": {
+          "match_mapping_type": "string",
+          "match": "organism|*organism*|host_scientific_name|*_scientific_name|strain|*strain*|lineage*|clade*|serotype|serogroup",
+          "mapping": {
+            "type": "keyword",
+            "fields": {
+              "text": {
+                "type": "text",
+                "analyzer": "standard"
+              }
+            }
+          }
+        }
+      },
+      {
+        "gene_resistance_data": {
+          "match_mapping_type": "string",
+          "match": "*gene*|*resistance*|*resistant*|virulence_factor*|*phenotype*|*genotype*",
+          "mapping": {
+            "type": "keyword",
+            "fields": {
+              "text": {
+                "type": "text", 
+                "analyzer": "standard"
+              }
+            }
+          }
+        }
+      },
+      {
+        "sequencing_instruments": {
+          "match_mapping_type": "string",
+          "match": "sequencing_instrument|*instrument*|platform|sequencing_assay_type|*protocol*|*method*",
+          "mapping": {
+            "type": "keyword",
+            "fields": {
+              "text": {
+                "type": "text",
+                "analyzer": "standard"
+              }
+            }
+          }
+        }
+      },
+      {
+        "clinical_outcomes": {
+          "match_mapping_type": "string",
+          "match": "*outcome*|*status*|*health*|vaccination_status|*disease*|*symptom*|*condition*",
+          "mapping": {
+            "type": "keyword",
+            "fields": {
+              "text": {
+                "type": "text",
+                "analyzer": "standard"
+              }
+            }
+          }
+        }
+      },
+      {
+        "specimen_types": {
+          "match_mapping_type": "string",
+          "match": "biospecimen|*specimen*|*material*|body_product|anatomical_*|collection_device",
+          "mapping": {
+            "type": "keyword",
+            "fields": {
+              "text": {
+                "type": "text",
+                "analyzer": "standard"
+              }
+            }
+          }
+        }
+      },
+      {
+        "fasta_sequences": {
+          "match_mapping_type": "string",
+          "match": "fasta_header_name|fasta_file_name|*fasta*|*sequence*",
+          "mapping": {
+            "type": "keyword",
+            "index": false,
+            "doc_values": false
+          }
+        }
+      },
+      {
+        "names_and_descriptions": {
+          "match_mapping_type": "string",
+          "match": "name|description|title|summary|*_name|*Name",
+          "mapping": {
+            "type": "text",
+            "analyzer": "standard",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          }
+        }
+      },
+      {
+        "types_and_states": {
+          "match_mapping_type": "string",
+          "match": "*Type|*State|*Status|platform|strategy|purpose_of_*|*_purpose",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      },
+      {
+        "file_sizes": {
+          "match_mapping_type": "long",
+          "match": "*Size|*size|*_size",
+          "mapping": {
+            "type": "long"
+          }
+        }
+      },
+      {
+        "version_fields": {
+          "match_mapping_type": "string",
+          "match": "*Version|*version|*_version",
+          "mapping": {
+            "type": "keyword"
+          }
+        }
+      },
+      {
+        "boolean_fields": {
+          "match_mapping_type": "boolean",
+          "match": "*",
+          "mapping": {
+            "type": "boolean"
+          }
+        }
+      },
+      {
+        "catch_all_strings": {
+          "match_mapping_type": "string",
+          "mapping": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 512
+              }
+            }
+          }
+        }
+      }
+    ],
+    "properties": {
+      "all_ids": {
+        "type": "keyword"
+      },
+      "timestamp": {
+        "type": "date",
+        "format": "strict_date_optional_time||epoch_millis"
+      },
+      "source": {
+        "type": "keyword"
+      },
+      "document_type": {
+        "type": "keyword"
+      },
+      "analysisType": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "keyword"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "projectId": {
+        "type": "keyword"
+      },
+      "organisationId": {
+        "type": "keyword"
+      },
+      "submissionId": {
+        "type": "keyword",
+        "copy_to": ["all_ids"]
+      },
+      "studyId": {
+        "type": "keyword",
+        "copy_to": ["all_ids"]
+      },
+      "analysisId": {
+        "type": "keyword",
+        "copy_to": ["all_ids"]
+      },
+      "privacy": {
+        "type": "keyword"
+      },
+      "publishedAt": {
+        "type": "date",
+        "format": "strict_date_optional_time||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+      },
+      "analysisState": {
+        "type": "keyword"
+      },
+      "createdAt": {
+        "type": "date", 
+        "format": "strict_date_optional_time||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+      },
+      "updatedAt": {
+        "type": "date",
+        "format": "strict_date_optional_time||yyyy-MM-dd'T'HH:mm:ss||yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+      },
+      "files": {
+        "type": "nested",
+        "properties": {
+          "fileName": {
+            "type": "keyword"
+          },
+          "fileType": {
+            "type": "keyword"
+          },
+          "fileSize": {
+            "type": "long"
+          },
+          "dataType": {
+            "type": "keyword"
+          },
+          "fileMd5sum": {
+            "type": "keyword"
+          }
+        }
+      }
+    }
+  },
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 1,
+    "index": {
+      "max_result_window": 100000,
+      "mapping": {
+        "total_fields": {
+          "limit": 5000
+        },
+        "depth": {
+          "limit": 100
+        },
+        "nested_fields": {
+          "limit": 200
+        },
+        "nested_objects": {
+          "limit": 50000
+        }
+      },
+      "max_docvalue_fields_search": 200,
+      "max_script_fields": 100,
+      "max_regex_length": 10000
+    },
+    "analysis": {
+      "analyzer": {
+        "standard_folding": {
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding"]
+        },
+        "keyword_lowercase": {
+          "tokenizer": "keyword",
+          "filter": ["lowercase", "asciifolding"]
+        },
+        "genomic_analyzer": {
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding", "word_delimiter"]
+        }
+      },
+      "filter": {
+        "word_delimiter": {
+          "type": "word_delimiter",
+          "generate_word_parts": true,
+          "generate_number_parts": true,
+          "catenate_words": false,
+          "catenate_numbers": false,
+          "catenate_all": false,
+          "split_on_case_change": true,
+          "preserve_original": true
+        }
+      }
+    }
+  }
+}
