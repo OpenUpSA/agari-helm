@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/methodlab/agari-frontend
-  tag: v0.0.24
+  tag: v0.0.26
   pullPolicy: Always
 
 service:
@@ -13,13 +13,17 @@ service:
 ingress:
   enabled: true
   className: private
-  annotations: {}
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod" # probably leave this as prod
   hosts:
-    - host: agari.openup.org.za
+    - host: agari-staging.openup.org.za # ilifu/staging
       paths:
         - path: /
           pathType: ImplementationSpecific
-  tls: []
+  tls:
+    - secretName: agari-staging-tls-cert # try ilifu/staging
+      hosts:
+        - agari-staging.openup.org.za # try ilifu/staging
 
 resources:
   limits:

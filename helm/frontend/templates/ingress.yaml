@@ -5,6 +5,11 @@ metadata:
   name: {{ include "agari-frontend.fullname" . }}
   annotations: {{ toYaml .Values.ingress.annotations | nindent 4 }}
 spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- toYaml .Values.ingress.tls | nindent 4 }}
+  {{- end }}
   rules:
     {{- $root := . }}
     {{- range .Values.ingress.hosts }}
@@ -19,9 +24,6 @@ spec:
                 name: {{ include "agari-frontend.fullname" $root }}
                 port:
                   number: {{ $.Values.service.port }}
-            {{- end }}
-      {{- end }}
-  {{- if .Values.ingress.tls }}
-    tls: {{ toYaml .Values.ingress.tls | nindent 2 }}
-  {{- end }}
+          {{- end }}
+    {{- end }}
 {{- end -}}
