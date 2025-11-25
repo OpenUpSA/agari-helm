@@ -1,6 +1,0 @@
-apiVersion: v2
-name: maestro
-description: A Helm chart for Maestro - Workflow orchestration and data indexing service
-type: application
-version: 0.1.0
-appVersion: "4.3.0"
