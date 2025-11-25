@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: ghcr.io/openupsa/agari-folio
   pullPolicy: "Always"
-  tag: "staging" #main/staging
+  tag: "staging" #master/staging
 
 service:
   type: ClusterIP
@@ -52,7 +52,10 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
-  tls: []
+  tls:
+    - secretName: folio-staging-tls-cert #ilifu/staging
+      hosts:
+        - folio-staging.openup.org.za #ilifu/staging
 
 resources:
   limits:

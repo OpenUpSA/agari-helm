@@ -1,7 +1,7 @@
 replicaCount: 1
 
 url:
-  hostname: "keycloak-ilifu.openup.org.za"
+  hostname: "keycloak-staging.openup.org.za" # ilifu/staging
 
 image:
   repository: quay.io/phasetwo/phasetwo-keycloak
@@ -27,11 +27,14 @@ ingress:
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
     nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
   hosts:
-    - host: keycloak-ilifu.openup.org.za
+    - host: keycloak-staging.openup.org.za  # ilifu/staging
       paths:
         - path: /
           pathType: Prefix
-  tls: []
+  tls:
+    - secretName: keycloak-staging-tls-cert # ilifu/staging
+      hosts:
+        - keycloak-staging.openup.org.za # ilifu/staging
 
 extraEnv:
   - name: KC_FEATURES
@@ -43,7 +46,7 @@ extraEnv:
   - name: JAVA_OPTS_APPEND
     value: "-Djava.awt.headless=true -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.net.preferIPv4Stack=true -server -Xms512m -Xmx768m"
   - name: KC_HOSTNAME
-    value: keycloak-ilifu.openup.org.za
+    value: keycloak-staging.openup.org.za  # ilifu/staging
   - name: KC_PROXY
     value: "edge"
   - name: KC_CORS_ORIGINS
@@ -78,11 +81,11 @@ keycloak:
     password: admin123
   
   # Keycloak settings
-  hostname: keycloak-ilifu.openup.org.za
+  hostname: keycloak-staging.openup.org.za # ilifu/staging
   healthEnabled: true
   startupMode: start-dev
-  frontendUrl: "https://keycloak-ilifu.openup.org.za"
-  adminUrl: "https://keycloak-ilifu.openup.org.za"
+  frontendUrl: "https://keycloak-staging.openup.org.za" # ilifu/staging
+  adminUrl: "https://keycloak-staging.openup.org.za" # ilifu/staging
 
 # Resource limits - better configuration from values-keycloak.yaml
 resources:
