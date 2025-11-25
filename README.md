@@ -45,20 +45,7 @@ helm install minio ./helm/minio -n agari
 kubectl port-forward -n agari service/minio 9000:9000
 ```
 
-### 3.2 Kafka Message Queue
-
-```bash
-# Add Strimzi repository for Kafka operator
-helm repo add strimzi https://strimzi.io/charts/
-
-# Build chart dependencies (required for first-time deployment)
-cd helm/kafka && helm dependency build && cd ../..
-
-# Install Kafka using Strimzi operator
-helm install kafka ./helm/kafka -n agari-kafka
-```
-
-### 4. Setup Keycloak
+#### 3.2 Setup Keycloak
 
 ```bash
 # Database
@@ -72,23 +59,6 @@ Set up the **client** in Keycloak and copy the **secret** to **song**, **score**
 
 use `utils/update-secrets.sh` script to update the secrets in all services
 
-### 5. Deploy Overture Stack
-
-#### 5.1 SONG
-
-```bash
-# Database
-helm install song-db ./helm/song-db -n agari
-
-# Song
-helm install song ./helm/song -n agari
-```
-
-#### 5.2 SCORE
-```bash
-helm install score ./helm/score -n agari
-```
-
 #### 5.3 ELASTICSEARCH
 ```bash
 # Elasticsearch
@@ -100,20 +70,7 @@ curl -X PUT "http://elasticsearch.local/agari-index" \
     -d @helm/elasticsearch/configs/agari-index-mapping.json
 ```
 
-#### 5.4 MAESTRO
-```bash
-helm install maestro ./helm/maestro -n agari
-```
-#### 5.5 ARRANGER
-```bash
-# Set up Arranger configuration
-kubectl create configmap arranger-config --from-file=helm/arranger/configs/ -n agari
-
-# Arranger
-helm install arranger ./helm/arranger -n agari
-```
-
-#### 5.6 FOLIO Projects Service
+#### 3.4 FOLIO Projects Service
 
 **Find Folio repo at [https://github.com/OpenUpSA/agari-folio](https://github.com/OpenUpSA/agari-folio)**
 
@@ -133,11 +90,7 @@ helm install folio ./helm/folio -n agari
 For local development, you can use `/etc/hosts` to map the services:
 
 ```bash
-echo "127.0.0.1 song.local
-127.0.0.1 score.local
-127.0.0.1 maestro.local
-127.0.0.1 arranger.local
-127.0.0.1 keycloak.local
+echo "127.0.0.1 keycloak.local
 127.0.0.1 elasticsearch.local
 127.0.0.1 minio-console.local
 127.0.0.1 folio.local" | sudo tee -a /etc/hosts
@@ -154,9 +107,6 @@ kubectl create secret tls folio-prod-tls-cert --cert=/path/to/tls.crt --key=/pat
 
 Services are available at these URLs:
 
-- **SONG API**: http://song.local/swagger-ui.html
-- **Score API**: http://score.local/swagger-ui.html  
-- **Arranger GraphQL**: http://arranger.local/graphql
 - **Keycloak**: http://keycloak.local
 - **Elasticsearch**: http://elasticsearch.local
 - **MinIO Console**: http://minio-console.local
@@ -205,7 +155,7 @@ curl -d "client_id=song-api" \
      "http://keycloak.local/realms/agari/protocol/openid-connect/token"
 ```
 
-## Data Flow
+## Data Flow - outdated
 
 1. **Submit metadata** → SONG validates and stores in PostgreSQL
 2. **Upload files** → Score stores in MinIO object storage  
@@ -213,7 +163,7 @@ curl -d "client_id=song-api" \
 4. **Index data** → Maestro processes and indexes in Elasticsearch
 5. **Query data** → Arranger provides GraphQL API
 
-## GraphQL Query Examples
+## GraphQL Query Examples  - outdated
 
 Visit http://arranger.local/graphql to access the GraphQL playground. Here are example queries you can copy and paste:
 
