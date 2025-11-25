@@ -2,12 +2,25 @@ replicaCount: 1
 
 fullnameOverride: "minio"
 
-url:
-  hostname: "minio-ilifu.openup.org.za"
+image:
+  repository: minio/minio
+  pullPolicy: IfNotPresent
+  tag: "RELEASE.2024-01-16T16-07-38Z"
 
+# Service configuration
+service:
+  type: ClusterIP
+  port: 9000
+  consolePort: 9001
+
+# External URL configuration (required by template)
+url:
+  hostname: "minio-staging.openup.org.za" # ilifu/staging
+
+# Console configuration
 console:
   url:
-    hostname: "minio-console-ilifu.openup.org.za"
+    hostname: "minio-console-staging.openup.org.za"  # ilifu/staging
   ingress:
     enabled: true
     className: "private"
@@ -15,82 +28,43 @@ console:
       nginx.ingress.kubernetes.io/proxy-body-size: "1000m"
     tls: []
 
-image:
-  repository: minio/minio
-  pullPolicy: IfNotPresent
-  tag: "RELEASE.2024-01-16T16-07-38Z"
-
-nameOverride: ""
-
-service:
-  type: ClusterIP
-  port: 9000
-  consolePort: 9001
-
+# Main MinIO ingress - SIMPLIFIED VERSION
 ingress:
   enabled: true
   className: "private"
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "1000m"
     nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
   hosts:
-    - host: minio-ilifu.openup.org.za
+    - host: minio-staging.openup.org.za  # ilifu/staging
       paths:
         - path: /
           pathType: Prefix
-  tls: []
+  tls:
+    - secretName: minio-staging-tls-cert #ilifu/staging
+      hosts:
+        - minio-staging.openup.org.za #ilifu/staging
 
+# Environment variables for MinIO
+extraEnv:
+  - name: MINIO_SERVER_URL
+    value: "https://minio-staging.openup.org.za"  # ilifu/staging
+
+# MinIO configuration
 minio:
   accessKey: admin
   secretKey: admin123
   
+  # Buckets to create
   buckets:
     - name: state
     - name: object
+    - name: agari-data
   
+  # Enable bucket setup
   bucketSetup:
     enabled: true
-
-resources:
-  limits:
-    cpu: 300m
-    memory: 256Mi
-  requests:
-    cpu: 150m
-    memory: 128Mi
-
-persistence:
-  enabled: true
-  size: 5Gi
-
-probes:
-  liveness:
-    enabled: true 
-    httpGet:
-      path: /minio/health/live
-      port: api
-    initialDelaySeconds: 30
-    periodSeconds: 30
-    timeoutSeconds: 5
-    failureThreshold: 3
-  
-  readiness:
-    enabled: true
-    httpGet:
-      path: /minio/health/ready
-      port: api
-    initialDelaySeconds: 15
-    periodSeconds: 10
-    timeoutSeconds: 3
-    failureThreshold: 3
-    enabled: true
-
-# Persistence
-persistence:
-  enabled: true
-  size: 10Gi
-  accessMode: ReadWriteOnce
-  storageClass: ""
 
 # Resource limits
 resources:
@@ -101,18 +75,43 @@ resources:
     cpu: 250m
     memory: 256Mi
 
-# Node selection
-nodeSelector: {}
-tolerations: []
-affinity: {}
+# Persistence
+persistence:
+  enabled: true
+  size: 10Gi
+  accessMode: ReadWriteOnce
+  storageClass: ""
 
-# Pod security context
+# Health checks
+probes:
+  liveness:
+    enabled: true 
+    httpGet:
+      path: /minio/health/live
+      port: api
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  
+  readiness:
+    enabled: true
+    httpGet:
+      path: /minio/health/ready
+      port: api
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# Security context
 podSecurityContext: 
   fsGroup: 1000
 
 securityContext:
   runAsUser: 1000
   runAsGroup: 1000
+  runAsNonRoot: true
 
 # Service account
 serviceAccount:
@@ -123,8 +122,13 @@ serviceAccount:
 # Pod annotations
 podAnnotations: {}
 
-# MC (MinIO Client) for bucket setup
+# MinIO Client for bucket setup
 mc:
   image:
     repository: minio/mc
     tag: "RELEASE.2024-01-13T08-44-48Z"
+
+# Node selection
+nodeSelector: {}
+tolerations: []
+affinity: {}
