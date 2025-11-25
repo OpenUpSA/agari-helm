@@ -143,6 +143,13 @@ echo "127.0.0.1 song.local
 127.0.0.1 folio.local" | sudo tee -a /etc/hosts
 ```
 
+## Set SSL cert secret
+
+```
+kubectl create secret tls folio-prod-tls-cert --cert=/path/to/tls.crt --key=/path/to/tls.key -n agari-prod
+```
+
+
 ## Service Access
 
 Services are available at these URLs:
