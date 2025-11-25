@@ -81,6 +81,9 @@ helm install folio-db ./helm/folio-db -n agari
 # Folio
 helm install folio ./helm/folio -n agari
 
+# Folio worker
+helm install folio-worker ./helm/folio-worker -n agari
+
 ```
 
 
