@@ -42,7 +42,7 @@ ingress:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: minio-staging-tls-cert #ilifu/staging
+    - secretName: minio-staging-tls-cert #minio/minio-staging
       hosts:
         - minio-staging.openup.org.za #ilifu/staging
 
@@ -78,7 +78,7 @@ resources:
 # Persistence
 persistence:
   enabled: true
-  size: 10Gi
+  size: 20Gi
   accessMode: ReadWriteOnce
   storageClass: ""
 

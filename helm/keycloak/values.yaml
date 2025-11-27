@@ -32,7 +32,7 @@ ingress:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: keycloak-staging-tls-cert # ilifu/staging
+    - secretName: keycloak-staging-tls-cert # keycloak/keycloak-staging
       hosts:
         - keycloak-staging.openup.org.za # ilifu/staging
 

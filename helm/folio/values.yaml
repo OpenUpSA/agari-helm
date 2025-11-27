@@ -34,10 +34,6 @@ folio:
       timeout: 30
     options: "?connect_timeout=10&application_name=folio"
 
-  overture:
-    score: "http://score:8087"
-    song: "http://song:8080"
-
 ingress:
   enabled: true
   className: private
@@ -53,17 +49,17 @@ ingress:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: folio-staging-tls-cert #ilifu/staging
+    - secretName: folio-staging-tls-cert #prod/staging
       hosts:
         - folio-staging.openup.org.za #ilifu/staging
 
 resources:
   limits:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 1500m
+    memory: 1Gi
   requests:
-    cpu: 200m
-    memory: 256Mi
+    cpu: 1000m
+    memory: 512Mi
 
 nodeSelector: {}
 

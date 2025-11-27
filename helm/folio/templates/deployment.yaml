@@ -44,10 +44,6 @@ spec:
               value: {{ .Values.folio.database.user | quote }}
             - name: DB_PASSWORD
               value: {{ .Values.folio.database.password | quote }}
-            - name: OVERTURE_SCORE
-              value: {{ .Values.folio.overture.score | quote }}
-            - name: OVERTURE_SONG
-              value: {{ .Values.folio.overture.song | quote }}
             - name: KEYCLOAK_URL
               value: {{ .Values.folio.auth.keycloak.host | quote }}
           livenessProbe:

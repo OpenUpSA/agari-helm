@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/methodlab/agari-frontend
-  tag: v0.0.29
+  tag: v0.0.37
   pullPolicy: Always
 
 service:
@@ -10,18 +10,22 @@ service:
   port: 80
   targetPort: 3000
 
+env:
+  - name: AGARI_ENV
+    value: "production" # production/
+
 ingress:
   enabled: true
   className: private
   hosts:
-    - host: agari-staging.openup.org.za # agari/agari-staging
+    - host: agari.openup.org.za # agari/agari-staging
       paths:
         - path: /
           pathType: ImplementationSpecific
   tls:
-    - secretName: agari-staging-tls-cert # agari/agari-staging
+    - secretName: agari-tls-cert # agari/agari-staging
       hosts:
-        - agari-staging.openup.org.za # agari/agari-staging
+        - agari.openup.org.za # agari/agari-staging
 
 resources:
   limits:

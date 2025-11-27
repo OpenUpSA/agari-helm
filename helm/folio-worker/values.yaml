@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: ghcr.io/openupsa/agari-folio
   pullPolicy: "Always"
-  tag: "staging"
+  tag: "staging" # master/staging
 
 worker:
   command: ["python", "worker.py"]
@@ -45,11 +45,11 @@ folio:
 
 resources:
   limits:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 1500m
+    memory: 1Gi
   requests:
-    cpu: 200m
-    memory: 256Mi
+    cpu: 1000m
+    memory: 512Mi
 
 nodeSelector: {}
 
