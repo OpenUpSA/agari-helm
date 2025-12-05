@@ -947,9 +947,13 @@
       "name": "Age",
       "x-hint": "Numeric values only.",
       "description": "A subject age at time of specimen extraction is the age (since birth) of the organism at the time a given specimen was extracted",
-      "type": "number",
-      "minimum": 0,
-      "maximum": 120
+      "oneOf": [
+        { "type": "number", "minimum": 0, "maximum": 120 },
+        {
+          "type": "string",
+          "maxLength": 0
+        }
+      ]
     },
     "subject_age_unit": {
       "name": "Age Unit",
@@ -1040,7 +1044,13 @@
       "name": "Vaccine Doses",
       "x-hint": "Numeric values only.",
       "description": "describes the number of doses of vaccine received by the patient",
-      "type": "number"
+      "oneOf": [
+        { "type": "number" },
+        {
+          "type": "string",
+          "maxLength": 0
+        }
+      ]
     },
     "date_of_last_vaccine_dose": {
       "name": "Last Vaccine",

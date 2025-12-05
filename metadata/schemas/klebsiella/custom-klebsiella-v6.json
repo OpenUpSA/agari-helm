@@ -1143,7 +1143,13 @@
       "name": "Age",
       "x-hint": "Numeric values only.",
       "description": "A host data field which describes the age of the host at the time of sampling",
-      "type": "number"
+      "oneOf": [
+        { "type": "number", "minimum": 0, "maximum": 120 },
+        {
+          "type": "string",
+          "maxLength": 0
+        }
+      ]
     },
     "host_age_unit": {
       "name": "Age Unit",
@@ -1489,7 +1495,13 @@
       "name": "Contig Count",
       "x-hint": "Numeric values only.",
       "description": "A contig count is the count of contigs that belong to a sequence assembly.",
-      "type": "number"
+      "oneOf": [
+        { "type": "number" },
+        {
+          "type": "string",
+          "maxLength": 0
+        }
+      ]
     },
     "%_gc": {
       "name": "GC Content",
