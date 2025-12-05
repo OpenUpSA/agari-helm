@@ -980,7 +980,10 @@
             "Restricted Access"
           ]
         },
-        { "type": "null" }
+        {
+          "type": "string",
+          "maxLength": 0
+        }
       ]
     },
     "subject_disease_outcome": {
