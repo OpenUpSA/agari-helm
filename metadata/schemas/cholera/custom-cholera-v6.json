@@ -1753,7 +1753,7 @@
         }
       ]
     },
-    "trimethroprim_sulfamethoxazole_resistance_phenotype": {
+    "trimethoprim_sulfamethoxazole_resistance_phenotype": {
       "name": "Trimethroprim Result",
       "x-hint": "Select a value from the template list.",
       "description": "Phenotypic outcome of antimicrobial susceptibility testing for trimethroprim-sulfamethoxazole.",
@@ -1888,7 +1888,7 @@
         }
       ]
     },
-    "resistant_genes": {
+    "resistance_genes": {
       "name": "Resistant Genes",
       "x-hint": "Select one or more value from the template list.",
       "x-split-regex": ",\\s*",
