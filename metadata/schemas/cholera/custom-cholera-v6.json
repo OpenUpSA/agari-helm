@@ -1604,13 +1604,13 @@
       "description": "The number of times a particular locus (site, nucleotide, amplicon, region) was sequenced",
       "type": "string"
     },
-    "sequencing_typing_method": {
+    "sequence_typing_method": {
       "name": "Typing Method",
       "x-hint": "Enter a text value.",
       "description": "The method or scheme used to determine the genetic type of an organism based on sequence data. This can include approaches like multilocus sequence typing (MLST), core genome MLST (cgMLST), single nucleotide polymorphism (SNP) typing, or other genome-based typing schemes.",
       "type": "string"
     },
-    "sequencing_type": {
+    "sequence_type": {
       "name": "Sequencing Type",
       "x-hint": "Enter a text value.",
       "description": "The sequence type assigned to an isolate according to a specific typing method. For example, in MLST, the sequence type is a numerical designation (ST) representing the allelic profile of multiple loci.",

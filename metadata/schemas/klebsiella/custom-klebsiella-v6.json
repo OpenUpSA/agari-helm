@@ -1527,14 +1527,14 @@
       "description": "A gene encoding an outer membrane protein involved in capsule attachment in Klebsiella species. The sequence or allele of wzi can be used for capsule typing and epidemiological tracking.",
       "type": "string"
     },
-    "sequencing_typing_method": {
+    "sequence_typing_method": {
       "name": "Typing Method",
       "x-hint": "Enter a text value.",
       "description": "The method or scheme used to determine the genetic type of an organism based on sequence data. This can include approaches like multilocus sequence typing (MLST), core genome MLST (cgMLST), single nucleotide polymorphism (SNP) typing, or other genome-based typing schemes.",
       "type": "string"
     },
-    "sequencing_type": {
-      "name": "Sequencing Type",
+    "sequence_type": {
+      "name": "Sequence Type",
       "x-hint": "Enter a text value.",
       "description": "The sequence type assigned to an isolate according to a specific typing method. For example, in MLST, the sequence type is a numerical designation (ST) representing the allelic profile of multiple loci.",
       "type": "string"
