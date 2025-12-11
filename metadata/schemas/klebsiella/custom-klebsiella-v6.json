@@ -1083,7 +1083,7 @@
     },
     "host_scientific_name": {
       "name": "Scientific Name",
-      "x-hint": "Required field: select a value from the template list.",
+      "x-hint": "Select a value from the template list.",
       "description": "A subject age at time of specimen extraction is the age (since birth) of the organism at the time a given specimen was extracted",
       "type": "string",
       "enum": [
@@ -1246,7 +1246,7 @@
     },
     "host_disease": {
       "name": "Disease",
-      "x-hint": "Required field: select a value from the template list.",
+      "x-hint": "Select a value from the template list.",
       "description": "A host data field which describes the name of the disease experienced by the host.",
       "type": "string",
       "enum": [
