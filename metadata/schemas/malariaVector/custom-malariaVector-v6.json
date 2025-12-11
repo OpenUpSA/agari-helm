@@ -1537,8 +1537,7 @@
           "format": "date"
         },
         {
-          "type": "string",
-          "maxLength": 0
+          "type": "null"
         }
       ]
     },
@@ -1959,7 +1958,7 @@
         }
       ]
     },
-    "specimen_identification_method": {
+    "species_identification_method": {
       "name": "Identification Method",
       "x-hint": "Select a value from the template list.",
       "description": "Modification(s) in the insect cuticle preventing or slowing the absorption or penetration of insecticide.",
@@ -1988,7 +1987,7 @@
         }
       ]
     },
-    "anopheles_development_stage": {
+    "anopheles_developmental_stage": {
       "name": "Development Stage",
       "x-hint": "Select a value from the template list.",
       "description": "The developmental stages of mosquitoes belonging to the genus Anopheles.",
@@ -2215,8 +2214,7 @@
           "format": "date"
         },
         {
-          "type": "string",
-          "maxLength": 0
+          "type": "null"
         }
       ]
     },

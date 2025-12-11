@@ -80,8 +80,7 @@
           "format": "date"
         },
         {
-          "type": "string",
-          "maxLength": 0
+          "type": "null"
         }
       ]
     },
@@ -1085,25 +1084,33 @@
       "name": "Scientific Name",
       "x-hint": "Select a value from the template list.",
       "description": "A subject age at time of specimen extraction is the age (since birth) of the organism at the time a given specimen was extracted",
-      "type": "string",
-      "enum": [
-        "Homo Sapiens",
-        "Bos Taurus",
-        "Equus Caballus",
-        "Chiroptera",
-        "Mirounga Leonina",
-        "Cercopithecidae",
-        "Hominoidea",
-        "Sus Scrofa",
-        "Capra Hircus",
-        "Canis Lupus Familiaris",
-        "Felis Catus",
-        "Ovis Aries",
-        "Other",
-        "Missing",
-        "Not Provided",
-        "Not Applicable",
-        "Restricted Access"
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "Homo Sapiens",
+            "Bos Taurus",
+            "Equus Caballus",
+            "Chiroptera",
+            "Mirounga Leonina",
+            "Cercopithecidae",
+            "Hominoidea",
+            "Sus Scrofa",
+            "Capra Hircus",
+            "Canis Lupus Familiaris",
+            "Felis Catus",
+            "Ovis Aries",
+            "Other",
+            "Missing",
+            "Not Provided",
+            "Not Applicable",
+            "Restricted Access"
+          ]
+        },
+        {
+          "type": "string",
+          "maxLength": 0
+        }
       ]
     },
     "other_host_scientific_name": {
@@ -1248,27 +1255,35 @@
       "name": "Disease",
       "x-hint": "Select a value from the template list.",
       "description": "A host data field which describes the name of the disease experienced by the host.",
-      "type": "string",
-      "enum": [
-        "Urinary Tract Infection",
-        "Pneumonia",
-        "Sepsis",
-        "Bacteremia",
-        "Wound Infection",
-        "Meningitis",
-        "Necrotizing Fasciitis",
-        "Endophthalmitis",
-        "Pyogenic Liver Abscess",
-        "Mastitis",
-        "Rhinoscleroma",
-        "Neonatal Sepsis",
-        "Soft Tissue Infections",
-        "Catheter-Related Infections",
-        "Other",
-        "Missing",
-        "Not Provided",
-        "Not Applicable",
-        "Restricted Access"
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": [
+            "Urinary Tract Infection",
+            "Pneumonia",
+            "Sepsis",
+            "Bacteremia",
+            "Wound Infection",
+            "Meningitis",
+            "Necrotizing Fasciitis",
+            "Endophthalmitis",
+            "Pyogenic Liver Abscess",
+            "Mastitis",
+            "Rhinoscleroma",
+            "Neonatal Sepsis",
+            "Soft Tissue Infections",
+            "Catheter-Related Infections",
+            "Other",
+            "Missing",
+            "Not Provided",
+            "Not Applicable",
+            "Restricted Access"
+          ]
+        },
+        {
+          "type": "string",
+          "maxLength": 0
+        }
       ]
     },
     "other_host_disease": {
@@ -1367,8 +1382,7 @@
           "format": "date"
         },
         {
-          "type": "string",
-          "maxLength": 0
+          "type": "null"
         }
       ]
     },

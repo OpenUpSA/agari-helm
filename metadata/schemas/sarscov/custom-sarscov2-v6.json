@@ -237,8 +237,7 @@
           "format": "date"
         },
         {
-          "type": "string",
-          "maxLength": 0
+          "type": "null"
         }
       ]
     },
@@ -1754,8 +1753,7 @@
           "format": "date"
         },
         {
-          "type": "string",
-          "maxLength": 0
+          "type": "null"
         }
       ]
     },
@@ -2484,8 +2482,7 @@
           "format": "date"
         },
         {
-          "type": "string",
-          "maxLength": 0
+          "type": "null"
         }
       ]
     },
