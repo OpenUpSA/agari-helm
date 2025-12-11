@@ -2406,7 +2406,7 @@
       "description": "A data field that describes whether there was prior antiviral treatment with an antiviral agent.",
       "type": "string"
     },
-    "prior_SARS-CoV-2_treatment_agent": {
+    "prior_SARS-CoV-2_antiviral_treatment_agent": {
       "name": "Treatment Agent",
       "x-hint": "Enter a text value.",
       "description": "A data field which describes the name of the antiviral agent administered during the prior covid infection.",
