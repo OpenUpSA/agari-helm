@@ -2472,6 +2472,18 @@
         }
       ]
     },
+    "fasta_header_name": {
+      "name": "FASTA Header",
+      "x-hint": "FASTA header name needs to match the record in the attached FASTA file.",
+      "description": "A unique sequence identifier found in the header line of a FASTA-formatted sequence file. It typically begins with the “>” character and may include accession numbers, sample IDs, or organism identifiers that link the sequence record to its corresponding metadata",
+      "type": "string"
+    },
+    "fasta_file_name": {
+      "name": "FASTA File",
+      "x-hint": "Filename needs to match FASTA filename exactly.",
+      "description": "The name of the file containing nucleotide or protein sequence(s) formatted in the FASTA standard. The filename serves as a reference to the physical data file associated with the sample or sequencing submission.",
+      "type": "string"
+    },
     "sequenced_by": {
       "name": "Sequencing Agency",
       "x-hint": "Required field",
