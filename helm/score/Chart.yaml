@@ -1,6 +1,0 @@
-apiVersion: v2
-name: score
-description: A Helm chart for Score - Object storage API for genomic data
-type: application
-version: 0.1.0
-appVersion: "5.11.0"

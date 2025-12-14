@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to update OAuth2 client secrets in Song, Score, and Maestro values.yaml files
+# Script to update OAuth2 client secrets in Folio Helm chart values files.
 # Usage: ./update-secrets.sh <new-secret>
 
 set -e
@@ -62,23 +62,14 @@ update_secrets_in_file() {
 }
 
 # Update secrets in each service
-update_secrets_in_file "$HELM_DIR/song/values.yaml" "Song"
-update_secrets_in_file "$HELM_DIR/score/values.yaml" "Score"  
-update_secrets_in_file "$HELM_DIR/maestro/values.yaml" "Maestro"
 update_secrets_in_file "$HELM_DIR/folio/values.yaml" "Folio"
 
 echo "Secret update completed!"
 echo
 echo "Modified files:"
-echo "- $HELM_DIR/song/values.yaml"
-echo "- $HELM_DIR/score/values.yaml"
-echo "- $HELM_DIR/maestro/values.yaml"
 echo "- $HELM_DIR/folio/values.yaml"
 echo
 echo "Backup files created with timestamp suffix (.backup.YYYYMMDD_HHMMSS)"
 echo
 echo "To apply changes to your cluster, run:"
-echo "  helm upgrade song ./helm/song -n agari"
-echo "  helm upgrade score ./helm/score -n agari"
-echo "  helm upgrade maestro ./helm/maestro -n agari"
 echo "  helm upgrade folio ./helm/folio -n agari"
