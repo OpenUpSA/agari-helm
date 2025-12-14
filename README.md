@@ -94,6 +94,15 @@ helm install folio-worker ./helm/folio-worker -n agari
 
 ```
 
+### 8. Frontend
+
+**Find Frontend repo at [https://github.com/methodlab/agari-frontend](https://github.com/methodlab/agari-frontend)**
+
+```bash
+# Folio Worker
+helm install agari-frontend ./helm/frontend -n agari
+
+```
 
 ## Ingress Configuration
 
