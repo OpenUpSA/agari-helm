@@ -157,8 +157,8 @@ Services are available at these URLs:
 ### JWT Token Example
 ```bash
 # Get JWT token from Keycloak
-curl -d "client_id=song-api" \
-     -d "client_secret=song-secret" \
+curl -d "client_id=dms" \
+     -d "client_secret=dms-secret" \
      -d "username=admin@example.com" \
      -d "password=admin123" \
      -d "grant_type=password" \
