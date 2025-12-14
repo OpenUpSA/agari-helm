@@ -1,5 +1,4 @@
 # Local Helm values (contains secrets)
-values-production-secrets.yaml
 
 work/
 .github/
