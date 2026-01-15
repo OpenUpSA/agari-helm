@@ -30,6 +30,13 @@ folio:
     score: "http://score:8087"
     song: "http://song:8080"
 
+  minio:
+    endpoint: "http://minio.local"
+    accessKey: "admin"
+    secretKey: "admin123"
+    secured: false
+    bucket: folio
+
 ingress:
   enabled: true
   className: nginx
