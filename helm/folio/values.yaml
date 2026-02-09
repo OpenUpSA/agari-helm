@@ -10,7 +10,6 @@ service:
   port: 80
   targetPort: 8000
 
-# Folio application configuration
 folio:
   auth:
     keycloak:
@@ -25,7 +24,7 @@ folio:
     port: "5432"
     name: "folio"
     user: "admin"
-    password: "folio-db-pass-123"
+    #password: "folio-db-pass-123" # get password from secret store
     pool:
       size: 10
       maxOverflow: 20
